@@ -1,4 +1,4 @@
-package net.siisise.security;
+package net.siisise.security.mac;
 
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -8,7 +8,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.AlgorithmParameterSpec;
 import javax.crypto.MacSpi;
 import javax.crypto.spec.SecretKeySpec;
-import net.siisise.security.digest.MessageDigestSpec;
+import net.siisise.security.digest.BlockMessageDigest;
 
 /**
  * まだ
@@ -62,11 +62,11 @@ public class HMACSpi extends MacSpi {
         int b;
         if ( alg.startsWith("HMAC")) {
             int l = (alg.length() > 4 && alg.charAt(4) == '-') ? 5 : 4;
-            MessageDigestSpec mds;
+            BlockMessageDigest mds;
             try {
-                mds = MessageDigestSpec.getInstance(alg.substring(l));
+                mds = BlockMessageDigest.getInstance(alg.substring(l));
                 md = (MessageDigest) mds;
-                b = mds.getBlockLength() / 8;
+                b = mds.getBitBlockLength() / 8;
             } catch (UnsupportedOperationException e) {
                 try {
                     md = MessageDigest.getInstance(alg);

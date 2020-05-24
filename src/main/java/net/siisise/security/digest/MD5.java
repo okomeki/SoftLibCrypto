@@ -1,23 +1,18 @@
 package net.siisise.security.digest;
 
-import java.security.MessageDigest;
-import net.siisise.security.PacketListener;
-import net.siisise.security.PacketRun;
+import net.siisise.security.io.BlockOutputStream;
 
 /**
  * RFC 1321 MD5の実装.
  * RFC 6151?
  * @deprecated 脆弱
  */
-public class MD5 extends MessageDigest implements PacketListener, MessageDigestSpec {
+public class MD5 extends BlockMessageDigest {
 
     public static String OBJECTIDENTIFIER = "1.2.840.113549.2.5";
 
     private final int digestLength;
     private int[] ad;
-
-    private PacketRun pac;
-    private int length = 0;
 
     static final int[] S1 = {7, 22, 17, 12};
     static final int[] S2 = {5, 20, 14, 9};
@@ -77,7 +72,7 @@ public class MD5 extends MessageDigest implements PacketListener, MessageDigestS
     }
     
     @Override
-    public int getBlockLength() {
+    public int getBitBlockLength() {
         return 512;
     }
 
@@ -85,7 +80,7 @@ public class MD5 extends MessageDigest implements PacketListener, MessageDigestS
     protected void engineReset() {
         ad = new int[]{0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476};
         length = 0;
-        pac = new PacketRun(64, this);
+        pac = new BlockOutputStream(this);
     }
 
     private void abcdf(int m, int i) {
@@ -131,21 +126,10 @@ public class MD5 extends MessageDigest implements PacketListener, MessageDigestS
         ad[e] = ((m << d) | (m >>> (32 - d))) + b;
     }
 
-    @Override
-    protected void engineUpdate(byte input) {
-        engineUpdate(new byte[]{input}, 0, 1);
-    }
-
-    @Override
-    protected void engineUpdate(byte[] input, int offset, int len) {
-        pac.write(input,offset,len);
-        length += len * 8l;
-    }
-    
     int x[] = new int[16];
     
     @Override
-    public void packetOut(byte[] input, int offset, int len) {
+    public void blockWrite(byte[] input, int offset, int len) {
 
         int aa, bb, cc, dd;
         aa = ad[0];
@@ -153,7 +137,7 @@ public class MD5 extends MessageDigest implements PacketListener, MessageDigestS
         cc = ad[2];
         dd = ad[3];
 
-        PacketRun.writeLittle(x,0, input,offset,16);
+        BlockOutputStream.writeLittle(x,0, input,offset,16);
         /* Round 1. */
         for (int i = 0; i < 16; i++) {
             abcdf(x[i], i);
@@ -193,7 +177,7 @@ public class MD5 extends MessageDigest implements PacketListener, MessageDigestS
             len >>>= 8;
         }
 
-        engineUpdate(lena, 0, lena.length);
+        pac.write(lena, 0, lena.length);
 
         byte[] ret = new byte[digestLength];
         for (int i = 0; i < digestLength; i++) {

@@ -2,18 +2,16 @@ package net.siisise.security.digest;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
-import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Map;
-import net.siisise.security.PacketListener;
-import net.siisise.security.PacketRun;
+import net.siisise.security.io.BlockOutputStream;
 
 /**
  * NIST FIPS PUB 180-4.
  * RFC 4634
  * RFC 6234
  */
-public class SHA512 extends MessageDigest implements PacketListener,MessageDigestSpec {
+public class SHA512 extends BlockMessageDigest {
 
     public static String OBJECTIDENTIFIER = "2.16.840.1.101.3.4.2.3";
 
@@ -51,43 +49,7 @@ public class SHA512 extends MessageDigest implements PacketListener,MessageDiges
         0x5be0cd19137e2179l
     };
     
-    protected final long[] H = new long[8];
-    private final int digestLength;
-    private final long[] IV;
-    private PacketRun pac;
-    private BigInteger length;
-
-    /**
-     * 汎用初期.
-     *
-     * @param n 名前 SHA-512, SHA-384, SHA-512/t
-     * @param l 512,384,t
-     * @param iv 初期のあれ
-     */
-    protected SHA512(String n, int l, long[] iv) {
-        super(n);
-        digestLength = l;
-        IV = iv;
-        engineReset();
-    }
-
-    public SHA512() {
-        this("SHA-512",512,IV512);
-    }
-
     static Map<Integer,long[]> hi = new HashMap<>();
-
-    /**
-     * SHA-512/t
-     *
-     * @param t 8の倍数 384, 512以上禁止
-     */
-    public SHA512(int t) {
-        this("SHA-512/" + t,t,iv(t));
-        if (t == 384 || t > 511) {
-            throw new SecurityException();
-        }
-    }
     
     /**
      * 
@@ -119,11 +81,39 @@ public class SHA512 extends MessageDigest implements PacketListener,MessageDiges
         return H0;
     }
 
-    @Override
-    protected void engineReset() {
-        System.arraycopy(IV, 0, H, 0, IV.length);
-        pac = new PacketRun(128,this);
-        length = BigInteger.valueOf(0);
+    protected final long[] H = new long[8];
+    private final int digestLength;
+    private final long[] IV;
+    private BigInteger length;
+
+    /**
+     * 汎用初期.
+     *
+     * @param n 名前 SHA-512, SHA-384, SHA-512/t
+     * @param l 512,384,t
+     * @param iv 初期のあれ
+     */
+    protected SHA512(String n, int l, long[] iv) {
+        super(n);
+        digestLength = l;
+        IV = iv;
+        engineReset();
+    }
+
+    public SHA512() {
+        this("SHA-512",512,IV512);
+    }
+
+    /**
+     * SHA-512/t
+     *
+     * @param t 8の倍数 384, 512以上禁止
+     */
+    public SHA512(int t) {
+        this("SHA-512/" + t,t,iv(t));
+        if (t == 384 || t > 511) {
+            throw new SecurityException();
+        }
     }
 
     @Override
@@ -132,8 +122,15 @@ public class SHA512 extends MessageDigest implements PacketListener,MessageDiges
     }
 
     @Override
-    public int getBlockLength() {
+    public int getBitBlockLength() {
         return 1024;
+    }
+
+    @Override
+    protected void engineReset() {
+        System.arraycopy(IV, 0, H, 0, IV.length);
+        pac = new BlockOutputStream(this);
+        length = BigInteger.valueOf(0);
     }
 
     static final long ch(final long x, final long y, final long z) {
@@ -165,11 +162,6 @@ public class SHA512 extends MessageDigest implements PacketListener,MessageDiges
     }
 
     @Override
-    protected void engineUpdate(byte input) {
-        engineUpdate(new byte[]{input}, 0, 1);
-    }
-
-    @Override
     protected void engineUpdate(byte[] input, int offset, int len) {
         pac.write(input, offset, len);
         length = length.add(BigInteger.valueOf(len * 8l));
@@ -178,7 +170,7 @@ public class SHA512 extends MessageDigest implements PacketListener,MessageDiges
     long w[] = new long[80];
 
     @Override
-    public void packetOut(byte[] in, int offset, int len) {
+    public void blockWrite(byte[] in, int offset, int len) {
     
         long a, b, c, d, e, f, g, h;
 
@@ -191,7 +183,7 @@ public class SHA512 extends MessageDigest implements PacketListener,MessageDiges
         g = H[6];
         h = H[7];
 
-        PacketRun.writeBig(w, 0, in, offset, 16);
+        BlockOutputStream.writeBig(w, 0, in, offset, 16);
         for (int t = 16; t < 80; t++) {
             w[t] = σ1(w[t - 2]) + w[t - 7] + σ0(w[t - 15]) + w[t - 16];
         }
@@ -238,7 +230,7 @@ public class SHA512 extends MessageDigest implements PacketListener,MessageDiges
         int padlen = 1024 - ((len.mod(BigInteger.valueOf(1024)).intValue() + 16 * 8 + 8) % 1024);
         pac.write(new byte[padlen / 8 + (16 - lb.length)]);
 
-        pac.write(lb, 0, lb.length);
+        engineUpdate(lb, 0, lb.length);
 
         byte[] digest = toB(H, digestLength / 8);
         engineReset();

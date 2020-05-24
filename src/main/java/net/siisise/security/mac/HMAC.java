@@ -1,14 +1,14 @@
-package net.siisise.security;
+package net.siisise.security.mac;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import javax.crypto.spec.SecretKeySpec;
-import net.siisise.security.digest.MessageDigestSpec;
+import net.siisise.security.digest.BlockMessageDigest;
 
 /**
  * The Keyed-Hash Message Authentication Code (HMAC) FIPS 198-1.
  * Java標準ではない仮の鍵付きハッシュの形. あとで標準に寄せる。
- *
+ * ISO/IEC 10118 か ISO/IEC 9796
  * H 暗号ハッシュ関数.
  * K 秘密鍵 / 認証鍵.
  * B Hのブロックバイト長 512 / 8
@@ -39,7 +39,7 @@ import net.siisise.security.digest.MessageDigestSpec;
  * RFC 4231 Identifiers and Test Vector for HMAC-SHA-224, HMAC-SHA-256,
  *                          HMAC-SHA-384, and HMAC-SHA-512
  */
-public class HMAC {
+public class HMAC implements MAC {
 
     public static final String rsadsi = "1.2.840.113549";
     public static final String digestAlgorithm = rsadsi + ".2";
@@ -48,6 +48,7 @@ public class HMAC {
     public static final String idhmacWithSHA384 = digestAlgorithm + ".10";
     public static final String idhmacWithSHA512 = digestAlgorithm + ".11";
 
+//    private HMACSpi spi;
     private MessageDigest md;
     int blockLength;
     private byte[] k_ipad;
@@ -61,9 +62,10 @@ public class HMAC {
      * @param key 鍵 ブロック長 512bitのもの.
      */
     public HMAC(MessageDigest md, byte[] key) {
+//        spi = new HMACSpi();
         this.md = md;
-        if (md instanceof MessageDigestSpec) {
-            blockLength = ((MessageDigestSpec) md).getBlockLength();
+        if (md instanceof BlockMessageDigest) {
+            blockLength = ((BlockMessageDigest) md).getBitBlockLength();
         } else {
             blockLength = 512;
         }
@@ -108,7 +110,7 @@ public class HMAC {
     public void init(SecretKeySpec key) {
         String alg = key.getAlgorithm().toUpperCase();
         if (alg.startsWith("HMAC-")) { // RFC系の名前?
-            md = (MessageDigest) MessageDigestSpec.getInstance(key.getAlgorithm().substring(5));
+            md = (MessageDigest) BlockMessageDigest.getInstance(key.getAlgorithm().substring(5));
         } else if (alg.startsWith("HMAC")) {
             try {  // Java系の名前
                 md = MessageDigest.getInstance(alg.substring(4));
@@ -122,10 +124,19 @@ public class HMAC {
             throw new java.lang.UnsupportedOperationException();
         }
         this.md = md;
-        if (md instanceof MessageDigestSpec) {
-            blockLength = ((MessageDigestSpec) md).getBlockLength();
+        if (md instanceof BlockMessageDigest) {
+            blockLength = ((BlockMessageDigest) md).getBitBlockLength();
         }
         init(key.getEncoded());
+    }
+
+    /**
+     * 
+     * @return バイト長
+     */
+    @Override
+    public int getMacLength() {
+        return md.getDigestLength();
     }
 
     /**
@@ -155,10 +166,12 @@ public class HMAC {
         md.update(k_ipad);
     }
 
+    @Override
     public void update(byte[] src) {
         md.update(src, 0, src.length);
     }
 
+    @Override
     public void update(byte[] src, int offset, int len) {
         md.update(src, offset, len);
     }

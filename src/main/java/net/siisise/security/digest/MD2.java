@@ -1,20 +1,18 @@
 package net.siisise.security.digest;
 
-import java.security.MessageDigest;
 import java.util.Arrays;
-import net.siisise.security.PacketListener;
-import net.siisise.security.PacketRun;
+import net.siisise.security.io.BlockOutputStream;
 
 /**
  * RFC 1319
  * @deprecated RFC 6149
  */
-public class MD2 extends MessageDigest implements PacketListener, MessageDigestSpec {
+public class MD2 extends BlockMessageDigest {
 
     static final String OID = "1.2.840.113549.2.2";
 
     // byte short int どれでもいい
-    static int[] S = {
+    static final short[] S = {
         0x29, 0x2e, 0x43, 0xc9, 0xa2, 0xd8, 0x7c, 0x01, 0x3d, 0x36, 0x54, 0xa1, 0xec, 0xf0, 0x06, 0x13,
         0x62, 0xa7, 0x05, 0xf3, 0xc0, 0xc7, 0x73, 0x8c, 0x98, 0x93, 0x2b, 0xd9, 0xbc, 0x4c, 0x82, 0xca,
         0x1e, 0x9b, 0x57, 0x3c, 0xfd, 0xd4, 0xe0, 0x16, 0x67, 0x42, 0x6f, 0x18, 0x8a, 0x17, 0xe5, 0x12,
@@ -33,7 +31,6 @@ public class MD2 extends MessageDigest implements PacketListener, MessageDigestS
         0x31, 0x44, 0x50, 0xb4, 0x8f, 0xed, 0x1f, 0x1a, 0xdb, 0x99, 0x8d, 0x33, 0x9f, 0x11, 0x83, 0x14
     };
 
-    private PacketRun pac;
     private byte[] c = new byte[16];
     private byte[] x = new byte[48];
     private byte l;
@@ -49,21 +46,23 @@ public class MD2 extends MessageDigest implements PacketListener, MessageDigestS
     }
 
     @Override
-    public int getBlockLength() {
+    public int getBitBlockLength() {
         return 128;
     }
-
+    
+    /**
+     * length 不要
+     * @param data
+     * @param offset
+     * @param length 
+     */
     @Override
-    protected void engineUpdate(byte input) {
-        engineUpdate(new byte[]{input}, 0, 1);
+    public void engineUpdate(byte[] data, int offset, int length) {
+        pac.write(data,offset,length);
     }
 
     @Override
-    protected void engineUpdate(byte[] input, int offset, int len) {
-        pac.write(input, offset, len);
-    }
-
-    public void packetOut(byte[] input, int offset, int len) {
+    public void blockWrite(byte[] input, int offset, int len) {
         byte lc;
         int t;
     
@@ -108,7 +107,7 @@ public class MD2 extends MessageDigest implements PacketListener, MessageDigestS
 
     @Override
     protected final void engineReset() {
-        pac = new PacketRun(16,this);
+        pac = new BlockOutputStream(this);
         l = 0;
         Arrays.fill(c,(byte)0);
         // Step 3.

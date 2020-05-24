@@ -1,8 +1,6 @@
 package net.siisise.security.digest;
 
-import java.security.MessageDigest;
-import net.siisise.security.PacketListener;
-import net.siisise.security.PacketRun;
+import net.siisise.security.io.BlockOutputStream;
 
 /**
  * SHA-2.
@@ -10,7 +8,7 @@ import net.siisise.security.PacketRun;
  * FIPS PUB 180-3
  * RFC 6234
  */
-public class SHA256 extends MessageDigest implements PacketListener,MessageDigestSpec {
+public class SHA256 extends BlockMessageDigest {
 
     public static String OBJECTIDENTIFIER = "2.16.840.1.101.3.4.2.1";
 
@@ -45,8 +43,6 @@ public class SHA256 extends MessageDigest implements PacketListener,MessageDiges
     };
 
     final int[] H = new int[8];
-    protected PacketRun pac;
-    protected long length;
     private final int[] IV;
 
     public SHA256() {
@@ -62,20 +58,20 @@ public class SHA256 extends MessageDigest implements PacketListener,MessageDiges
     }
 
     @Override
-    protected void engineReset() {
-        System.arraycopy(IV, 0, H, 0, IV.length);
-        pac = new PacketRun(64,this);
-        length = 0;
-    }
-
-    @Override
     protected int engineGetDigestLength() {
         return 32;
     }
 
     @Override
-    public int getBlockLength() {
+    public int getBitBlockLength() {
         return 512;
+    }
+
+    @Override
+    protected void engineReset() {
+        System.arraycopy(IV, 0, H, 0, IV.length);
+        pac = new BlockOutputStream(this);
+        length = 0;
     }
 
     private static int Ch(final int x, final int y, final int z) {
@@ -111,16 +107,10 @@ public class SHA256 extends MessageDigest implements PacketListener,MessageDiges
         return ROTR(x, 17) ^ ROTR(x, 19) ^ (x >>> 10);
     }
 
-    @Override
-    protected void engineUpdate(byte[] input, int offset, int len) {
-        pac.write(input, offset, len);
-        length += len * 8l;
-    }
-    
     int w[] = new int[64];
 
     @Override
-    public void packetOut(byte[] in, int offset, int length) {
+    public void blockWrite(byte[] in, int offset, int length) {
 
         int a, b, c, d, e, f, g, h;
         a = H[0];
@@ -132,7 +122,7 @@ public class SHA256 extends MessageDigest implements PacketListener,MessageDiges
         g = H[6];
         h = H[7];
 
-        PacketRun.writeBig(w, 0, in, offset, 16);
+        BlockOutputStream.writeBig(w, 0, in, offset, 16);
         for (int t = 16; t < 64; t++) {
             w[t] = σ1(w[t - 2]) + w[t - 7] + σ0(w[t - 15]) + w[t - 16];
         }
@@ -149,7 +139,34 @@ public class SHA256 extends MessageDigest implements PacketListener,MessageDiges
             b = a;
             a = temp1 + temp2;
         }
-
+/*
+        // シフトしているのは元に戻る
+        for (int t = 63; t >=0; t--) {
+            int temp1 = a;
+            a = b;
+            b = c;
+            c = d;
+            int temp2 = Σ0(a) + Maj(a, b, c);
+            temp1 -= temp2;
+            d = e - temp1;
+            e = f;
+            f = g;
+            g = h;
+            h = temp1 - (Σ1(e) + Ch(e, f, g) + K[t] + w[t]); // h か wが定まらないと不確定
+        }
+        for (int t = 0; t < 64; t++) {
+            int temp1 = h + Σ1(e) + Ch(e, f, g) + K[t] + w[t];
+            int temp2 = Σ0(a) + Maj(a, b, c);
+            h = g;
+            g = f;
+            f = e;
+            e = d + temp1;
+            d = c;
+            c = b;
+            b = a;
+            a = temp1 + temp2;
+        }
+*/
         H[0] += a;
         H[1] += b;
         H[2] += c;
@@ -166,7 +183,7 @@ public class SHA256 extends MessageDigest implements PacketListener,MessageDiges
      * @param len 出力バイト長
      * @return 
      */
-    static byte[] toB(int[] src, int len) {
+    public static byte[] toB(int[] src, int len) {
         byte[] ret = new byte[len];
         for (int i = 0; i < len; i++) {
             ret[i] = (byte) (src[i / 4] >>> (((3 - i) % 4) * 8));
