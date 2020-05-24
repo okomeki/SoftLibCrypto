@@ -17,6 +17,7 @@ import net.siisise.security.digest.SHA384;
 import net.siisise.security.digest.SHA512;
 import net.siisise.security.digest.SHA512224;
 import net.siisise.security.digest.SHA512256;
+import net.siisise.security.mac.HMACSpi;
 
 /**
  *

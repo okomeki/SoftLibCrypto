@@ -1,9 +1,7 @@
 package net.siisise.security.digest;
 
-import java.security.MessageDigest;
 import java.util.Arrays;
-import net.siisise.security.PacketListener;
-import net.siisise.security.PacketRun;
+import net.siisise.security.io.BlockOutputStream;
 
 
 /**
@@ -17,12 +15,12 @@ import net.siisise.security.PacketRun;
  * 可変値
  * c: capacity SHA-3では2*d, d: 出力ビット長, pad頭
  */
-public class Keccak extends MessageDigest implements PacketListener,MessageDigestSpec {
+public class Keccak extends BlockMessageDigest {
     // 固定値
     static final int l = 6;
     private static final int w = 1 << l;
     // 固定箱
-    private long[] a = new long[5*5];
+    private final long[] a = new long[5*5];
 
     // 出力ビット長
     private int d;
@@ -31,14 +29,7 @@ public class Keccak extends MessageDigest implements PacketListener,MessageDiges
     private int r;
     private int R;
 
-    protected PacketRun pac;
-    // byte
-    protected long length;
-
     static final long[] RC = new long[24];
-
-//    static final int[] RR = {0,300,171,21,78,28,276,3,45,253,1,6,153,136,210,91,36,10,15,120,190,55,231,105,66};
-    static final int[] rr = {0,44,43,21,14,28,20,3,45,61,1,6,25,8,18,27,36,10,15,56,62,55,39,41,2};
 
     static {
         for (int ir = 0; ir < 24; ir++) {
@@ -47,9 +38,6 @@ public class Keccak extends MessageDigest implements PacketListener,MessageDiges
                 RC[ir] |= rc(j + 7 * ir) ? (1l << ((1 << j) - 1)) : 0;
             }
         }
-//        for ( int i = 0; i < 25; i++ ) {
-//            rr[i] = RR[i] % w;
-//        }
     }
     
     byte padstart;
@@ -102,21 +90,15 @@ public class Keccak extends MessageDigest implements PacketListener,MessageDiges
     }
 
     @Override
-    public int getBlockLength() {
+    public int getBitBlockLength() {
         return r;
     }
     
-    
     @Override
     protected void engineReset() {
-        pac = new PacketRun(r/8,this);
+        pac = new BlockOutputStream(this);
         length = 0;
         Arrays.fill(a, 0l);
-    }
-
-    @Override
-    protected void engineUpdate(byte input) {
-        engineUpdate(new byte[]{input}, 0, 1);
     }
 
     // little endian
@@ -141,6 +123,9 @@ public class Keccak extends MessageDigest implements PacketListener,MessageDiges
         }
         return (R & 0x80) != 0;
     }
+    
+//    static final int[] rr = {0,300,171,21,78,28,276,3,45,253,1,6,153,136,210,91,36,10,15,120,190,55,231,105,66};
+    static final int[] rr = {0,44,43,21,14,28,20,3,45,61,1,6,25,8,18,27,36,10,15,56,62,55,39,41,2};
 
     /**
      *
@@ -167,7 +152,7 @@ public class Keccak extends MessageDigest implements PacketListener,MessageDiges
             // 3.2.3 π
             for ( int y = 0; y < 5; y++ ) {
                 for ( int x = 0; x < 5; x++ ) {
-                    ad[x + y * 5] = ROTL(a[(y*3+x)%5 + x*5], rr[x+y*5]);
+                    ad[x + y * 5] = ROTL(a[(y*3+x)%5 + x*5],rr[x+y*5]);
                 }
             }
 
@@ -199,7 +184,7 @@ public class Keccak extends MessageDigest implements PacketListener,MessageDiges
     }
 
     @Override
-    public void packetOut(byte[] input, int offset, int len) {
+    public void blockWrite(byte[] input, int offset, int len) {
         keccak(input, offset);
     }
 

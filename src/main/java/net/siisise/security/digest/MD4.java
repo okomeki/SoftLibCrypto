@@ -1,19 +1,14 @@
 package net.siisise.security.digest;
 
-import java.security.MessageDigest;
-import net.siisise.security.PacketListener;
-import net.siisise.security.PacketRun;
+import net.siisise.security.io.BlockOutputStream;
 
 /**
  * RFC 1320
  * @deprecated RFC 6150
  */
-public class MD4 extends MessageDigest implements PacketListener,MessageDigestSpec {
+public class MD4 extends BlockMessageDigest {
 
     private int[] ad;
-
-    private PacketRun pac;
-    private int length = 0;
 
     public MD4() {
         super("MD4");
@@ -26,7 +21,7 @@ public class MD4 extends MessageDigest implements PacketListener,MessageDigestSp
     }
     
     @Override
-    public int getBlockLength() {
+    public int getBitBlockLength() {
         return 512;
     }
 
@@ -34,7 +29,7 @@ public class MD4 extends MessageDigest implements PacketListener,MessageDigestSp
     protected void engineReset() {
         ad = new int[]{0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476};
         length = 0;
-        pac = new PacketRun(64,this);
+        pac = new BlockOutputStream(this);
     }
 
     static final int[] S1 = {3, 19, 11, 7};
@@ -71,20 +66,10 @@ public class MD4 extends MessageDigest implements PacketListener,MessageDigestSp
         ad[e] = ((m << d) | (m >>> (32 - d)));
     }
 
-    @Override
-    protected void engineUpdate(byte input) {
-        engineUpdate(new byte[]{input}, 0, 1);
-    }
-
-    @Override
-    protected void engineUpdate(byte[] input, int offset, int len) {
-        pac.write(input, offset, len);
-        length += len * 8l;
-    }
-    
     int x[] = new int[16];
 
-    public void packetOut(byte[] input, int offset, int len) {
+    @Override
+    public void blockWrite(byte[] input, int offset, int len) {
 
         int aa, bb, cc, dd;
         for (int j = 0; j < 16; j++) {
@@ -132,7 +117,7 @@ public class MD4 extends MessageDigest implements PacketListener,MessageDigestSp
             len >>>= 8;
         }
 
-        engineUpdate(lena, 0, lena.length);
+        pac.write(lena, 0, lena.length);
 
         byte[] ret = new byte[16];
         for (int i = 0; i < 16; i++) {

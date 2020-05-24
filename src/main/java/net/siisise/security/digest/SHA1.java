@@ -1,21 +1,17 @@
 package net.siisise.security.digest;
 
-import java.security.MessageDigest;
-import net.siisise.security.PacketListener;
-import net.siisise.security.PacketRun;
+import net.siisise.security.io.BlockOutputStream;
 
 /**
  * RFC 3174 SHA-1.
  * FIPS 180-1.
  * @deprecated 
  */
-public final class SHA1 extends MessageDigest implements PacketListener, MessageDigestSpec {
+public final class SHA1 extends BlockMessageDigest {
 
     public static String OBJECTIDENTIFIER = "1.3.14.3.2.26";
     private int[] h = new int[5];
     private final int bit;
-    private PacketRun pac;
-    private long length;
     
     public SHA1() {
         super("SHA-1");
@@ -39,7 +35,7 @@ public final class SHA1 extends MessageDigest implements PacketListener, Message
     }
 
     @Override
-    public int getBlockLength() {
+    public int getBitBlockLength() {
         return 512;
     }
 
@@ -51,7 +47,7 @@ public final class SHA1 extends MessageDigest implements PacketListener, Message
         h[2] = 0x98badcfe;
         h[3] = 0x10325476;
         h[4] = 0xc3d2e1f0;
-        pac = new PacketRun(64,this);
+        pac = new BlockOutputStream(this);
         length = 0;
     }
 
@@ -68,21 +64,10 @@ public final class SHA1 extends MessageDigest implements PacketListener, Message
         return (b ^ c ^ d) + 0xca62c1d6;
     }
 
-    @Override
-    protected void engineUpdate(byte input) {
-        engineUpdate(new byte[]{input}, 0, 1);
-    }
-
-    @Override
-    protected void engineUpdate(byte[] src, int offset, int len) {
-        pac.write(src, offset, len);
-        length += len * 8l;
-    }
-   
     int w[] = new int[80];
 
     @Override
-    public void packetOut(byte[] src, int offset, int len) {
+    public void blockWrite(byte[] src, int offset, int len) {
 
         int a, b, c, d, e;
         // 6.1.

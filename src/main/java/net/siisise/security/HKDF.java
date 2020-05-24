@@ -1,7 +1,7 @@
 package net.siisise.security;
 
+import net.siisise.security.mac.HMAC;
 import java.security.MessageDigest;
-import javax.crypto.spec.SecretKeySpec;
 
 /**
  * 鍵導出関数. Key Derivation Function KDF.
@@ -42,8 +42,6 @@ public class HKDF {
         if (salt == null) {
             salt = new byte[0];
         }
-//        SecretKeySpec sk = new SecretKeySpec(salt, "HMAC-" + sha.getAlgorithm());
-//        HMAC mac = new HMAC(sk);
         HMAC mac = new HMAC(sha, salt);
         return mac.doFinal(ikm);
     }
