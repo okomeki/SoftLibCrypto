@@ -4,8 +4,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- *
- * @author okome
+ * Aの簡易版
  */
 public class PacketS {
 
@@ -154,12 +153,51 @@ public class PacketS {
         }
     }
     
+    private class PacketDirectOutputStream extends PacketBaseOutputStream {
+        @Override
+        public void write(byte[] b) {
+            if ( b.length > 0) {
+                nullPack.addPrev(new PacketIn(b));
+            }
+        }
+
+        /**
+         * ToDo: まとめて変換してから追加してもいい
+         *
+         * @param src
+         * @param offset
+         * @param length
+         */
+        @Override
+        public void write(byte[] src, int offset, int length) {
+            PacketIn p = new PacketIn(src);
+            p.offset = offset;
+            p.length = length;
+            
+            nullPack.addPrev(p);
+        }
+    }
+
     PacketBaseInputStream in;
     PacketBaseOutputStream out;
 
     public PacketS() {
         in = new PacketBaseInputStream(nullPack);
         out = new PacketBaseOutputStream();
+    }
+
+    public PacketS(byte[] b) {
+        in = new PacketBaseInputStream(nullPack);
+        out = new PacketBaseOutputStream();
+        write(b);
+    }
+    
+    public void setDirect(boolean d) {
+        if (d) {
+            out = new PacketDirectOutputStream();
+        } else {
+            out = new PacketBaseOutputStream();
+        }
     }
 
     public InputStream getInputStream() {
@@ -170,6 +208,9 @@ public class PacketS {
         return out;
     }
 
+    public OutputStream getDirectOutputStream() {
+        return new PacketDirectOutputStream();
+    }
 /*
     public int read() {
         return in.read();
