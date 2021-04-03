@@ -16,8 +16,8 @@ public class EncodeStream implements BlockIOListener {
 
     private final Block block;
     private final OutputStream out;
-    PacketS pac;
-    boolean padding;
+    private final PacketS pac;
+    private final boolean padding;
 
     EncodeStream(Block b, OutputStream out, boolean pad) {
         block = b;
@@ -46,7 +46,8 @@ public class EncodeStream implements BlockIOListener {
     }
 
     /**
-     * PKCS5/7のPadding(仮). サイズがずれていたら勝手につける
+     * PKCS5/7のPadding(仮).
+     * サイズがずれていたら勝手につける
      *
      * @param size 0以上maxまでくらい
      * @throws IOException
@@ -100,14 +101,14 @@ public class EncodeStream implements BlockIOListener {
 
     static class DecodeInputBlock extends InputStream {
 
-        PacketS decoded = new PacketS();
-        PacketS pac = new PacketS();
-        boolean eof = false;
-        boolean eof2 = false;
-        int blockLen;
-        Block block;
-        InputStream in;
-        boolean pad;
+        private final PacketS decoded = new PacketS();
+        private final PacketS pac = new PacketS();
+        private final int blockLen;
+        private final Block block;
+        private final InputStream in;
+        private final boolean pad;
+        private boolean eof = false;
+        private boolean eof2 = false;
 
         DecodeInputBlock(Block block, InputStream in, boolean pad) {
             this.block = block;

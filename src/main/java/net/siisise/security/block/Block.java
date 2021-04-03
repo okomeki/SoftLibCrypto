@@ -8,7 +8,7 @@ package net.siisise.security.block;
  */
 public interface Block {
     /**
-     * ブロック長.
+     * Bit block length.
      * ブロック長を外部ブロックに伝え、vectorなどの長さに利用するためのもの。
      * ブロックモード暗号モジュールのみで利用する。
      * @return ビット単位のブロック長.
@@ -23,13 +23,18 @@ public interface Block {
      */
     void init(byte[] key);
     
+    /**
+     * 
+     * @param key シークレット鍵
+     * @param iv 
+     */
     void init(byte[] key, byte[] iv);
     
     /**
-     * ブロックモード用
+     * block mode 暗号化用.
      * @param src
      * @param offset
-     * @param length 固定サイズの倍数であること.
+     * @param length 固定サイズの倍数であること. バイト長.
      * @return 
      */
     byte[] encrypt(byte[] src, int offset, int length);
@@ -47,6 +52,7 @@ public interface Block {
     byte[] encrypt(byte[] src, int offset);
 
     /**
+     * 
      * @deprecated 
      * @param src
      * @param offset
@@ -55,6 +61,7 @@ public interface Block {
      */
     byte[] decrypt(byte[] src, int offset, int length);
     void decrypt(byte[] src, int offset, byte[] dst, int doffset, int length);
+
     /**
      * 復号処理.
      * ブロック単位で呼び出される.

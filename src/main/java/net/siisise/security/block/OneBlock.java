@@ -2,7 +2,6 @@ package net.siisise.security.block;
 
 /**
  *
- * @author okome
  */
 public abstract class OneBlock implements Block {
 
@@ -29,6 +28,14 @@ public abstract class OneBlock implements Block {
         return dec;
     }
 
+    /**
+     *
+     * @param src
+     * @param offset
+     * @param dec
+     * @param doffset
+     * @param length
+     */
     @Override
     public void encrypt(byte[] src, int offset, byte[] dec, int doffset, int length) {
         int blen = getBlockLength() / 8;
@@ -42,6 +49,14 @@ public abstract class OneBlock implements Block {
         }
     }
 
+    /**
+     * 復号処理.
+     * 
+     * @param src
+     * @param offset
+     * @param length
+     * @return
+     */
     @Override
     public byte[] decrypt(byte[] src, int offset, int length) {
         int blen = getBlockLength() / 8;
@@ -58,6 +73,15 @@ public abstract class OneBlock implements Block {
         return dec;
     }
     
+    /**
+     * 復号処理.
+     *
+     * @param src
+     * @param offset
+     * @param dst
+     * @param doffset
+     * @param length
+     */
     @Override
     public void decrypt(byte[] src, int offset, byte[] dst, int doffset, int length) {
         int blen = getBlockLength() / 8;

@@ -21,7 +21,7 @@ public class AES extends OneBlock {
 //    private static final int[] GF3 = new int[256];
     // 9・n
     private static final int[] GFN = new int[11];
-    
+
     private static final int[] sbox = new int[256];
     private static final int[] mix0 = new int[256];
     private static final int[] mix1 = new int[256];
@@ -95,37 +95,14 @@ public class AES extends OneBlock {
 
     /**
      * Sec. 5.2.
+     *
      * @param s
-     * @param w 
+     * @param round
      */
     private void addRoundKey(int[] s, int round) {
-        round *=4;
+        round *= 4;
         for (int c = 0; c < 4; c++) {
-            s[c] ^= w[round+c];
-        }
-    }
-
-    private static void subBytes(int[] s) {
-        for ( int i = 0; i < 4; i++ ) {
-            int d = s[i];
-            s[i] = (sbox[ d >>> 24        ] << 24)
-                 | (sbox[(d >>  16) & 0xff] << 16)
-                 | (sbox[(d >>   8) & 0xff] <<  8)
-                 |  sbox[ d         & 0xff];
-        }
-    }
-
-    /**
-     * MixColumns.
-     * あらかじめ計算しておけるらしい。
-     */
-    private static void mixColumns(int[] s) {
-        for ( int c = 0; c < 4; c++ ) {
-            int d = s[c];
-            s[c] = mix0[ d >>> 24        ]
-                 ^ mix1[(d >>  16) & 0xff]
-                 ^ mix2[(d >>   8) & 0xff]
-                 ^ mix3[ d         & 0xff];
+            s[c] ^= w[round + c];
         }
     }
 
@@ -133,21 +110,13 @@ public class AES extends OneBlock {
      * SubBytes() の逆.
      */
     private static void invSubBytes(int[] s) {
-        for ( int i = 0; i < 4; i++ ) {
+        for (int i = 0; i < 4; i++) {
             int d = s[i];
             s[i] = (ibox[ d >>> 24        ] << 24)
                  | (ibox[(d >>  16) & 0xff] << 16)
                  | (ibox[(d >>   8) & 0xff] <<  8)
                  |  ibox[ d         & 0xff];
         }
-    }
-
-    private static void shiftRows(int[] s) {
-        int a = s[0], b = s[1], c = s[2], d = s[3];
-        s[0] = (a & 0xff000000) | (b & 0xff0000) | (c & 0xff00) | (d & 0xff);
-        s[1] = (b & 0xff000000) | (c & 0xff0000) | (d & 0xff00) | (a & 0xff);
-        s[2] = (c & 0xff000000) | (d & 0xff0000) | (a & 0xff00) | (b & 0xff);
-        s[3] = (d & 0xff000000) | (a & 0xff0000) | (b & 0xff00) | (c & 0xff);
     }
 
     /**
@@ -164,8 +133,8 @@ public class AES extends OneBlock {
     /**
      * MixColumns() の逆.
      */
-    private void invMixColumns(int[] s) {
-        for ( int c = 0; c < 4; c++ ) {
+    private static void invMixColumns(int[] s) {
+        for (int c = 0; c < 4; c++) {
             int d = s[c];
             s[c] = imix0[ d >>> 24        ]
                  ^ imix1[(d >>  16) & 0xff]
@@ -179,6 +148,11 @@ public class AES extends OneBlock {
         return blockLength;
     }
 
+    /**
+     * subWord(rotate(t))
+     * @param t
+     * @return 
+     */
     private static int rotsubWord(int t) {
         return (sbox[(t >>  16) & 0xff] << 24)
              | (sbox[(t >>   8) & 0xff] << 16)
@@ -186,96 +160,148 @@ public class AES extends OneBlock {
              |  sbox[ t >>> 24        ];
     }
 
+    /**
+     * 
+     * @param word
+     * @return 
+     */
     private static int subWord(int word) {
         return (sbox[ word >>> 24        ] << 24)
              | (sbox[(word >>  16) & 0xff] << 16)
              | (sbox[(word >>   8) & 0xff] <<  8)
              |  sbox[ word         & 0xff];
     }
-    
+
     private static final int Nb = 4;
     private int Nr;
-    
+
     /**
      * 鍵.
      * AESは128bit長.
-     * 
+     *
      * @param key 128,192,256bit (16,24,32byte)のいずれか
      */
     @Override
     public void init(byte[] key) {
-        
-        if ( key.length != 16 && key.length != 24 && key.length != 32 ) {
+
+        if (key.length != 16 && key.length != 24 && key.length != 32) {
             throw new SecurityException("key length");
         }
-        
+
         int Nk = key.length / 4; // ぐらい
         blockLength = key.length * 8;
         Nr = Nk + 6;
-        
+
         // ラウンドキーの初期化 ワード列版 128*11?
-        w = new int[Nb * (Nr+1)];
-        btoi(key,0, w, 0, Nk);
+        w = new int[Nb * (Nr + 1)];
+        btoi(key, 0, w, 0, Nk);
         int temp;
-        for (int i = Nk; i < Nb * (Nr+1); i++) {
-            temp = w[i-1];
-            if ( i % Nk == 0) {
-                temp = rotsubWord(temp) ^ GFN[i/Nk];
+        for (int i = Nk; i < Nb * (Nr + 1); i++) {
+            temp = w[i - 1];
+            if (i % Nk == 0) {
+                temp = rotsubWord(temp) ^ GFN[i / Nk];
             } else if (Nk > 6 && i % Nk == 4) {
                 temp = subWord(temp);
             }
-            w[i] = w[i-Nk] ^ temp;
+            w[i] = w[i - Nk] ^ temp;
         }
     }
-    
+
     private static void btoi(byte[] src, int offset, int[] dst, int doffset, int length) {
-        for ( int i = 0; i < length*4; i+=4 ) {
+        for (int i = 0; i < length * 4; i += 4) {
             int t = offset + i;
-            dst[doffset + i/4] =
-                      ((src[t  ] & 0xff) << 24)
-                    | ((src[t+1] & 0xff) << 16)
-                    | ((src[t+2] & 0xff) <<  8)
-                    |  (src[t+3] & 0xff);
+            dst[doffset + i / 4]
+                    = ((src[t    ] & 0xff) << 24)
+                    | ((src[t + 1] & 0xff) << 16)
+                    | ((src[t + 2] & 0xff) <<  8)
+                    |  (src[t + 3] & 0xff);
         }
     }
-    
+
     private static byte[] itob(int[] src) {
         byte[] ss = new byte[16];
-        for ( int i = 0; i < 4; i++ ) {
-            ss[i*4  ] = (byte) (src[i] >> 24);
-            ss[i*4+1] = (byte) (src[i] >> 16);
-            ss[i*4+2] = (byte) (src[i] >>  8);
-            ss[i*4+3] = (byte)  src[i]       ;
+        for (int i = 0; i < 4; i++) {
+            ss[i * 4    ] = (byte) (src[i] >> 24);
+            ss[i * 4 + 1] = (byte) (src[i] >> 16);
+            ss[i * 4 + 2] = (byte) (src[i] >>  8);
+            ss[i * 4 + 3] = (byte)  src[i];
         }
         return ss;
     }
 
-    /** 使わない */
+    /**
+     * 使わない
+     *
+     * @param key
+     * @param iv
+     */
     @Override
     public void init(byte[] key, byte[] iv) {
         throw new SecurityException();
     }
 
     /**
-     * tmp[r,c] = in[r+4c]
- w0 = tmp[0,0] tmp[1,0] tmp[2,0] tmp[3,0]
- w3
+     * AES エンコード
+     * Ryzen 5 2600 で AES/CBCで 700Mbpsを超える最適化の場合
      * @param src
      * @param offset
-     */    
+     */
     @Override
     public byte[] encrypt(final byte[] src, final int offset) {
-        int[] s = new int[4];
-        btoi(src,offset,s,0,4);
-        addRoundKey(s, 0);
-        for ( int r = 1; r < Nr; r++ ) {
-            shiftRows(s);
-            //subBytes(tmp);
-            mixColumns(s);
-            addRoundKey(s, r);
+        int t = offset;
+        int a = w[0], b = w[1], c = w[2], d = w[3];
+        for ( int i = 0; i < 4; i++ ) {
+            int n = 24 - 8 * i;
+            a ^= ((src[t   ] & 0xff) << n);
+            b ^= ((src[t+ 4] & 0xff) << n);
+            c ^= ((src[t+ 8] & 0xff) << n);
+            d ^= ((src[t+12] & 0xff) << n);
+            t++;
         }
-        subBytes(s);
-        shiftRows(s);
+
+        for ( int r4 = 4; r4 < Nr*4; r4+=4 ) {
+            int e, f, g; 
+            e = mix0[a >>> 24        ]
+                ^ mix1[(b >> 16) & 0xff];       
+            e ^= mix2[(c >>  8) & 0xff]
+                ^ mix3[d         & 0xff];
+            f = mix0[b >>> 24        ]
+               ^ mix1[(c >> 16) & 0xff]
+               ^ mix2[(d >>  8) & 0xff]
+               ^ mix3[a         & 0xff];
+            g = mix0[c >>> 24        ]
+               ^ mix1[(d >> 16) & 0xff];
+            g ^= mix2[(a >>  8) & 0xff]
+               ^ mix3[b         & 0xff];
+            d = mix0[d >>> 24        ]
+              ^ mix1[(a >> 16) & 0xff]
+              ^ mix2[(b >>  8) & 0xff]
+              ^ mix3[c         & 0xff];
+            a = e ^ w[r4];
+            b = f ^ w[r4+1];
+            c = g ^ w[r4+2];
+            d ^= w[r4+3];
+        }
+
+        int[] s = new int[4];
+
+        s[0] = (sbox[ a >>> 24        ] << 24)
+             | (sbox[(b >>  16) & 0xff] << 16)
+             | (sbox[(c >>   8) & 0xff] <<  8)
+             |  sbox[ d         & 0xff];
+        s[1] = (sbox[ b >>> 24        ] << 24)
+             | (sbox[(c >>  16) & 0xff] << 16)
+             | (sbox[(d >>   8) & 0xff] <<  8)
+             |  sbox[ a         & 0xff];
+        s[2] = (sbox[ c >>> 24        ] << 24)
+             | (sbox[(d >>  16) & 0xff] << 16)
+             | (sbox[(a >>   8) & 0xff] <<  8)
+             |  sbox[ b         & 0xff];
+        s[3] = (sbox[ d >>> 24        ] << 24)
+             | (sbox[(a >>  16) & 0xff] << 16)
+             | (sbox[(b >>   8) & 0xff] <<  8)
+             |  sbox[ c         & 0xff];
+
         addRoundKey(s, Nr);
 
         return itob(s);
@@ -284,20 +310,20 @@ public class AES extends OneBlock {
 
     @Override
     public byte[] decrypt(final byte[] src, final int offset) {
-        
+
         int[] s = new int[4];
-        btoi(src,offset,s,0,4);
+        btoi(src, offset, s, 0, 4);
         addRoundKey(s, Nr);
         invShiftRows(s);
         invSubBytes(s);
-        for (int r = Nr-1; r >= 1; r-- ) {
+        for (int r = Nr - 1; r >= 1; r--) {
             addRoundKey(s, r);
             invMixColumns(s);
             invShiftRows(s);
             invSubBytes(s);
         }
         addRoundKey(s, 0);
-        
+
         return itob(s);
     }
 }
