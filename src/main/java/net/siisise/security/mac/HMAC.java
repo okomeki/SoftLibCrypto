@@ -2,7 +2,7 @@ package net.siisise.security.mac;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import javax.crypto.spec.SecretKeySpec;
+import javax.crypto.SecretKey;
 import net.siisise.security.digest.BlockMessageDigest;
 
 /**
@@ -78,7 +78,7 @@ public class HMAC implements MAC {
      *
      * @param key アルゴリズムと鍵.
      */
-    public HMAC(SecretKeySpec key) {
+    public HMAC(SecretKey key) {
         blockLength = 512;
         init(key);
     }
@@ -96,7 +96,7 @@ public class HMAC implements MAC {
         init(key);
     }
 
-    public HMAC(MessageDigest md, int blockBitLength, SecretKeySpec key) {
+    public HMAC(MessageDigest md, int blockBitLength, SecretKey key) {
         this.md = md;
         blockLength = blockBitLength;
         init(key);
@@ -107,7 +107,7 @@ public class HMAC implements MAC {
      *
      * @param key
      */
-    public void init(SecretKeySpec key) {
+    public void init(SecretKey key) {
         String alg = key.getAlgorithm().toUpperCase();
         if (alg.startsWith("HMAC-")) { // RFC系の名前?
             md = (MessageDigest) BlockMessageDigest.getInstance(key.getAlgorithm().substring(5));
