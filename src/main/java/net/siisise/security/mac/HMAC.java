@@ -50,7 +50,7 @@ public class HMAC implements MAC {
 
 //    private HMACSpi spi;
     private MessageDigest md;
-    int blockLength;
+    private int blockLength;
     private byte[] k_ipad;
     private byte[] k_opad;
 

@@ -12,7 +12,7 @@ import net.siisise.security.PacketS;
  * 暗号、復号化するストリームを作る。
  * パディングするので送信タイミングはずれることがある。
  */
-public class EncodeStream implements BlockIOListener {
+class EncodeStream implements BlockIOListener {
 
     private final Block block;
     private final OutputStream out;

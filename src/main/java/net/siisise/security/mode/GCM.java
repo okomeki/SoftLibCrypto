@@ -4,6 +4,7 @@ import net.siisise.security.block.Block;
 
 /**
  * Galois/Counter Mode.
+ * CTR + Galois mode
  * 認証用?
  * NIST SP 800-38D
  * https://ja.wikipedia.org/wiki/Galois/Counter_Mode

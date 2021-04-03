@@ -9,8 +9,8 @@ import net.siisise.security.io.BlockOutputStream;
  */
 public final class SHA1 extends BlockMessageDigest {
 
-    public static String OBJECTIDENTIFIER = "1.3.14.3.2.26";
-    private int[] h = new int[5];
+    public static final String OBJECTIDENTIFIER = "1.3.14.3.2.26";
+    private final int[] h = new int[5];
     private final int bit;
     
     public SHA1() {

@@ -9,7 +9,6 @@ import javax.crypto.IllegalBlockSizeException;
 
 /**
  *
- * @author okome
  */
 public class CipherOutputStream extends FilterOutputStream {
     private Cipher cipher;

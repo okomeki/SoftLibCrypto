@@ -83,7 +83,7 @@ public class DES extends OneBlock {
 
     static void parityCheck(byte[] key) {
         if (key == null || key.length != 8) {
-            throw new UnsupportedOperationException();
+            throw new SecurityException();
         }
         int p = 0;
         for (int i = 0; i < 8; i++) {
@@ -92,7 +92,7 @@ public class DES extends OneBlock {
             }
         }
         if (p != 0) {
-            throw new UnsupportedOperationException("ぱりてー");
+            throw new SecurityException("ぱりてー");
         }
     }
 

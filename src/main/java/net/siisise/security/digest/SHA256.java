@@ -10,7 +10,7 @@ import net.siisise.security.io.BlockOutputStream;
  */
 public class SHA256 extends BlockMessageDigest {
 
-    public static String OBJECTIDENTIFIER = "2.16.840.1.101.3.4.2.1";
+    public static final String OBJECTIDENTIFIER = "2.16.840.1.101.3.4.2.1";
 
     static final int[] IV256 = {
         0x6a09e667,
@@ -46,9 +46,7 @@ public class SHA256 extends BlockMessageDigest {
     private final int[] IV;
 
     public SHA256() {
-        super("SHA-256");
-        IV = IV256;
-        engineReset();
+        this("SHA-256",IV256);
     }
 
     protected SHA256(String n, int[] iv) {

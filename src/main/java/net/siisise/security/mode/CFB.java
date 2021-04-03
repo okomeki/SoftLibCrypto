@@ -21,10 +21,10 @@ public final class CFB extends StreamMode {
         System.arraycopy(iv, 0, vector, 0, vector.length > iv.length ? iv.length : vector.length);
         vector = block.encrypt(vector, 0);
     }
-    
+
     @Override
     public byte[] encrypt(byte[] src, int offset) {
-        xor(vector,src,offset,vector.length);
+        xor(vector, src, offset, vector.length);
         byte[] ret = vector;
         vector = block.encrypt(ret, 0);
         return ret;
@@ -33,7 +33,7 @@ public final class CFB extends StreamMode {
     @Override
     public byte[] decrypt(byte[] src, int offset) {
         byte[] ret = vector;
-        xor(ret,src,offset,ret.length);
+        xor(ret, src, offset, ret.length);
         vector = block.encrypt(src, offset);
         return ret;
     }
@@ -43,16 +43,16 @@ public final class CFB extends StreamMode {
         int l = vector.length - this.offset;
         byte[] ret = new byte[length];
         int ro = 0;
-        while ( ro < ret.length ) {
-            if ( length < l ) {
+        while (ro < ret.length) {
+            if (length < l) {
                 l = length;
             }
-            for ( int i = 0; i < l; i++) {
+            for (int i = 0; i < l; i++) {
                 vector[this.offset] ^= src[offset++];
                 ret[ro++] = vector[this.offset++];
                 length--;
             }
-            if ( this.offset >= vector.length ) {
+            if (this.offset >= vector.length) {
                 this.offset = 0;
                 vector = block.encrypt(vector, 0);
                 l = vector.length;
@@ -66,16 +66,16 @@ public final class CFB extends StreamMode {
         int l = vector.length - this.offset;
         byte[] ret = new byte[length];
         int ro = 0;
-        while ( ro < ret.length ) {
-            if ( length < l ) {
+        while (ro < ret.length) {
+            if (length < l) {
                 l = length;
             }
-            for ( int i = 0; i < l; i++) {
+            for (int i = 0; i < l; i++) {
                 ret[ro++] = (byte) (vector[this.offset + i] ^ src[offset + i]);
                 vector[this.offset++] = src[offset++];
                 length--;
             }
-            if ( this.offset >= vector.length ) {
+            if (this.offset >= vector.length) {
                 this.offset = 0;
                 vector = block.encrypt(vector, 0);
                 l = vector.length;

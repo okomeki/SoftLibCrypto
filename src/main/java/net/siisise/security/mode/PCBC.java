@@ -9,12 +9,13 @@ import net.siisise.security.block.Block;
  * ブロックの前後差し替えが可能なので利用されない。
  */
 public class PCBC extends BlockMode {
+
     byte[] vector;
-    
+
     public PCBC(Block b) {
         super(b);
     }
-    
+
     @Override
     public void init(byte[] key) {
         throw new SecurityException("iv");
@@ -29,11 +30,11 @@ public class PCBC extends BlockMode {
 
     @Override
     public byte[] encrypt(byte[] src, int offset) {
-        for ( int i = 0; i < vector.length; i++ ) {
+        for (int i = 0; i < vector.length; i++) {
             vector[i] ^= src[offset + i];
         }
         byte[] ret = block.encrypt(vector, 0);
-        for ( int i = 0; i < vector.length; i++ ) {
+        for (int i = 0; i < vector.length; i++) {
             vector[i] = (byte) (src[offset + i] ^ ret[i]);
         }
         return ret;
@@ -42,7 +43,7 @@ public class PCBC extends BlockMode {
     @Override
     public byte[] decrypt(byte[] src, int offset) {
         byte[] ret = block.decrypt(src, offset);
-        for (int i = 0; i < vector.length; i++ ) {
+        for (int i = 0; i < vector.length; i++) {
             ret[i] ^= vector[i];
         }
         for (int i = 0; i < vector.length; i++) {
@@ -50,5 +51,5 @@ public class PCBC extends BlockMode {
         }
         return ret;
     }
-    
+
 }

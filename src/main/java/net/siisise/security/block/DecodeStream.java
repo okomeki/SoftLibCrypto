@@ -8,7 +8,7 @@ import net.siisise.security.io.BlockIOListener;
 /**
  *
  */
-public class DecodeStream implements BlockIOListener {
+class DecodeStream implements BlockIOListener {
 
     private final Block block;
     private final boolean pad;

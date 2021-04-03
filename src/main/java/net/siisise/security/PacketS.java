@@ -152,11 +152,12 @@ public class PacketS {
             }
         }
     }
-    
+
     private class PacketDirectOutputStream extends PacketBaseOutputStream {
+
         @Override
         public void write(byte[] b) {
-            if ( b.length > 0) {
+            if (b.length > 0) {
                 nullPack.addPrev(new PacketIn(b));
             }
         }
@@ -173,7 +174,7 @@ public class PacketS {
             PacketIn p = new PacketIn(src);
             p.offset = offset;
             p.length = length;
-            
+
             nullPack.addPrev(p);
         }
     }
@@ -191,7 +192,7 @@ public class PacketS {
         out = new PacketBaseOutputStream();
         write(b);
     }
-    
+
     public void setDirect(boolean d) {
         if (d) {
             out = new PacketDirectOutputStream();
@@ -211,11 +212,12 @@ public class PacketS {
     public OutputStream getDirectOutputStream() {
         return new PacketDirectOutputStream();
     }
-/*
+
+    /*
     public int read() {
         return in.read();
     }
-*/
+     */
     public int read(byte[] b, int offset, int length) {
         return in.read(b, offset, length);
     }
@@ -229,11 +231,12 @@ public class PacketS {
         read(d);
         return d;
     }
-/*
+
+    /*
     public void write(int b) {
         out.write(b);
     }
-*/
+     */
     public void write(byte[] b, int offset, int length) {
         out.write(b, offset, length);
     }

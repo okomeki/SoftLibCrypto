@@ -1,7 +1,6 @@
 package net.siisise.security.mode;
 
 import net.siisise.security.block.Block;
-import net.siisise.security.mode.BlockMode;
 
 /**
  *

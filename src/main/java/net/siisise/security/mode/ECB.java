@@ -7,11 +7,11 @@ import net.siisise.security.block.Block;
  * 特に指定しない
  */
 public class ECB extends BlockMode {
-    
+
     public ECB(Block block) {
         super(block);
     }
-    
+
     @Override
     public byte[] encrypt(byte[] src, int offset) {
         return block.encrypt(src, offset);
@@ -21,12 +21,12 @@ public class ECB extends BlockMode {
     public byte[] decrypt(byte[] src, int offset) {
         return block.decrypt(src, offset);
     }
-    
+
     @Override
     public byte[] encrypt(byte[] src, int offset, int length) {
         return block.encrypt(src, offset, length);
     }
-    
+
     @Override
     public byte[] decrypt(byte[] src, int offset, int length) {
         return block.decrypt(src, offset, length);

@@ -8,63 +8,68 @@ import net.siisise.security.stream.Stream;
  *
  */
 public abstract class StreamMode extends BlockMode implements Stream {
+
     protected byte[] vector;
     protected int offset;
-    
+
     StreamMode(Block block) {
         super(block);
     }
-    
+
 //    @Override
 //    public int getBlockLength() {
 //        return vector.length * 8;
 //    }
-
     /**
      * ストリーム用暗号化.
+     *
      * @param src
      * @param offset
      * @param length
-     * @return 
+     * @return
      */
     @Override
     public abstract byte[] encrypt(byte[] src, int offset, int length);
+
     /**
      * ストリーム用復号
+     *
      * @param src
      * @param offset
      * @param length
-     * @return 
+     * @return
      */
     @Override
-    public abstract byte[] decrypt(byte[] src, int offset, int length);    
+    public abstract byte[] decrypt(byte[] src, int offset, int length);
 
     static final void xor(byte[] a, byte[] b, int offset, int length) {
-        for ( int i = 0; i < length; i++) {
+        for (int i = 0; i < length; i++) {
             a[i] ^= b[offset + i];
         }
     }
 
     /**
      * ブロック暗号として利用.
+     *
      * @param src
      * @param offset
-     * @return 
+     * @return
      */
     @Override
     public byte[] encrypt(byte[] src, int offset) {
-        return encrypt(src, offset, getBlockLength()*8);
+        return encrypt(src, offset, getBlockLength() * 8);
     }
 
     /**
      * ブロック暗号として利用.
+     *
      * @param src
      * @param offset
-     * @return 
+     * @return
      */
     @Override
     public byte[] decrypt(byte[] src, int offset) {
-        return decrypt(src, offset, getBlockLength()*8);
+        return decrypt(src, offset, getBlockLength() * 8);
     }
-    
+
 }

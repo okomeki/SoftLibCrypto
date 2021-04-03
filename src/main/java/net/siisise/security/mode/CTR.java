@@ -8,6 +8,7 @@ import net.siisise.security.block.Block;
  * Counter
  */
 public class CTR extends StreamMode {
+
     BigInteger ivector;
     int vlen;
 
@@ -22,15 +23,15 @@ public class CTR extends StreamMode {
         vlen = block.getBlockLength() / 8;
         vector = new byte[vlen];
         ivector = new BigInteger(iv);
-        
+
         next();
     }
-    
+
     void next() {
         byte[] v = ivector.toByteArray();
         int l = vlen - v.length; // ToDo: オーバーフロー未対応
-        Arrays.fill(vector, 0, l, (byte)0);
-        System.arraycopy(v,0,vector,l,v.length);
+        Arrays.fill(vector, 0, l, (byte) 0);
+        System.arraycopy(v, 0, vector, l, v.length);
         ivector = ivector.add(BigInteger.ONE);
     }
 
@@ -38,7 +39,7 @@ public class CTR extends StreamMode {
     public byte[] encrypt(byte[] src, int offset) {
 
         byte[] ret = block.encrypt(vector, 0);
-        for ( int i = 0; i < vlen; i++) {
+        for (int i = 0; i < vlen; i++) {
             ret[i] ^= src[offset + i];
         }
         next();
@@ -47,7 +48,7 @@ public class CTR extends StreamMode {
 
     @Override
     public byte[] decrypt(byte[] src, int offset) {
-        return encrypt(src,offset);
+        return encrypt(src, offset);
     }
 
     @Override

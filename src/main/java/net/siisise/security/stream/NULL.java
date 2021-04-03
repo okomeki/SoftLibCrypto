@@ -4,12 +4,13 @@ package net.siisise.security.stream;
  * NULL 暗号
  */
 public class NULL {
+
     int length;
-    
+
     NULL() {
         length = 8;
     }
-    
+
     NULL(int length) {
         this.length = length;
     }
@@ -32,5 +33,5 @@ public class NULL {
         d[0] = src[0];
         return d;
     }
-    
+
 }

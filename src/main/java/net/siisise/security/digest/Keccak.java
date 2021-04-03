@@ -3,12 +3,11 @@ package net.siisise.security.digest;
 import java.util.Arrays;
 import net.siisise.security.io.BlockOutputStream;
 
-
 /**
  * Keccak-f[1600].
  * SHA-3のもと
  * cは2倍にしていいのか謎
- * 
+ *
  * Keccak-f[b] {25, 50, 100, 200, 400, 800, 1600} のうち b = 1600 のもの
  * 固定値
  * l = 6; w = 64; b = 5*5*w = 1600
@@ -16,11 +15,12 @@ import net.siisise.security.io.BlockOutputStream;
  * c: capacity SHA-3では2*d, d: 出力ビット長, pad頭
  */
 public class Keccak extends BlockMessageDigest {
+
     // 固定値
-    static final int l = 6;
+    private static final int l = 6;
     private static final int w = 1 << l;
     // 固定箱
-    private final long[] a = new long[5*5];
+    private final long[] a = new long[5 * 5];
 
     // 出力ビット長
     private int d;
@@ -39,37 +39,39 @@ public class Keccak extends BlockMessageDigest {
             }
         }
     }
-    
-    byte padstart;
-    
+
+    private byte padstart;
+
     /**
      * Keccak[c](N,d).
      * c = 2*d の SHA-3相当
-     * 
+     *
      * @param d 出力ビット長 c=2*d
      */
     public Keccak(int d) {
-        this(2*d,d);
+        this(2 * d, d);
     }
 
     /**
      * 5.2. Specification of KECCAK[c].
-     * 
+     *
      * Keccak[c](N,d)
      * N 入力
+     *
      * @param c キャパシティ b まで
      * @param d 出力ビット長 b まで
      */
     public Keccak(int c, int d) {
-        this("Keccak["+c+"](N,"+d+")", c, d, (byte)0x01);
+        this("Keccak[" + c + "](N," + d + ")", c, d, (byte) 0x01);
     }
-    
+
     /**
-     * 
+     *
      * Keccak[c](N,d)
      * l = 6
      * SPONGE[KECCAK-p[1600,12+2l],pad10*1,1600-c]
      * N 入力
+     *
      * @param name
      * @param c キャパシティ 2*d か d か固定
      * @param d 出力長
@@ -93,7 +95,7 @@ public class Keccak extends BlockMessageDigest {
     public int getBitBlockLength() {
         return r;
     }
-    
+
     @Override
     protected void engineReset() {
         pac = new BlockOutputStream(this);
@@ -123,15 +125,15 @@ public class Keccak extends BlockMessageDigest {
         }
         return (R & 0x80) != 0;
     }
-    
+
 //    static final int[] rr = {0,300,171,21,78,28,276,3,45,253,1,6,153,136,210,91,36,10,15,120,190,55,231,105,66};
-    static final int[] rr = {0,44,43,21,14,28,20,3,45,61,1,6,25,8,18,27,36,10,15,56,62,55,39,41,2};
+    static final int[] rr = {0, 44, 43, 21, 14, 28, 20, 3, 45, 61, 1, 6, 25, 8, 18, 27, 36, 10, 15, 56, 62, 55, 39, 41, 2};
 
     /**
      *
      * @param a
      */
-    final void keccak_f(long[] a) {
+    private void keccak_f(long[] a) {
         long[] ad = new long[25];
 
         for (int ir = 0; ir < 12 + 2 * l; ir++) {
@@ -150,16 +152,16 @@ public class Keccak extends BlockMessageDigest {
             }
             // 3.2.2. ρ
             // 3.2.3 π
-            for ( int y = 0; y < 5; y++ ) {
-                for ( int x = 0; x < 5; x++ ) {
-                    ad[x + y * 5] = ROTL(a[(y*3+x)%5 + x*5],rr[x+y*5]);
+            for (int y = 0; y < 5; y++) {
+                for (int x = 0; x < 5; x++) {
+                    ad[x + y * 5] = ROTL(a[(y * 3 + x) % 5 + x * 5], rr[x + y * 5]);
                 }
             }
 
             // 3.2.4 χ
-            for (int y = 0; y < 25; y+=5) {
+            for (int y = 0; y < 25; y += 5) {
                 for (int x = 0; x < 5; x++) {
-                    a[x + y] = ad[x + y] ^ ((~ad[((x+1) % 5) + y]) & ad[((x+2) % 5) + y]);
+                    a[x + y] = ad[x + y] ^ ((~ad[((x + 1) % 5) + y]) & ad[((x + 2) % 5) + y]);
                 }
             }
 
@@ -170,13 +172,14 @@ public class Keccak extends BlockMessageDigest {
     /**
      * Algorithm 8
      *
-     * @param b
+     * @param b input / output
      * @return
      */
-    void keccak(byte[] b, int offset) {
+    private void keccak(byte[] b, int offset) {
+        int wb = w / 8;
         for (int c = 0; c < R; c++) {
-            int of = offset + w/8 * c;
-            for (int j = 0; j < w/8; j++) {
+            int of = offset + wb * c;
+            for (int j = 0; j < wb; j++) {
                 a[c] ^= (((long) b[of + j] & 0xff)) << (j * 8);
             }
         }
@@ -190,7 +193,7 @@ public class Keccak extends BlockMessageDigest {
 
     @Override
     protected void engineUpdate(byte[] input, int offset, int len) {
-        pac.write(input,offset,len);
+        pac.write(input, offset, len);
         length += len;
     }
 

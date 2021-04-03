@@ -54,7 +54,7 @@ public class CRC extends MessageDigest {
         cr[1] = (byte) ((c >>> 16) & 0xff);
         cr[2] = (byte) ((c >>> 8) & 0xff);
         cr[3] = (byte) (c & 0xff);
-        System.out.println(Integer.toHexString(c));
+//        System.out.println(Integer.toHexString(c));
         engineReset();
         return cr;
     }
