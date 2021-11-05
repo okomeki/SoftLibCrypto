@@ -5,6 +5,7 @@ package net.siisise.security.block;
  * とある暗号アルゴリズム.
  * 
  * ANSI X9.52-1998
+ * @deprecated AES
  */
 public class TripleDES extends OneBlock {
 

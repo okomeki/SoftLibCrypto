@@ -215,7 +215,7 @@ public class AES extends OneBlock {
         }
     }
 
-    private static void btoi(byte[] src, int offset, int[] dst, int doffset, int length) {
+    private static void btoi(final byte[] src, int offset, int[] dst, int doffset, int length) {
         for (int i = 0; i < length * 4; i += 4) {
             int t = offset + i;
             dst[doffset + i / 4]
@@ -226,7 +226,7 @@ public class AES extends OneBlock {
         }
     }
 
-    private static byte[] itob(int[] src) {
+    private static byte[] itob(final int[] src) {
         byte[] ss = new byte[16];
         for (int i = 0; i < 4; i++) {
             ss[i * 4    ] = (byte) (src[i] >> 24);

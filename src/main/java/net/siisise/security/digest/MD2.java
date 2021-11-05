@@ -31,8 +31,8 @@ public class MD2 extends BlockMessageDigest {
         0x31, 0x44, 0x50, 0xb4, 0x8f, 0xed, 0x1f, 0x1a, 0xdb, 0x99, 0x8d, 0x33, 0x9f, 0x11, 0x83, 0x14
     };
 
-    private byte[] c = new byte[16];
-    private byte[] x = new byte[48];
+    private final byte[] c = new byte[16];
+    private final byte[] x = new byte[48];
     private byte l;
 
     public MD2() {
