@@ -104,7 +104,7 @@ public class Keccak extends BlockMessageDigest {
     }
 
     // little endian
-    private static final long ROTL(final long x, final long n) {
+    private static long ROTL(final long x, final long n) {
         // d = d % w;
         return (x >>> (w - n)) | (x << n);
     }

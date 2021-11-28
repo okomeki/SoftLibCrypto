@@ -48,25 +48,24 @@ public class TripleDES extends OneBlock {
 
     /**
      * 鍵2個でとりぷるDES。
-     * @param k1 鍵1 1回目と3回目に使用する。
-     * @param k2 鍵2 2回目に使用する。
+     * @param keys 鍵1 1回目と3回目に使用する。 鍵2 2回目に使用する。
      */
     @Override
-    public void init(byte[] k1, byte[] k2) {
-        block1.init(k1);
-        block2.init(k2);
-        block3.init(k1);
+    public void init(byte[]... keys) {
+        block1 = new DES();
+        block2 = new DES();
+        block3 = new DES();
+        if ( keys.length == 2) {
+            block1.init(keys[0]);
+            block2.init(keys[1]);
+            block3.init(keys[0]);
+        } else if ( keys.length == 3) {
+            block1.init(keys[0]);
+            block2.init(keys[1]);
+            block3.init(keys[2]);
+        }
     }
 
-    public void init(byte[] k1, byte[] k2, byte[] k3) {
-        block1 = new DES();
-        ((DES)block1).init(k1);
-        block2 = new DES();
-        ((DES)block2).init(k2);
-        block3 = new DES();
-        ((DES)block3).init(k3);
-    }
-    
     @Override
     public int getBlockLength() {
         return block1.getBlockLength();

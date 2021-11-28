@@ -1,7 +1,8 @@
 package net.siisise.security.stream;
 
 /**
- *
+ * ストリーム系暗号のインターフェース
+ * いろいろ未定
  */
 public interface Stream {
     

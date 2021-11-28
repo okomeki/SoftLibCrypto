@@ -10,6 +10,7 @@ import net.siisise.security.stream.Stream;
 public abstract class StreamMode extends BlockMode implements Stream {
 
     protected byte[] vector;
+    protected int[] vectori;
     protected int offset;
 
     StreamMode(Block block) {
@@ -41,12 +42,6 @@ public abstract class StreamMode extends BlockMode implements Stream {
      */
     @Override
     public abstract byte[] decrypt(byte[] src, int offset, int length);
-
-    static final void xor(byte[] a, byte[] b, int offset, int length) {
-        for (int i = 0; i < length; i++) {
-            a[i] ^= b[offset + i];
-        }
-    }
 
     /**
      * ブロック暗号として利用.

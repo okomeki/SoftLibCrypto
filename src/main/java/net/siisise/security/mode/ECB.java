@@ -18,7 +18,17 @@ public class ECB extends BlockMode {
     }
 
     @Override
+    public int[] encrypt(int[] src, int offset) {
+        return block.encrypt(src, offset);
+    }
+
+    @Override
     public byte[] decrypt(byte[] src, int offset) {
+        return block.decrypt(src, offset);
+    }
+
+    @Override
+    public int[] decrypt(int[] src, int offset) {
         return block.decrypt(src, offset);
     }
 
@@ -28,7 +38,17 @@ public class ECB extends BlockMode {
     }
 
     @Override
+    public int[] encrypt(int[] src, int offset, int length) {
+        return block.encrypt(src, offset, length);
+    }
+
+    @Override
     public byte[] decrypt(byte[] src, int offset, int length) {
+        return block.decrypt(src, offset, length);
+    }
+
+    @Override
+    public int[] decrypt(int[] src, int offset, int length) {
         return block.decrypt(src, offset, length);
     }
 }

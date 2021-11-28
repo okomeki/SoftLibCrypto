@@ -14,7 +14,7 @@ package net.siisise.security.block;
  * MixColumns
  * https://tex2e.github.io/blog/crypto/aes-mix-columns
  */
-public class AES extends OneBlock {
+public class AES extends IntBlock {
 
     /**
      * Rijndael 128～256ビット 32ビット単位
@@ -29,6 +29,10 @@ public class AES extends OneBlock {
     private static final int[] MIX1 = new int[256];
     private static final int[] MIX2 = new int[256];
     private static final int[] MIX3 = new int[256];
+    private static final long[] LMIX0 = new long[256];
+    private static final long[] LMIX1 = new long[256];
+    private static final long[] LMIX2 = new long[256];
+    private static final long[] LMIX3 = new long[256];
     private static final int[] ibox = new int[256];
     private static final int[] IMIX0 = new int[256];
     private static final int[] IMIX1 = new int[256];
@@ -39,6 +43,10 @@ public class AES extends OneBlock {
      * ラウンド鍵
      */
     private int[] w;
+    /**
+     * InvMixColumns(ラウンド鍵)
+     */
+    private int[] dw;
 
     static {
         // 2・n
@@ -71,6 +79,9 @@ public class AES extends OneBlock {
             s = 0x63 ^ (s ^ (s >> 8)) & 0xff; // 手抜きローテート
 
             sbox[i] = s;
+//            sbox3[i] = s << 24; 
+//            sbox2[i] = s << 16; 
+//            sbox1[i] = s << 8; 
 /*
             // 個別で逆も計算できるが省略
             r = (i << 1) ^ (i << 3) ^ (i << 6) ^ 0x5;
@@ -79,87 +90,43 @@ public class AES extends OneBlock {
 /*/          
             ibox[s] = i;
 //*/
-            int gf = GF[s]; // 前段階のsboxを含める
+            int gf2 = GF[s]; // 前段階のsboxを含める
             // 1,2,3しかないのに個別に mulとかしてはいけない
             // XOR で演算できるので 3は1と2を合成するだけ
             // sbox込み あとで XOR できるところまで計算
-            MIX0[i] = s * 0x00010101 ^ gf * 0x01000001;
-            MIX1[i] = s * 0x01000101 ^ gf * 0x01010000;
-            MIX2[i] = s * 0x01010001 ^ gf * 0x00010100;
-            MIX3[i] = s * 0x01010100 ^ gf * 0x00000101;
+/*
+            MIX0[i] = s * 0x00010101 ^ gf2 * 0x01000001;
+            MIX1[i] = s * 0x01000101 ^ gf2 * 0x01010000;
+            MIX2[i] = s * 0x01010001 ^ gf2 * 0x00010100;
+            MIX3[i] = s * 0x01010100 ^ gf2 * 0x00000101;
+*/
+            LMIX0[i] = s * 0x00010101l ^ gf2 * 0x01000001l;
+            LMIX1[i] = s * 0x01000101l ^ gf2 * 0x01010000l;
+            LMIX2[i] = s * 0x01010001l ^ gf2 * 0x00010100l;
+            LMIX3[i] = s * 0x01010100l ^ gf2 * 0x00000101l;
+
+            MIX0[i] = (int) LMIX0[i];
+            MIX1[i] = (int) LMIX1[i];
+            MIX2[i] = (int) LMIX2[i];
+            MIX3[i] = (int) LMIX3[i];
 
             // 同じ原理で個別の計算を省略する
-            gf = GF[i];
-            int gf4 = GF[gf];
-            int gf7 = gf4 ^ gf ^ i;
+            gf2 = GF[i];
+            int gf4 = GF[gf2];
+            int gf7 = gf4 ^ gf2 ^ i;
             int gf9x = (GF[gf4] ^ i) * 0x01010101;
 
-            // iboxなし
-            IMIX0[i] = gf9x ^ (gf7 << 24) ^  gf        ^ (gf4 <<  8);
-            IMIX1[i] = gf9x ^ (gf7 << 16) ^ (gf << 24) ^  gf4       ;
-            IMIX2[i] = gf9x ^ (gf7 <<  8) ^ (gf << 16) ^ (gf4 << 24);
-            IMIX3[i] = gf9x ^  gf7        ^ (gf <<  8) ^ (gf4 << 16);
+            // iboxあり
+            IMIX0[s] = gf9x ^ (gf7 << 24) ^  gf2        ^ (gf4 <<  8);
+            IMIX1[s] = gf9x ^ (gf7 << 16) ^ (gf2 << 24) ^  gf4       ;
+            IMIX2[s] = gf9x ^ (gf7 <<  8) ^ (gf2 << 16) ^ (gf4 << 24);
+            IMIX3[s] = gf9x ^  gf7        ^ (gf2 <<  8) ^ (gf4 << 16);
         }
 
         n = 1;
         for (int i = 1; i < 11; i++) { // 使う範囲で生成
             Rcon[i] = n << 24;
             n = GF[n];
-        }
-    }
-
-    /**
-     * Sec. 5.2.
-     *
-     * @param s
-     * @param round
-     */
-    private void addRoundKey(int[] s, int round) {
-        for (int c = 0; c < 4; c++) {
-            s[c] ^= w[round + c];
-        }
-    }
-
-    /**
-     * ShiftRows() の逆 + SubBytes() の逆.
-     */
-    private static void invShiftSub(int[] s) {
-        int a = s[0], b = s[1], c = s[2], d = s[3];
-        int e, f, g, h;
-
-        e  = ibox[a >>> 24       ] << 24
-          ^  ibox[d >>  16 & 0xff] << 16;
-        e ^= ibox[c >>   8 & 0xff] << 8;
-        e |= ibox[b        & 0xff];
-        f  = ibox[b >>> 24       ] << 24
-          ^  ibox[a >>  16 & 0xff] << 16;
-        f ^= ibox[d >>   8 & 0xff] << 8
-          ^  ibox[c        & 0xff];
-        g  = ibox[c >>> 24       ] << 24
-          ^  ibox[b >>  16 & 0xff] << 16;
-        g ^= ibox[a >>   8 & 0xff] << 8;
-        g ^= ibox[d        & 0xff];
-        h  = ibox[d >>> 24       ] << 24
-          ^  ibox[c >>  16 & 0xff] << 16;
-        h ^= ibox[b >>   8 & 0xff] << 8;
-        h ^= ibox[a        & 0xff];
-
-        s[0] = e;
-        s[1] = f;
-        s[2] = g;
-        s[3] = h;
-    }
-
-    /**
-     * MixColumns() の逆.
-     */
-    private static void invMixColumns(int[] s) {
-        for (int c = 0; c < 4; c++) {
-            int d = s[c];
-            s[c] = IMIX0[d >>> 24       ]
-                 ^ IMIX1[d >>  16 & 0xff]
-                 ^ IMIX2[d >>   8 & 0xff]
-                 ^ IMIX3[d        & 0xff];
         }
     }
 
@@ -174,9 +141,9 @@ public class AES extends OneBlock {
      * @return
      */
     private static int rotsubWord(int t) {
-        return sbox[t >>  16 & 0xff] << 24
-             | sbox[t >>   8 & 0xff] << 16
-             | sbox[t        & 0xff] <<  8
+        return (sbox[t >>  16 & 0xff] << 24)
+             | (sbox[t >>   8 & 0xff] << 16)
+             | (sbox[t        & 0xff] << 8)
              | sbox[t >>> 24       ];
     }
 
@@ -186,14 +153,16 @@ public class AES extends OneBlock {
      * @return
      */
     private static int subWord(int word) {
-        return sbox[word >>> 24       ] << 24
-             | sbox[word >>  16 & 0xff] << 16
-             | sbox[word >>   8 & 0xff] <<  8
+        return (sbox[word >>> 24       ] << 24)
+             | (sbox[word >>  16 & 0xff] << 16)
+             | (sbox[word >>   8 & 0xff] << 8)
              | sbox[word        & 0xff];
     }
 
     private static final int Nb = 4;
     private int Nr4;
+    
+    private long[] bw;
 
     /**
      * 鍵.
@@ -212,9 +181,9 @@ public class AES extends OneBlock {
         int Nr = Nk + 6;
         Nr4 = Nr * 4;
 
-        // ラウンドキーの初期化 ワード列版 128*11?
+        // ラウンド鍵の初期化 ワード列版 128*11?
         w = new int[Nb * (Nr + 1)];
-        btoi(key, 0, w, 0, Nk);
+        btoi(key, 0, w, Nk);
         int temp;
         for (int i = Nk; i < Nb * (Nr + 1); i++) {
             temp = w[i - 1];
@@ -225,89 +194,179 @@ public class AES extends OneBlock {
             }
             w[i] = w[i - Nk] ^ temp;
         }
-    }
-
-    private static void btoi(final byte[] src, int offset, int[] dst, int doffset, int length) {
-        for (int i = 0; i < length * 4; i += 4) {
-            int t = offset + i;
-            dst[doffset + i / 4]
-                    = ( src[t    ]         << 24)
-                    | (Byte.toUnsignedInt(src[t + 1]) << 16)
-                    | (Byte.toUnsignedInt(src[t + 2]) <<  8)
-                    |  Byte.toUnsignedInt(src[t + 3]);
+        
+        int[] wt = new int[Nb];
+        bw = new long[Nr*2];
+        for (int i = 0; i < Nr; i++ ) {
+            System.arraycopy(w, i * Nb, wt, 0, Nb);
+            bw[i*2  ] = (((long)wt[0]) << 32) | (((long)wt[1]) & 0xffffffffl);
+            bw[i*2+1] = (((long)wt[2]) << 32) | (((long)wt[3]) & 0xffffffffl);
         }
-    }
-
-    private static byte[] itob(final int[] src) {
-        byte[] ss = new byte[16];
-        for (int i = 0; i < 4; i++) {
-            int l = i*4;
-            ss[l    ] = (byte) (src[i] >> 24);
-            ss[l + 1] = (byte) (src[i] >> 16);
-            ss[l + 2] = (byte) (src[i] >>  8);
-            ss[l + 3] = (byte)  src[i]       ;
+        
+        // デコード用ラウンド鍵 + MixColumns
+        dw = new int[w.length - 4];
+        for ( int i = Nb; i < Nb * Nr; i+= Nb) {
+            for (int c = 0; c < 4; c++ ) {
+                int d = subWord(w[i+c]); // IMIX0はibox込みなのでiboxをsboxで消す
+                dw[i+c] = IMIX0[d >>> 24]
+                        ^ IMIX1[(d >> 16) & 0xff]
+                        ^ IMIX2[(d >>  8) & 0xff]
+                        ^ IMIX3[ d        & 0xff];
+            }
         }
-        return ss;
     }
 
     /**
-     * 使わない
+     * 複数パラメータは持たない
      *
      * @param key
-     * @param iv
      */
     @Override
-    public void init(byte[] key, byte[] iv) {
-        throw new SecurityException();
+    public void init(byte[]... key) {
+        init(key[0]);
+    }
+    
+    @Override
+    public byte[] encrypt(byte[] src, int offset, int length) {
+        byte[] ret = new byte[length];
+        int of = 0;
+        while (length > of) {
+            byte[] x = encrypt(src,offset);
+            System.arraycopy(x, 0, ret, of, x.length);
+            offset += x.length;
+            of += x.length;
+        }
+        return ret;
     }
 
     /**
      * AES エンコード
      * AMD Ryzen 5 2600X で AES/CBCで 950Mbpsを超える
      *
-     * @param src source 16byte
+     * @param src planetext 16byte
      * @param offset 先頭位置
+     * @return chipertext
      */
     @Override
-    public byte[] encrypt(final byte[] src, final int offset) {
-        int t = offset;
-        // AddRoundKey
-        int a = w[0], b = w[1], c = w[2], d = w[3];
-        for (int i = 0; i < 4; i++) {
-            int n = 24 - 8 * i;
-            a ^= ((src[t     ] & 0xff) << n);
-            b ^= ((src[t +  4] & 0xff) << n);
-            c ^= ((src[t +  8] & 0xff) << n);
-            d ^= ((src[t + 12] & 0xff) << n);
-            t++;
+    public byte[] encrypt(final byte[] src, int offset) {
+        long a = 0, b = 0;
+        for ( int i = 0; i < 8; i++ ) {
+            a <<= 8;
+            a |= src[offset + i] & 0xff;
+            b <<= 8;
+            b |= src[offset+8+ i] & 0xff;
         }
+        // AddRoundKey
+        a ^= bw[0];
+        b ^= bw[1];
+        int nr = Nr4/2;
         
-        // SubBytes + ShiftRow + MixColumns
-        for (int r4 = 4; r4 < Nr4; r4 += 4) {
-            int e, f, g;
-            e  = MIX0[ a >>> 24        ]
-              ^  MIX1[(b >>  16) & 0xff];
-            f  = MIX0[ b >>> 24        ]
-              ^  MIX1[(c >>  16) & 0xff];
-            g  = MIX0[ c >>> 24        ]
-              ^  MIX1[(d >>  16) & 0xff];
-            e ^= MIX2[(c >>   8) & 0xff]
-              ^  MIX3[ d         & 0xff];
-            f ^= MIX2[(d >>   8) & 0xff]
-              ^  MIX3[ a         & 0xff];
-            d  = MIX0[ d >>> 24        ];
-            g ^= MIX2[(a >>   8) & 0xff]
-              ^  MIX3[ b         & 0xff];
-            d ^= MIX1[(a >>  16) & 0xff];
-            d ^= MIX2[(b >>   8) & 0xff];
-            d ^= MIX3[ c         & 0xff];
+        for (int r = 2; r < nr; r+=2) {
+            // SubBytes + ShiftRow + MixColumns
+            long e, g;
+            e  = LMIX0[(int)(a >>> 0x38)]
+              ^  LMIX1[(int)(a >> 16) & 0xff];
+            g  = LMIX0[(int)(b >>> 56)]
+              ^  LMIX1[(int) b >> 16 & 0xff];
+            e ^= LMIX2[(int)(b >> 40) & 0xff]
+              ^  LMIX3[(int)b & 0xff];
+            g ^= LMIX2[(int)(a >> 40) & 0xff]
+              ^  LMIX3[(int)a & 0xff];
+            e <<= 32;
+            g <<= 32;
+            e ^= LMIX0[(int)(a >> 24) & 0xff]
+              ^  LMIX1[(int)(b >> 48) & 0xff];
+            g ^= LMIX0[(int)b >> 24 & 0xff];
+            g ^= LMIX1[(int)(a >> 48) & 0xff];
+            e ^= LMIX2[(int)b >> 8 & 0xff]
+              ^  LMIX3[(int)(a >> 32) & 0xff];
+            g ^= LMIX2[(int)(a >> 8) & 0xff];
+            g ^= LMIX3[(int)(b >> 32) & 0xff];
+
+//            e |= f & 0xffffffffl;
+            a = e ^ bw[r];
+            b = g ^ bw[r+1];
             // AddRoundKey
-            a = e ^ w[r4    ];
-            b = f ^ w[r4 + 1];
-            c = g ^ w[r4 + 2];
-            d ^=    w[r4 + 3];
+//            a = e ^ w[r4++  ];
+//            b = f ^ w[r4++  ];
+//            c = g ^ w[r4++  ];
+//            d ^=    w[r4++  ];
+        }
+//        s[0] = a; s[1] = b;
+        
+
+        // SubBytes + ShiftRows
+        int e, f, g, d;
+        e =  (sbox[(int)(a >>> 56)] << 24)
+          |  (sbox[(int)(a >> 16) & 0xff] << 16);
+        e |= (sbox[(int)(b >> 40) & 0xff] << 8)
+          |   sbox[(int) b        & 0xff];
+        f =  (sbox[(int)(a >> 24) & 0xff] << 24)
+          |  (sbox[(int)(b >> 48) & 0xff] << 16);
+        f |= (sbox[(int)(b >>  8) & 0xff] << 8)
+          |   sbox[(int)(a >> 32) & 0xff];
+        g  = (sbox[(int)(b >> 56) & 0xff] << 24)
+          |  (sbox[(int)(b >> 16) & 0xff] << 16);
+        g |= (sbox[(int)(a >> 40) & 0xff] << 8)
+          |   sbox[(int) a        & 0xff];
+        d  = (sbox[(int)(b >> 24) & 0xff] << 24)
+          |  (sbox[(int)(a >> 48) & 0xff] << 16)
+          |  (sbox[(int)(a >> 8) & 0xff] << 8)
+          |   sbox[(int)(b >> 32) & 0xff];
+
+        // AddRoundKey
+        return itob(new int[] {
+            e ^ w[Nr4] ,
+            f ^ w[Nr4 + 1],
+            g ^ w[Nr4 + 2],
+            d ^ w[Nr4 + 3]
+        });
+    }
+
+    /**
+     * AES エンコード
+     * AMD Ryzen 5 2600X で AES/CBCで 950Mbpsを超える
+     *
+     * @param src planetext 16byte
+     * @param offset 先頭位置
+     * @return chipertext
+     */
+    @Override
+    public int[] encrypt(final int[] src, int offset) {
+        // AddRoundKey
+        int a = src[offset] ^ w[0], b = src[++offset] ^ w[1], c = src[++offset] ^ w[2], d = src[++offset] ^ w[3];
+        
+        for (int r4 = 4; r4 < Nr4; r4+=4) {
+            // SubBytes + ShiftRow + MixColumns
+            int e, f, g;
+            e  = MIX0[a >>> 24      ]
+              ^  MIX1[b << 8 >>> 24 ];
+            f  = MIX0[b >>> 24      ]
+              ^  MIX1[c << 8 >>> 24 ];
+            g  = MIX0[c >>> 24      ]
+              ^  MIX1[d << 8 >>> 24 ];
+            e ^= MIX2[c << 16 >>> 24]
+              ^  MIX3[d       & 0xff];
+            f ^= MIX2[d << 16 >>> 24]
+              ^  MIX3[a       & 0xff];
+            d  = MIX0[d >>> 24      ];
+            g ^= MIX2[a << 16 >>> 24]
+              ^  MIX3[b       & 0xff];
+            d ^= MIX1[a << 8 >>> 24 ];
+            d ^= MIX2[b << 16 >>> 24];
+            d ^= MIX3[c       & 0xff];
+            // AddRoundKey
+//            a = e ^ w[r4++  ];
+//            b = f ^ w[r4++  ];
+//            c = g ^ w[r4++  ];
+//            d ^=    w[r4++  ];
+            a = e ^ w[r4  ];
+            b = f ^ w[r4+1  ];
+            c = g ^ w[r4+2  ];
+            d ^=    w[r4+3  ];
         }
 
+        // SubBytes + ShiftRows
         int e, f, g;
         e =  (sbox[ a >>> 24        ] << 24)
           |  (sbox[(b >>  16) & 0xff] << 16);
@@ -327,28 +386,68 @@ public class AES extends OneBlock {
           |   sbox[ c         & 0xff];
 
         // AddRoundKey
-        return itob( new int[] {
+        return new int[] {
             e ^ w[Nr4] ,
             f ^ w[Nr4 + 1],
             g ^ w[Nr4 + 2],
             d ^ w[Nr4 + 3]
-        } );
+        };
     }
 
     @Override
-    public byte[] decrypt(final byte[] src, final int offset) {
+    public int[] decrypt(final int[] src, final int offset) {
+        int a,b,c,d;
+        a = w[Nr4 + 0] ^ src[offset + 0];
+        b = w[Nr4 + 1] ^ src[offset + 1];
+        c = w[Nr4 + 2] ^ src[offset + 2];
+        d = w[Nr4 + 3] ^ src[offset + 3];
 
-        int[] s = new int[4];
-        btoi(src, offset, s, 0, 4);
-        addRoundKey(s, Nr4);
-        invShiftSub(s);
-        for (int r = Nr4 - 4; r >= 4; r-=4) {
-            addRoundKey(s, r);
-            invMixColumns(s);
-            invShiftSub(s);
+        for (int r4 = Nr4 - 4; r4 > 0; r4-=4) {
+            int e, f, g;
+        
+            e = IMIX0[a >>> 24       ]
+                 ^ IMIX1[d << 8 >>> 24]
+                 ^ IMIX2[c << 16 >>> 24]
+                 ^ IMIX3[b        & 0xff];
+            f = IMIX0[b >>> 24       ]
+                 ^ IMIX1[a >>  16 & 0xff]
+                 ^ IMIX2[d >>   8 & 0xff]
+                 ^ IMIX3[c        & 0xff];
+            g = IMIX0[c >>> 24       ]
+                 ^ IMIX1[b >>  16 & 0xff]
+                 ^ IMIX2[a >>   8 & 0xff]
+                 ^ IMIX3[d        & 0xff];
+            d = IMIX0[d >>> 24       ]
+                 ^ IMIX1[c >>  16 & 0xff]
+                 ^ IMIX2[b >>   8 & 0xff]
+                 ^ IMIX3[a        & 0xff]
+                 ^  dw[r4 + 3];
+            a = e ^ dw[r4];
+            b = f ^ dw[r4 + 1];
+            c = g ^ dw[r4 + 2];
         }
-        addRoundKey(s, 0);
+        int e, f, g, h;
+        e  = ibox[a >>> 24       ] << 24
+          ^  ibox[d >>  16 & 0xff] << 16;
+        e ^= ibox[c >>   8 & 0xff] << 8;
+        e |= ibox[b        & 0xff];
+        f  = ibox[b >>> 24       ] << 24
+          ^  ibox[a >>  16 & 0xff] << 16;
+        f ^= ibox[d >>   8 & 0xff] << 8
+          ^  ibox[c        & 0xff];
+        g  = ibox[c >>> 24       ] << 24
+          ^  ibox[b >>  16 & 0xff] << 16;
+        g ^= ibox[a >>   8 & 0xff] << 8;
+        g ^= ibox[d        & 0xff];
+        h  = ibox[d >>> 24       ] << 24
+          ^  ibox[c >>  16 & 0xff] << 16;
+        h ^= ibox[b >>   8 & 0xff] << 8;
+        h ^= ibox[a        & 0xff];
 
-        return itob(s);
+        return new int[] {
+            e ^ w[0],
+            f ^ w[1],
+            g ^ w[2],
+            h ^ w[3]};
     }
 }

@@ -14,8 +14,9 @@ public final class OFB extends StreamMode {
     }
 
     @Override
-    public void init(byte[] key, byte[] iv) {
-        super.init(key);
+    public void init(byte[]... key) {
+        super.init(key[0]);
+        byte[] iv = key[1];
         vector = new byte[getBlockLength() / 8];
         System.arraycopy(iv, 0, vector, 0, vector.length > iv.length ? iv.length : vector.length);
         next();

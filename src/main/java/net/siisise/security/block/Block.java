@@ -6,7 +6,7 @@ package net.siisise.security.block;
  * 暗号化、復号が、固定長で行われる。
  * CFBやOFBを使うとストリームモードでも利用可能。
  */
-public interface Block {
+public interface Block extends EncBlock, DecBlock {
 
     /**
      * Bit block length.
@@ -27,54 +27,11 @@ public interface Block {
     void init(byte[] key);
 
     /**
-     *
-     * @param key シークレット鍵
-     * @param iv
+     * 後ろの要素が外側のBlockにかかる.
+     * AES CBC の場合、ivをCBCがとり、keyをAESがとる。
+     * @param keyandparam シークレット鍵とIVなど
      */
-    void init(byte[] key, byte[] iv);
+    void init(byte[]... keyandparam);
 
-    /**
-     * block mode 暗号化用.
-     *
-     * @param src
-     * @param offset
-     * @param length 固定サイズの倍数であること. バイト長.
-     * @return
-     */
-    byte[] encrypt(byte[] src, int offset, int length);
-    void encrypt(byte[] src, int offset, byte[] dst, int doffset, int length);
-
-    /**
-     * 1ブロック暗号化処理.
-     * 固定長のブロック単位で呼び出される。
-     * パディングは考慮しない。
-     *
-     * @param src ブロックを含んだ列
-     * @param offset ブロックの位置
-     * @return 暗号化された列
-     */
-    byte[] encrypt(byte[] src, int offset);
-
-    /**
-     *
-     * @deprecated
-     * @param src
-     * @param offset
-     * @param length
-     * @return
-     */
-    byte[] decrypt(byte[] src, int offset, int length);
-    void decrypt(byte[] src, int offset, byte[] dst, int doffset, int length);
-
-    /**
-     * 復号処理.
-     * ブロック単位で呼び出される.
-     * パディングは考慮しない.
-     *
-     * @param src ブロックを含んだ配列
-     * @param offset ブロックの位置
-     * @return 復号されたデータ
-     */
-    byte[] decrypt(byte[] src, int offset);
 
 }

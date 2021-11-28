@@ -207,7 +207,7 @@ public class DES extends OneBlock {
     }
 
     @Override
-    public void init(byte[] key, byte[] iv) {
+    public void init(byte[]... key) {
         throw new SecurityException("さぽーとしてない");
     }
 
