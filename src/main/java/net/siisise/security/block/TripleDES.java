@@ -3,7 +3,7 @@ package net.siisise.security.block;
 /**
  * 3DES. TDEA DESede.
  * とある暗号アルゴリズム.
- * 
+ * DESede ともいう
  * ANSI X9.52-1998
  * @deprecated AES
  */
@@ -13,7 +13,7 @@ public class TripleDES extends OneBlock {
     private DES block2;
     private DES block3;
     
-    TripleDES() {
+    public TripleDES() {
         block1 = new DES();
         block2 = new DES();
         block3 = new DES();

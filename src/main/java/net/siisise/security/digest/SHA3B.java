@@ -9,7 +9,6 @@ import net.siisise.security.PacketS;
  * Secure Hash Algorithm-3 (SHA-3) family.
  * w=64 (long) で最適化したもの
  * ビット反転で作ってしまったもの
- * @author okome
  */
 public class SHA3B extends MessageDigest {
 

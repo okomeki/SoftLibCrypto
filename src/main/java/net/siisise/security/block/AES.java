@@ -25,10 +25,10 @@ public class AES extends IntBlock {
     private static final int[] Rcon = new int[11];
 
     private static final int[] sbox = new int[256];
-    private static final int[] MIX0 = new int[256];
-    private static final int[] MIX1 = new int[256];
-    private static final int[] MIX2 = new int[256];
-    private static final int[] MIX3 = new int[256];
+//    private static final int[] MIX0 = new int[256];
+//    private static final int[] MIX1 = new int[256];
+//    private static final int[] MIX2 = new int[256];
+//    private static final int[] MIX3 = new int[256];
     private static final long[] LMIX0 = new long[256];
     private static final long[] LMIX1 = new long[256];
     private static final long[] LMIX2 = new long[256];
@@ -76,7 +76,7 @@ public class AES extends IntBlock {
             // r ガロア体の逆数変換 1回しか使わないので使い捨て
             int r = (i == 0) ? 0 : expGF[255 - logGF[i]];  // むつかしいところ
             int s = r ^ (r << 1) ^ (r << 2) ^ (r << 3) ^ (r << 4);
-            s = 0x63 ^ (s ^ (s >> 8)) & 0xff; // 手抜きローテート
+            s = 0x63 ^ s ^ ((s >> 8) * 0x101); // 手抜きローテート
 
             sbox[i] = s;
 //            sbox3[i] = s << 24; 
@@ -105,10 +105,10 @@ public class AES extends IntBlock {
             LMIX2[i] = s * 0x01010001l ^ gf2 * 0x00010100l;
             LMIX3[i] = s * 0x01010100l ^ gf2 * 0x00000101l;
 
-            MIX0[i] = (int) LMIX0[i];
-            MIX1[i] = (int) LMIX1[i];
-            MIX2[i] = (int) LMIX2[i];
-            MIX3[i] = (int) LMIX3[i];
+//            MIX0[i] = (int) LMIX0[i];
+//            MIX1[i] = (int) LMIX1[i];
+//            MIX2[i] = (int) LMIX2[i];
+//            MIX3[i] = (int) LMIX3[i];
 
             // 同じ原理で個別の計算を省略する
             gf2 = GF[i];
@@ -219,7 +219,7 @@ public class AES extends IntBlock {
     /**
      * 複数パラメータは持たない
      *
-     * @param key
+     * @param key 鍵1つのみ 128,192,256bit
      */
     @Override
     public void init(byte[]... key) {
@@ -250,6 +250,7 @@ public class AES extends IntBlock {
     @Override
     public byte[] encrypt(final byte[] src, int offset) {
         long a = 0, b = 0;
+        int nr = Nr4/2;
         for ( int i = 0; i < 8; i++ ) {
             a <<= 8;
             a |= src[offset + i] & 0xff;
@@ -259,7 +260,6 @@ public class AES extends IntBlock {
         // AddRoundKey
         a ^= bw[0];
         b ^= bw[1];
-        int nr = Nr4/2;
         
         for (int r = 2; r < nr; r+=2) {
             // SubBytes + ShiftRow + MixColumns
@@ -283,17 +283,10 @@ public class AES extends IntBlock {
             g ^= LMIX2[(int)(a >> 8) & 0xff];
             g ^= LMIX3[(int)(b >> 32) & 0xff];
 
-//            e |= f & 0xffffffffl;
+            // AddRoundKey
             a = e ^ bw[r];
             b = g ^ bw[r+1];
-            // AddRoundKey
-//            a = e ^ w[r4++  ];
-//            b = f ^ w[r4++  ];
-//            c = g ^ w[r4++  ];
-//            d ^=    w[r4++  ];
         }
-//        s[0] = a; s[1] = b;
-        
 
         // SubBytes + ShiftRows
         int e, f, g, d;
@@ -331,10 +324,95 @@ public class AES extends IntBlock {
      * @param offset 先頭位置
      * @return chipertext
      */
+
+    @Override
+    public int[] encrypt(final int[] src, int offset) {
+        long a, b;
+        a = ((long)src[offset]) << 32;
+        a |= src[offset+1] & 0xffffffffl;
+        b = ((long)src[offset+2]) << 32;
+        b |= src[offset+3] & 0xffffffffl;
+        // AddRoundKey
+        a ^= bw[0];
+        b ^= bw[1];
+        int nr = Nr4/2;
+        
+        for (int r = 2; r < nr; r+=2) {
+            // SubBytes + ShiftRow + MixColumns
+            long c, g;
+            c  = LMIX0[(int)(a >>> 0x38)]
+              ^  LMIX1[(int)(a >> 16) & 0xff];
+            g  = LMIX0[(int)(b >>> 56)]
+              ^  LMIX1[(int) b >> 16 & 0xff];
+            c ^= LMIX2[(int)(b >> 40) & 0xff]
+              ^  LMIX3[(int)b & 0xff];
+            g ^= LMIX2[(int)(a >> 40) & 0xff]
+              ^  LMIX3[(int)a & 0xff];
+            c <<= 32;
+            g <<= 32;
+            c ^= LMIX0[(int)(a >> 24) & 0xff]
+              ^  LMIX1[(int)(b >> 48) & 0xff];
+            g ^= LMIX0[(int)b >> 24 & 0xff];
+            g ^= LMIX1[(int)(a >> 48) & 0xff];
+            c ^= LMIX2[(int)b >> 8 & 0xff]
+              ^  LMIX3[(int)(a >> 32) & 0xff];
+            g ^= LMIX2[(int)(a >> 8) & 0xff];
+            g ^= LMIX3[(int)(b >> 32) & 0xff];
+
+//            c |= f & 0xffffffffl;
+            a = c ^ bw[r];
+            b = g ^ bw[r+1];
+            // AddRoundKey
+//            a = c ^ w[r4++  ];
+//            b = f ^ w[r4++  ];
+//            c = g ^ w[r4++  ];
+//            h ^=    w[r4++  ];
+        }
+//        s[0] = a; s[1] = b;
+        
+
+        // SubBytes + ShiftRows
+        int e, f, g, h;
+        e =  (sbox[(int)(a >>> 56)] << 24)
+          |  (sbox[(int)(a >> 16) & 0xff] << 16);
+        e |= (sbox[(int)(b >> 40) & 0xff] << 8)
+          |   sbox[(int) b        & 0xff];
+        f =  (sbox[(int)(a >> 24) & 0xff] << 24)
+          |  (sbox[(int)(b >> 48) & 0xff] << 16);
+        f |= (sbox[(int)(b >>  8) & 0xff] << 8)
+          |   sbox[(int)(a >> 32) & 0xff];
+        g  = (sbox[(int)(b >> 56) & 0xff] << 24)
+          |  (sbox[(int)(b >> 16) & 0xff] << 16);
+        g |= (sbox[(int)(a >> 40) & 0xff] << 8)
+          |   sbox[(int) a        & 0xff];
+        h  = (sbox[(int)(b >> 24) & 0xff] << 24)
+          |  (sbox[(int)(a >> 48) & 0xff] << 16)
+          |  (sbox[(int)(a >> 8) & 0xff] << 8)
+          |   sbox[(int)(b >> 32) & 0xff];
+
+        // AddRoundKey
+        return new int[] {
+            e ^ w[Nr4] ,
+            f ^ w[Nr4 + 1],
+            g ^ w[Nr4 + 2],
+            h ^ w[Nr4 + 3]
+        };
+    }
+
+    /**
+     * AES エンコード
+     * AMD Ryzen 5 2600X で AES/CBCで 950Mbpsを超える
+     *
+     * @param src planetext 16byte
+     * @param offset 先頭位置
+     * @return chipertext
+     */
+/*
     @Override
     public int[] encrypt(final int[] src, int offset) {
         // AddRoundKey
         int a = src[offset] ^ w[0], b = src[++offset] ^ w[1], c = src[++offset] ^ w[2], d = src[++offset] ^ w[3];
+        long x;
         
         for (int r4 = 4; r4 < Nr4; r4+=4) {
             // SubBytes + ShiftRow + MixColumns
@@ -356,10 +434,10 @@ public class AES extends IntBlock {
             d ^= MIX2[b << 16 >>> 24];
             d ^= MIX3[c       & 0xff];
             // AddRoundKey
-//            a = e ^ w[r4++  ];
+//            a = c ^ w[r4++  ];
 //            b = f ^ w[r4++  ];
 //            c = g ^ w[r4++  ];
-//            d ^=    w[r4++  ];
+//            h ^=    w[r4++  ];
             a = e ^ w[r4  ];
             b = f ^ w[r4+1  ];
             c = g ^ w[r4+2  ];
@@ -393,7 +471,7 @@ public class AES extends IntBlock {
             d ^ w[Nr4 + 3]
         };
     }
-
+*/
     @Override
     public int[] decrypt(final int[] src, final int offset) {
         int a,b,c,d;

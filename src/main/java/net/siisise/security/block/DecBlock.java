@@ -1,16 +1,16 @@
 package net.siisise.security.block;
 
 /**
- *
+ * ブロック復号系.
  */
 public interface DecBlock {
     
     /**
-     *
-     * @param src
-     * @param offset
-     * @param length
-     * @return
+     * 復号処理.
+     * @param src 暗号データ列
+     * @param offset offset
+     * @param length 長さ
+     * @return 復号データ
      */
     byte[] decrypt(byte[] src, int offset, int length);
     void decrypt(byte[] src, int offset, byte[] dst, int doffset, int length);

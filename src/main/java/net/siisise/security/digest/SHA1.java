@@ -4,6 +4,7 @@ import net.siisise.security.io.BlockOutputStream;
 
 /**
  * RFC 3174 SHA-1.
+ * 160 bit message digest.
  * FIPS 180-1.
  * @deprecated 
  */

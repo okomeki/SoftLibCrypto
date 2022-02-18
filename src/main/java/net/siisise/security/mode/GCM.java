@@ -20,8 +20,7 @@ public class GCM extends StreamMode {
 
     /**
      * 
-     * @param key
-     * @param iv 毎回固有であること
+     * @param key 1つめkey 2つめiv 毎回固有であること
      */
     @Override
     public void init(byte[]... key) {

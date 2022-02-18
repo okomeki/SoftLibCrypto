@@ -56,7 +56,11 @@ public class MD5 extends BlockMessageDigest {
         digestLength = 128 / 8;
         engineReset();
     }
-    
+
+    /**
+     * 特定の長さのMD5.
+     * @param len 8の倍数bit 8 から 128 まで
+     */
     public MD5(int len) {
         super("MD5-" + len);
         if ( len < 8 || len > 128 ) {

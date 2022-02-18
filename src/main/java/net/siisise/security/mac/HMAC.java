@@ -17,9 +17,9 @@ import net.siisise.security.digest.BlockMessageDigest;
  * opad 0x5c をB回繰り返したもの
  *
  * 対応可能なアルゴリズム
- * HMAC-MD5         B  512bit L 128bit
+ * HMAC-MD5         B  512bit L 128bit RFC 6151
  * HMAC-MD5-96      B  512bit L  96bit
- * HMAC-SHA-1       B  512bit L 160bit
+ * HMAC-SHA-1       B  512bit L 160bit RFC 4634
  * HMAC-SHA-1-96    B  512bit L  96bit
  * HMAC-SHA-224     B  512bit L 224bit
  * HMAC-SHA-256     B  512bit L 256bit
@@ -38,6 +38,7 @@ import net.siisise.security.digest.BlockMessageDigest;
  * RFC 2202 テスト
  * RFC 4231 Identifiers and Test Vector for HMAC-SHA-224, HMAC-SHA-256,
  *                          HMAC-SHA-384, and HMAC-SHA-512
+ * RFC 6234 US Secure Hash Algorithms (SHA and SHA-based HMAC and HKDF)
  */
 public class HMAC implements MAC {
 
@@ -55,6 +56,16 @@ public class HMAC implements MAC {
     private byte[] k_opad;
 
     /**
+     * 鍵をあとにする初期化.
+     * ブロック長 512ビット または Spec対応用.
+     * @param md 
+     */
+    public HMAC(MessageDigest md) {
+//        spi = new HMACSpi();
+        setMD(md);
+    }
+    
+    /**
      * ブロック長 512ビット または Spec対応用.
      *
      * @param md MD5, SHA-1, SHA-256 など(汎用)512bitブロックのもの または
@@ -62,13 +73,7 @@ public class HMAC implements MAC {
      * @param key 鍵 ブロック長 512bitのもの.
      */
     public HMAC(MessageDigest md, byte[] key) {
-//        spi = new HMACSpi();
-        this.md = md;
-        if (md instanceof BlockMessageDigest) {
-            blockLength = ((BlockMessageDigest) md).getBitBlockLength();
-        } else {
-            blockLength = 512;
-        }
+        setMD(md);
         init(key);
     }
 
@@ -109,6 +114,7 @@ public class HMAC implements MAC {
      */
     public void init(SecretKey key) {
         String alg = key.getAlgorithm().toUpperCase();
+        MessageDigest md = null;
         if (alg.startsWith("HMAC-")) { // RFC系の名前?
             md = (MessageDigest) BlockMessageDigest.getInstance(key.getAlgorithm().substring(5));
         } else if (alg.startsWith("HMAC")) {
@@ -119,19 +125,25 @@ public class HMAC implements MAC {
                     throw new SecurityException(ex);
                 }
             }
-
         } else {
             throw new java.lang.UnsupportedOperationException();
         }
-        this.md = md;
-        if (md instanceof BlockMessageDigest) {
-            blockLength = ((BlockMessageDigest) md).getBitBlockLength();
-        }
+
+        setMD(md);
         init(key.getEncoded());
+    }
+    
+    private void setMD(MessageDigest md) {
+        this.md = md;
+        if ( md instanceof BlockMessageDigest) {
+            blockLength = ((BlockMessageDigest)md).getBitBlockLength();
+        } else {
+            blockLength = 512;
+        }
     }
 
     /**
-     * 
+     *
      * @return バイト長
      */
     @Override
@@ -168,7 +180,7 @@ public class HMAC implements MAC {
 
     @Override
     public void update(byte[] src) {
-        md.update(src, 0, src.length);
+        md.update(src);
     }
 
     @Override
@@ -181,8 +193,15 @@ public class HMAC implements MAC {
      * @param src
      * @return HMAC値
      */
+    @Override
     public byte[] doFinal(byte[] src) {
-        byte[] m = md.digest(src);
+        md.update(src);
+        return doFinal();
+    }
+
+    @Override
+    public byte[] doFinal() {
+        byte[] m = md.digest();
 
         md.update(k_opad);
         byte[] r = md.digest(m);

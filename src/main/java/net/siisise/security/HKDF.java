@@ -7,7 +7,8 @@ import java.security.MessageDigest;
  * 鍵導出関数. Key Derivation Function KDF.
  * FIPS 198-1 HMAC-based KDF
  * RFC 5869 HKDF.
- * RFC 6234.
+ * RFC 6234 US Secure Hash Algorithms (SHA and SHA-based HMAC and HKDF)
+ *   7.2. HKDF
  * RFC 8619 HKDFのOID.
  *
  */
