@@ -17,11 +17,17 @@ class DecodeStream implements BlockIOListener {
     private final int bsize;
     private byte[] buffer;
 
-    DecodeStream(Block b, OutputStream o, boolean pad) {
-        block = b;
-        this.pad = pad;
+    /**
+     * 
+     * @param block ブロック暗号アルゴリズムとモードを組み合わせたもの
+     * @param out
+     * @param padding paddingを付与する?
+     */
+    DecodeStream(Block block, OutputStream out, boolean padding) {
+        this.block = block;
+        this.pad = padding;
         pac.setDirect(false);
-        out = o;
+        this.out = out;
         bsize = block.getBlockLength() / 8;
     }
 

@@ -6,6 +6,8 @@ package net.siisise.security.mac;
  */
 public interface MAC {
 
+    void init(byte[] key);
+    
     void update(byte[] src);
     void update(byte[] src, int offset, int length);
 

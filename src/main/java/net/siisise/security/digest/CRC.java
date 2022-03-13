@@ -13,7 +13,7 @@ import java.security.MessageDigest;
  */
 public class CRC extends MessageDigest {
 
-    static int[] crc = new int[256];
+    static final int[] crc = new int[256];
 
     static {
         for (int i = 0; i < 256; i++) {

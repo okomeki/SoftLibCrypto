@@ -3,6 +3,7 @@ package net.siisise.security;
 import java.security.Provider;
 import java.util.ArrayList;
 import java.util.List;
+import net.siisise.security.digest.Keccak;
 import net.siisise.security.digest.MD2;
 import net.siisise.security.digest.MD4;
 import net.siisise.security.digest.MD5;
@@ -17,6 +18,8 @@ import net.siisise.security.digest.SHA384;
 import net.siisise.security.digest.SHA512;
 import net.siisise.security.digest.SHA512224;
 import net.siisise.security.digest.SHA512256;
+import net.siisise.security.digest.SHAKE128;
+import net.siisise.security.digest.SHAKE256;
 import net.siisise.security.mac.HMACSpi;
 
 /**
@@ -53,14 +56,16 @@ public final class SiisiseJCA extends Provider {
             }
         });
         putService(new Service(this, "MessageDigest", "SHA-512/256", SHA512256.class.getName(), null, null));
-//        putService(new Service(this, "MessageDigest", "Keccak-224", Keccak.class.getName(), null, null));
-//        putService(new Service(this, "MessageDigest", "Keccak-256", Keccak.class.getName(), null, null));
-//        putService(new Service(this, "MessageDigest", "Keccak-384", Keccak.class.getName(), null, null));
-//        putService(new Service(this, "MessageDigest", "Keccak-512", Keccak.class.getName(), null, null));
+        putService(new Service(this, "MessageDigest", "Keccak-224", Keccak.class.getName(), null, null));
+        putService(new Service(this, "MessageDigest", "Keccak-256", Keccak.class.getName(), null, null));
+        putService(new Service(this, "MessageDigest", "Keccak-384", Keccak.class.getName(), null, null));
+        putService(new Service(this, "MessageDigest", "Keccak-512", Keccak.class.getName(), null, null));
         putService(new Service(this, "MessageDigest", "SHA3-224", SHA3224.class.getName(), null, null));
         putService(new Service(this, "MessageDigest", "SHA3-256", SHA3256.class.getName(), null, null));
         putService(new Service(this, "MessageDigest", "SHA3-384", SHA3384.class.getName(), null, null));
         putService(new Service(this, "MessageDigest", "SHA3-512", SHA3512.class.getName(), null, null));
+        putService(new Service(this, "MessageDigest", "SHAKE128-128", SHAKE128.class.getName(), null, null));
+        putService(new Service(this, "MessageDigest", "SHAKE128-256", SHAKE256.class.getName(), null, null));
         aliases = new ArrayList();
         aliases.add("HMAC-MD5");
         aliases = null;

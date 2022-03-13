@@ -19,6 +19,12 @@ class EncodeStream implements BlockIOListener {
     private final PacketS pac;
     private final boolean padding;
 
+    /**
+     * 
+     * @param b
+     * @param out
+     * @param pad paddingを付与する?
+     */
     EncodeStream(Block b, OutputStream out, boolean pad) {
         block = b;
         this.out = out;

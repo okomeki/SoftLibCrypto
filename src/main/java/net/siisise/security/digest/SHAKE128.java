@@ -11,6 +11,10 @@ public class SHAKE128 extends Keccak {
     static final String OID = SHA3.hashAlgs + ".11";
     static final String OIDlen = SHA3.hashAlgs + ".17";
 
+    /**
+     * 
+     * @param d ビット数
+     */
     public SHAKE128(int d) {
         super("SHAKE128(M,"+d+")", 2 * 128, d, (byte) 0x1f);
     }

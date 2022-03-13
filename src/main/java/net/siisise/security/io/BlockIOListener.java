@@ -14,7 +14,15 @@ public interface BlockIOListener {
      * @return ビット長
      */
     int getBitBlockLength();
-    
+  
+    /**
+     * 非ブロック単位のものをpadding対応して送信するためのもの。
+     * ハッシュ計算などでは利用不可。write または flush の単位で暗号にpaddingを詰める想定
+     * false の場合は close のみ paddingするか、paddingしない
+     * まだない
+     */
+//    void setFlushPadding(boolean pad);
+
     /**
      * データが揃ったらところてんで呼び出される.
      * @param src 元配列

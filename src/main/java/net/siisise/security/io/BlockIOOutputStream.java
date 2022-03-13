@@ -58,16 +58,33 @@ public class BlockIOOutputStream extends OutputStream {
         });
     }
 
+    /**
+     * 1バイト書き
+     * @param b 1バイトデータ
+     * @throws IOException 
+     */
     @Override
     public void write(int b) throws IOException {
         write(new byte[]{(byte) b}, 0, 1);
     }
 
+    /**
+     * データ列書き
+     * @param input データ列
+     * @throws IOException 
+     */
     @Override
     public void write(byte[] input) throws IOException {
         write(input, 0, input.length);
     }
 
+    /**
+     * データ列書き
+     * @param src データ
+     * @param offset 読み位置
+     * @param length サイズ
+     * @throws IOException 
+     */
     @Override
     public void write(byte[] src, int offset, int length) throws IOException {
         if (this.offset > 0) { // 待機データあり

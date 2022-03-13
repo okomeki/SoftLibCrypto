@@ -42,12 +42,12 @@ import net.siisise.security.digest.BlockMessageDigest;
  */
 public class HMAC implements MAC {
 
-    public static final String rsadsi = "1.2.840.113549";
-    public static final String digestAlgorithm = rsadsi + ".2";
-    public static final String idhmacWithSHA224 = digestAlgorithm + ".8";
-    public static final String idhmacWithSHA256 = digestAlgorithm + ".9";
-    public static final String idhmacWithSHA384 = digestAlgorithm + ".10";
-    public static final String idhmacWithSHA512 = digestAlgorithm + ".11";
+    public static final String RSADSI = "1.2.840.113549";
+    public static final String DIGESTALGORITHM = RSADSI + ".2";
+    public static final String idhmacWithSHA224 = DIGESTALGORITHM + ".8";
+    public static final String idhmacWithSHA256 = DIGESTALGORITHM + ".9";
+    public static final String idhmacWithSHA384 = DIGESTALGORITHM + ".10";
+    public static final String idhmacWithSHA512 = DIGESTALGORITHM + ".11";
 
 //    private HMACSpi spi;
     private MessageDigest md;
@@ -112,7 +112,7 @@ public class HMAC implements MAC {
      *
      * @param key
      */
-    public void init(SecretKey key) {
+    public final void init(SecretKey key) {
         String alg = key.getAlgorithm().toUpperCase();
         MessageDigest md = null;
         if (alg.startsWith("HMAC-")) { // RFC系の名前?
@@ -158,6 +158,7 @@ public class HMAC implements MAC {
      *
      * @param key 鍵
      */
+    @Override
     public void init(byte[] key) {
         int b = blockLength / 8;
         md.reset();
