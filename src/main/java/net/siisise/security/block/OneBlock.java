@@ -5,6 +5,11 @@ package net.siisise.security.block;
  */
 public abstract class OneBlock implements Block {
 
+    @Override
+    public int[] getParamLength() {
+        return new int[] { getBlockLength() };
+    }
+
     /**
      * 
      * @param src

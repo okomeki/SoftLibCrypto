@@ -37,6 +37,16 @@ public abstract class BlockMode extends IntBlock {
     public int getBlockLength() {
         return block.getBlockLength();
     }
+    
+    /**
+     * 必要なパラメータの長さ
+     * 後ろが外側用のパラメータ長.
+     * @return 
+     */
+    @Override
+    public int[] getParamLength() {
+        return new int[] {block.getBlockLength(), getBlockLength() };
+    }
 
     static final void xor(byte[] a, byte[] b, int offset, int length) {
         for (int i = 0; i < length; i++) {

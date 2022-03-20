@@ -6,6 +6,11 @@ package net.siisise.security.block;
 public abstract class IntBlock implements Block {
 
     @Override
+    public int[] getParamLength() {
+        return new int[] { getBlockLength() };
+    }
+
+    @Override
     public byte[] encrypt(byte[] src, int offset) {
         int bl = getBlockLength() / 32;
         int[] block = new int[bl];

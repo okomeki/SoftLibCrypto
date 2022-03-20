@@ -15,16 +15,19 @@ public final class CFB extends StreamMode {
     }
 
     /**
-     * 
+     * 最後のパラメータがCFB用.
      * @param key 鍵とInitial Vector
      */
     @Override
     public void init(byte[]... key) {
-        super.init(key[0]);
+        byte[][] nkey = new byte[key.length - 1][];
+        System.arraycopy(key,0,nkey,0,key.length - 1);
+        super.init(nkey);
+        byte[] cfbkey = key[key.length - 1];
         vector = new byte[block.getBlockLength() / 8];
         vectori = new int[block.getBlockLength() / 32];
-        int[] d = new int[key[0].length / 4];
-        System.arraycopy(key[1], 0, vector, 0, vector.length > key[1].length ? key[1].length : vector.length);
+
+        System.arraycopy(cfbkey, 0, vector, 0, vector.length > cfbkey.length ? cfbkey.length : vector.length);
         btoi(vector,0,vectori,vectori.length);
         vectori = block.encrypt(vectori, 0);
     }

@@ -15,6 +15,10 @@ public class CBC extends BlockMode {
         vectori = new int[block.getBlockLength() / 32];
     }
 
+    /**
+     * iv をとる
+     * @param params 
+     */
     @Override
     public void init(byte[]... params) {
         byte[] iv;

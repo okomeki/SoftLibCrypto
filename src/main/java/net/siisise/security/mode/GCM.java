@@ -24,8 +24,10 @@ public class GCM extends StreamMode {
      */
     @Override
     public void init(byte[]... key) {
-        super.init(key[0]);
-        byte[] iv = key[1];
+        byte[][] nkey = new byte[key.length - 1][];
+        System.arraycopy(key,0,nkey,0,key.length - 1);
+        super.init(nkey);
+        byte[] iv = key[key.length - 1];
         vector = new byte[block.getBlockLength() / 8];
         System.arraycopy(iv, 0, vector, 0, vector.length > iv.length ? iv.length : vector.length);
         int vlen = block.getBlockLength() / 8;

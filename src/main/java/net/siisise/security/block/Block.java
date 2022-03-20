@@ -16,12 +16,20 @@ public interface Block extends EncBlock, DecBlock {
      * @return ビット単位のブロック長.
      */
     int getBlockLength();
+    
+    /**
+     * 必要な乱数のビット長のめやす.
+     * IV, secret, solt などの長さ
+     * @return ビット単位の長さの配列
+     */
+    int[] getParamLength();
 
     /**
      * 鍵の設定.
      * アルゴリズムによって鍵長は異なる.
      * それぞれ指定の長さに。
      *
+     * @deprecated 複数とりたいので廃止かな
      * @param key シークレット鍵
      */
     void init(byte[] key);

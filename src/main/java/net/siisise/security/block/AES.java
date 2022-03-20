@@ -134,7 +134,7 @@ public class AES extends IntBlock {
     public int getBlockLength() {
         return blockLength;
     }
-
+    
     /**
      * subWord(rotate(t))
      * @param t

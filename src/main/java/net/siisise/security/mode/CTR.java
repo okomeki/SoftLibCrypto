@@ -19,8 +19,10 @@ public class CTR extends StreamMode {
 
     @Override
     public void init(byte[]... key) {
-        super.init(key[0]);
-        byte[] iv = key[1];
+        byte[][] nkey = new byte[key.length - 1][];
+        System.arraycopy(key, 0, nkey, 0, key.length - 1);
+        super.init(nkey);
+        byte[] iv = key[key.length - 1];
         vlen = block.getBlockLength() / 8;
         vector = new byte[vlen];
         ivector = new BigInteger(iv);

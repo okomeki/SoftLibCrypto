@@ -55,20 +55,33 @@ public class TripleDES extends OneBlock {
         block1 = new DES();
         block2 = new DES();
         block3 = new DES();
-        if ( keys.length == 2) {
-            block1.init(keys[0]);
-            block2.init(keys[1]);
-            block3.init(keys[0]);
-        } else if ( keys.length == 3) {
-            block1.init(keys[0]);
-            block2.init(keys[1]);
-            block3.init(keys[2]);
+        switch (keys.length) {
+            case 1:
+                init(keys[0]);
+                break;
+            case 2:
+                block1.init(keys[0]);
+                block2.init(keys[1]);
+                block3.init(keys[0]);
+                break;
+            case 3:
+                block1.init(keys[0]);
+                block2.init(keys[1]);
+                block3.init(keys[2]);
+                break;
+            default:
+                break;
         }
     }
 
     @Override
     public int getBlockLength() {
         return block1.getBlockLength();
+    }
+    
+    @Override
+    public int[] getParamLength() {
+        return new int[] {getBlockLength() * 3};
     }
     
     @Override
