@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>net.siisise</groupId>
     <artifactId>softlib-crypto</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.1</version>
     <packaging>jar</packaging>
     <name>SoftLibCrypt</name>
     <description>Block Stream Digest Crypt for Java</description>
@@ -92,13 +92,13 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>[5.8.1,)</version>
+            <version>[5.8.2,)</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>net.siisise</groupId>
             <artifactId>softlib</artifactId>
-            <version>1.1.6-SNAPSHOT</version>
+            <version>1.1.6</version>
             <type>jar</type>
         </dependency>
     </dependencies>

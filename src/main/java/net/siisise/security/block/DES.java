@@ -17,7 +17,7 @@ public class DES extends OneBlock {
      * DESのブロック長.
      * 64bit っぽい56bit
      *
-     * @return
+     * @return 64
      */
     @Override
     public int getBlockLength() {

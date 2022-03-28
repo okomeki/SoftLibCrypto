@@ -14,17 +14,21 @@ import java.security.MessageDigest;
  */
 public class HKDF {
 
-    private MessageDigest sha;
+    private HMAC hmac;
 
     public HKDF(MessageDigest sha) {
-        this.sha = sha;
+        hmac = new HMAC(sha);
+    }
+    
+    public HKDF(HMAC mac) {
+        hmac = mac;
     }
 
     /**
      *
      * @param salt 塩 (HMAC鍵) null可
      * @param ikm 秘密鍵
-     * @param info 付加 null可
+     * @param info 付加 null可 saltっぽいもの
      * @param length リクエスト鍵長 (HMACの255倍まで)
      * @return
      */
@@ -43,33 +47,33 @@ public class HKDF {
         if (salt == null) {
             salt = new byte[0];
         }
-        HMAC mac = new HMAC(sha, salt);
-        return mac.doFinal(ikm);
+        hmac.init(salt);
+        return hmac.doFinal(ikm);
     }
 
     /**
      * 鍵長になるまで繰り返し.
      * 
-     * @param prk 中間鍵
-     * @param info 付加
-     * @param length 鍵長
-     * @return 
+     * @param prk PRK 中間鍵
+     * @param info 付加 saltっぽいもの
+     * @param length L 鍵長 byte
+     * @return OKM output keying maerial (of L octets)
      */
     private byte[] expand(byte[] prk, byte[] info, int length) {
-        int l = sha.getDigestLength();
+        int l = hmac.getMacLength();
         int n = ((length + l - 1) / l);
         if (info == null) {
             info = new byte[0];
         }
         PacketS pt = new PacketS();
         byte[] t = new byte[0];
-        HMAC mac = new HMAC(sha, prk);
+        hmac.init(prk);
         byte[] d = new byte[1];
         for (int i = 1; i <= n; i++) {
-            mac.update(t);
-            mac.update(info);
+            hmac.update(t);
+            hmac.update(info);
             d[0] = (byte) i;
-            t = mac.doFinal(d);
+            t = hmac.doFinal(d);
             pt.write(t);
         }
         byte[] r = new byte[length];

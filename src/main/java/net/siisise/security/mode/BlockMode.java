@@ -28,6 +28,11 @@ public abstract class BlockMode extends IntBlock {
         block.init(key);
     }
 
+    /**
+     * 初期化
+     * 
+     * @param params 外側が後ろ
+     */
     @Override
     public void init(byte[]... params) {
         block.init(params);

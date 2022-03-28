@@ -143,7 +143,7 @@ public class HMAC implements MAC {
     }
 
     /**
-     *
+     * HMACのバイト長.
      * @return バイト長
      */
     @Override
