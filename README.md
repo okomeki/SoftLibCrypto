@@ -29,6 +29,14 @@ MD2,MD4,MD5,SHA-1,SHA-2系,SHA-3系
 ## MAC
 HMAC
 
+## 速度
+code | JDK (OpenSSL AES-NI) | SoftLib
+-----|----|------
+AES-CBC encode | 2608 | 1510 
+AES-CBC decode | 2716 | 1144
+
+JDKのCBCが遅いのでCPUの半分くらいは出てる
+
 # License
 
 Apache 2.0 License としたいです。
