@@ -227,49 +227,47 @@ public class AESTest {
 */        
         int size = 500;
         byte[] src;
-        //src = input; //new byte[size*1024 * 1024];
+        byte[] encd = null;// = instance.encrypt(src, 0, size*1024*1024);
         src = SecureRandom.getSeed(size * 1024 * 1024);
-        //src = input;
-        //int[] intSrc = new int[src.length/4];
-        //IntBlock.btoi(src,0,intSrc,src.length/4);
+        for ( int loop = 0; loop < 4; loop++ ) {
+            //src = input; //new byte[size*1024 * 1024];
+            //src = input;
+            //int[] intSrc = new int[src.length/4];
+            //IntBlock.btoi(src,0,intSrc,src.length/4);
         
-        byte[] encd;// = instance.encrypt(src, 0, size*1024*1024);
-//        Block instance = new AES();
-        long d = System.nanoTime();
-        Block instance = new CBC(new AES());
-        instance.init(key,iv);
-        //intEncd = instance.encrypt(intSrc, 0, intSrc.length);
-        encd = instance.encrypt(src, 0, src.length);
+    //        Block instance = new AES();
+            long d = System.nanoTime();
+            Block instance = new CBC(new AES());
+            instance.init(key,iv);
+            //intEncd = instance.encrypt(intSrc, 0, intSrc.length);
+            encd = instance.encrypt(src, 0, src.length);
         
-        long e = System.nanoTime();
+            long e = System.nanoTime();
 
-        long t = e - d;
-        System.out.println( "SoftLibCrypto " + alg + " encrypt time : "  + t );
+            long t = e - d;
+            System.out.println( "SoftLibCrypto " + alg + " encrypt time : "  + t );
         
-        System.out.println( " speed : " + (size * 8*1024 / (t/1000/1000)) + "Mbps?" );
-        //assertArrayEquals(encd,expResult);
+            System.out.println( " speed : " + (size * 8*1024 / (t/1000/1000)) + "Mbps?" );
+            //assertArrayEquals(encd,expResult);
 
-        d = System.nanoTime();
-        instance.init(key,iv);
-//        System.out.println("encdl " + encd.length);
-        byte[] plane2 = instance.decrypt(encd, 0, src.length);
-//        int[] plane4 = instance.decrypt(intEncd, 0, intSrc.length);
-        e = System.nanoTime();
+            d = System.nanoTime();
+            instance.init(key,iv);
+            byte[] plane2 = instance.decrypt(encd, 0, src.length);
+            e = System.nanoTime();
         
-        assertArrayEquals(src, plane2,"戻ってない");
-//        assertArrayEquals(intSrc, plane4,"戻ってない");
+            assertArrayEquals(src, plane2,"戻ってない");
         
-        //encd = IntBlock.itob(intEncd);
-        t = e - d;
-        System.out.println("SoftLibCrypto " + alg + " decrypt time : "  + t );
+            //encd = IntBlock.itob(intEncd);
+            t = e - d;
+            System.out.println("SoftLibCrypto " + alg + " decrypt time : "  + t );
         
-        System.out.println( " speed : " + (size * 8*1024 / (t/1000/1000)) );
-        
+            System.out.println( " speed : " + (size * 8*1024 / (t/1000/1000)) );
+        }
         String ALG = alg + "/nopadding";
 
         try {
 //            byte[] plane2;
-            d = System.nanoTime();
+            long d = System.nanoTime();
             SecretKeySpec keysp = new SecretKeySpec(key, "AES");
             IvParameterSpec cbciv = new IvParameterSpec(iv);
             Cipher aescbc = Cipher.getInstance(ALG);
@@ -277,18 +275,30 @@ public class AESTest {
             aescbc.init(Cipher.ENCRYPT_MODE, keysp, cbciv );
 //            aescbc.init(Cipher.ENCRYPT_MODE, keysp );
             
-            plane2 = aescbc.doFinal(src);
-            e = System.nanoTime();
+            byte[] plane2 = aescbc.doFinal(src);
+            long e = System.nanoTime();
             
 //            for ( int i =0; i < 16; i++) {
 //                System.out.println(Integer.toHexString(encd[i]) + " " + Integer.toHexString(plane2[i]));
 //            }
             
             assertArrayEquals(encd, plane2,"CBCがちがうのか");
-            t = e - d;
+            long t = e - d;
             System.out.println( "Java JDK OpenSSL CPU AES-NI? encrypt time : "  + t );
             
             System.out.println( " speed : " + (size * 8*1024 / (t/1000/1000)) + "Mbps?" );
+
+            d = System.nanoTime();
+            aescbc.init(Cipher.DECRYPT_MODE, keysp, cbciv );
+            encd = aescbc.doFinal(plane2);
+            e = System.nanoTime();
+            
+            assertArrayEquals(src, encd,"JDK dec CBCがちがうのか");
+            t = e - d;
+            System.out.println( "Java JDK OpenSSL CPU AES-NI? decrypt time : "  + t );
+
+            System.out.println( " speed : " + (size * 8*1024 / (t/1000/1000)) + "Mbps?" );
+
 //        byte[] result = instance.encrypt(in, offset);
 //        assertArrayEquals(expResult, result);
 // TODO review the generated test code and remove the default call to fail.

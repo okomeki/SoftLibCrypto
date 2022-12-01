@@ -1,5 +1,6 @@
 package net.siisise.security.mode;
 
+import java.math.BigInteger;
 import net.siisise.security.block.Block;
 
 /**
@@ -16,6 +17,62 @@ public class GCM extends StreamMode {
 
     public GCM(Block block) {
         super(block);
+    }
+    
+    
+    static BigInteger GFBASE = BigInteger.valueOf(0x87l).add(BigInteger.ONE.shiftLeft(128));
+
+    /**
+     * gf 2^128
+     * gf x^128 + x^7 + x^2 + x + 1
+     * @param src
+     * @return 
+     */
+    public static BigInteger gf128(BigInteger src) {
+        BigInteger a;
+        
+        a = src.shiftLeft(1);
+        if ( a.testBit(128)) {
+            a = a.xor(a.multiply(GFBASE));
+        }
+        
+        return a;
+    }
+    
+    public static long[] gf128(long[] src) {
+        byte[] sb = new byte[src.length * 8 + 1];
+        ltob(src,sb,1);
+        BigInteger sbi = new BigInteger(sb);
+        BigInteger r = gf128(sbi);
+        byte[] d = r.toByteArray();
+        byte[] x = new byte[src.length];
+        if ( d.length <= src.length) {
+            System.arraycopy(d, 0, x, x.length - d.length, d.length);
+        } else {
+            System.arraycopy(d, d.length - x.length, x, 0, x.length);
+        }
+        
+        return btol(x);
+    }
+    
+    long[] x(int i) {
+        if ( i == 0) return new long[] {0,0};
+//        xor(x(i-1),a);
+        throw new UnsupportedOperationException();
+    }
+    
+    long[] ghash(long[] h, long[] a, long[] c) {
+        
+        throw new UnsupportedOperationException();
+        
+    }
+    
+    static long[] xor(long[] a, long[] b) {
+        long[] c = new long[a.length];
+        for ( int i = 0; i < a.length; i++) {
+            c[i] = a[i] ^ b[i];
+        }
+        return c;
     }
 
     /**
@@ -36,22 +93,22 @@ public class GCM extends StreamMode {
 
     @Override
     public byte[] encrypt(byte[] src, int offset, int length) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
     @Override
     public byte[] decrypt(byte[] src, int offset, int length) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
     @Override
-    public byte[] encrypt(byte[] src, int offset) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public int[] encrypt(int[] src, int offset) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
     @Override
-    public byte[] decrypt(byte[] src, int offset) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public int[] decrypt(int[] src, int offset) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
-    
+
 }

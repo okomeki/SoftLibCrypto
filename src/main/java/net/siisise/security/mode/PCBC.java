@@ -55,4 +55,14 @@ public class PCBC extends BlockMode {
         return ret;
     }
 
+    @Override
+    public int[] encrypt(int[] src, int offset) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    @Override
+    public int[] decrypt(int[] src, int offset) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
 }

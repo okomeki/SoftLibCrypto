@@ -6,13 +6,13 @@ import net.siisise.security.block.Block;
  * Cipher Block Chaining.
  * iv は 0 でいいがJavaのは必須?
  */
-public class CBC extends BlockMode {
+public class CBC extends LongBlockMode {
 
-    private int[] vectori;
+    private long[] vectorl;
 
     public CBC(Block block) {
         super(block);
-        vectori = new int[block.getBlockLength() / 32];
+        vectorl = new long[block.getBlockLength() / 64];
     }
 
     /**
@@ -32,35 +32,42 @@ public class CBC extends BlockMode {
             System.arraycopy(iv, 0, vector, 0, iv.length);
         }
         block.init(params2);
-        vectori = btoi(vector);
+        vectorl = btol(vector);
     }
 
     @Override
     public void init(Block block, byte[] key) {
         super.init(block, key);
-        vectori = new int[block.getBlockLength() / 32];
+        vectorl = new long[block.getBlockLength() / 64];
     }
 
     @Override
     public byte[] encrypt(byte[] src, int offset) {
-        int vl = vectori.length;
-        int[] isrc = new int[vl];
-        btoi(src, offset, isrc, vl);
-        xor(vectori, isrc, 0, vl);
-        return itob(vectori = block.encrypt(vectori,0));
+        int vl = vectorl.length;
+        xor(vectorl, src, offset, vl);
+        return ltob(vectorl = block.encrypt(vectorl,0));
     }
 
     @Override
     public int[] encrypt(int[] src, int offset) {
-        xor(vectori, src, offset, vectori.length);
-        int[] ret = block.encrypt(vectori,0);
+        int vl = vectorl.length;
+        long[] lsrc = new long[vl];
+        itol(src, offset, lsrc, vl);
+        xor(vectorl, lsrc, 0, vl);
+        return ltoi(vectorl = block.encrypt(vectorl,0));
+    }
+
+    @Override
+    public long[] encrypt(long[] src, int offset) {
+        xor(vectorl, src, offset, vectorl.length);
+        long[] ret = block.encrypt(vectorl,0);
         // 複製が必要かもしれない
-        System.arraycopy(ret, 0, vectori, 0, ret.length);
+        System.arraycopy(ret, 0, vectorl, 0, ret.length);
         return ret;
     }
 
     /**
-     * byte to int
+     * byte to long
      * @param src 平文 plane text
      * @param offset
      * @param length
@@ -69,44 +76,54 @@ public class CBC extends BlockMode {
 
     @Override
     public byte[] encrypt(byte[] src, int offset, int length) {
-        int vl = vectori.length;
+        int vl = vectorl.length;
         byte[] ret = new byte[length];
         int o4 = 0;
+        
+//        int ol = 0;
         while (o4 < length) {
-            // XOR
-            for (int i = 0; i < vl; i++, offset+=4) {
-                vectori[i] ^= (src[offset  ]         << 24)
-                           | ((src[offset+1] & 0xff) << 16)
-                           | ((src[offset+2] & 0xff) <<  8)
-                           |  (src[offset+3] & 0xff);
-            }
+            xor(vectorl, src, offset + o4, vl);
 
-            vectori = block.encrypt(vectori, 0);
+            vectorl = block.encrypt(vectorl, 0);
             
-            for (int i = 0; i < vl; i++, o4+= 4) {
-                ret[o4  ] = (byte) (vectori[i] >> 24);
-                ret[o4+1] = (byte) (vectori[i] >> 16);
-                ret[o4+2] = (byte) (vectori[i] >>  8);
-                ret[o4+3] = (byte)  vectori[i]       ;
-            }
+            ltob(vectorl,ret,o4);
+            o4 += vl*8;
+            /*
+            for (int i = 0; i < vl; i++, o4+= 8) {
+                long l = vectorl[i];
+//                byte[] a = java.nio.ByteBuffer.allocate(8).putLong(l).array();
+//                System.arraycopy(a, 0, ret, o4, 8);
+//                for (int j = 0; j < 8; j++) {
+//                    ret[o4+j] = (byte) (l >> (56-j*8));
+//                }
+/*
+                ret[o4+1] = (byte) (l >> 48);
+                ret[o4+2] = (byte) (l >> 40);
+                ret[o4+3] = (byte) (l >> 32);
+                ret[o4+4] = (byte) (l >> 24);
+                ret[o4+5] = (byte) (l >> 16);
+                ret[o4+6] = (byte) (l >>  8);
+                ret[o4+7] = (byte)  l       ;
+                *
+            }*/
         }
         return ret;
     }
 
     @Override
-    public int[] encrypt(int[] src, int offset, int length) {
-        int vl = vectori.length;
-        int[] ret = new int[length];
+    public long[] encrypt(long[] src, int offset, int length) {
+        int vl = vectorl.length;
+        long[] ret = new long[length];
         int roffset = 0;
 
         while (length > 0) {
 //          XOR
             for (int i = 0; i < vl; i++) {
-                vectori[i] ^= src[offset++];
+                vectorl[i] ^= src[offset++];
             }
-            vectori = block.encrypt(vectori, 0);
+            vectorl = block.encrypt(vectorl, 0);
             // 複製が必要かもしれない
-            System.arraycopy(vectori, 0, ret, roffset, vl);
+            System.arraycopy(vectorl, 0, ret, roffset, vl);
             length -= vl;
             roffset += vl;
         }
@@ -121,17 +138,12 @@ public class CBC extends BlockMode {
      */
     @Override
     public byte[] decrypt(byte[] src, int offset) {
-        int[] n = new int[vectori.length];
-        btoi(src, offset, n, vectori.length);
-        //System.arraycopy(src, offset, n, 0, vectori.length);
-        int[] ret = block.decrypt(n, 0);
+        long[] n = btol(src, offset, vectorl.length);
+        long[] ret = block.decrypt(n, 0);
         // 複製が必要かもしれない
-        xor(ret,vectori,0,vectori.length);
-//        for (int i = 0; i < vector.length; i++) {
-//            ret[i] ^= vector[i];
-//        }
-        vectori = n;
-        return itob(ret);
+        xor(ret,vectorl,0,vectorl.length);
+        vectorl = n;
+        return ltob(ret);
     }
 
     /**
@@ -143,51 +155,27 @@ public class CBC extends BlockMode {
      */
     @Override
     public byte[] decrypt(byte[] src, int offset, int length) {
-        int l4 = length/4;
-        int[] isrc = new int[l4];
-        
-        for (int i = 0; i < l4; i ++) {
-            isrc[i] = ( src[offset  ]         << 24)
-                    | ((src[offset+1] & 0xff) << 16)
-                    | ((src[offset+2] & 0xff) <<  8)
-                    |  (src[offset+3] & 0xff);
-            offset+=4;
-        }
-
         byte[] ret = new byte[length];
-        offset = 0;
-        int bl = vectori.length;
-        int bl4 = bl * 4;
-        int[] re;
+//        int bl = ;
 
-        re = block.decrypt(isrc, 0);
-        for (int i = 0; i < bl; i++) {
-            int x = re[i] ^ vectori[i];
-            ret[offset  ] = (byte)(x >> 24);
-            ret[offset+1] = (byte)(x >> 16);
-            ret[offset+2] = (byte)(x >>  8);
-            ret[offset+3] = (byte) x;
-            offset+=4;
-        }
-
-        int voffset = 0;
-        //length -= bl4;
-
-        while (offset < length) {
-            re = block.decrypt(isrc, offset / 4);
-            for (int i = 0; i < bl; i++) {
-                int x = re[i] ^ isrc[voffset++];
-                ret[offset  ] = (byte)(x >> 24);
-                ret[offset+1] = (byte)(x >> 16);
-                ret[offset+2] = (byte)(x >>  8);
-                ret[offset+3] = (byte) x;
-                offset+=4;
+        for (int toffset = 0; toffset < length; ) {
+            long[] ls = btol(src, offset + toffset, vectorl.length);
+            long[] re = block.decrypt(ls, 0);
+            
+            for (int i = 0; i < vectorl.length; i++, toffset+=8) {
+                long x = re[i] ^ vectorl[i];
+                
+                ret[toffset  ] = (byte)(x >> 56);
+                ret[toffset+1] = (byte)(x >> 48);
+                ret[toffset+2] = (byte)(x >> 40);
+                ret[toffset+3] = (byte)(x >> 32);
+                ret[toffset+4] = (byte)(x >> 24);
+                ret[toffset+5] = (byte)(x >> 16);
+                ret[toffset+6] = (byte)(x >>  8);
+                ret[toffset+7] = (byte) x;
             }
-        //    length -= bl4;
-//            offset += vl;
+            vectorl = ls;
         }
-        btoi(ret,offset-bl4,vectori,bl);
-        System.arraycopy(isrc, voffset, vectori, 0, bl);
         return ret;
     }
 
@@ -199,32 +187,33 @@ public class CBC extends BlockMode {
      * @return 
      */
     @Override
-    public int[] decrypt(int[] src, int offset, int length) {
-        int[] ret = new int[length];
+    public long[] decrypt(long[] src, int offset, int length) {
+        int bl = vectorl.length;
+
+        if ( length < bl) {
+            return new long[0];
+        }
+
         int roffset = 0;
-        int bl = vectori.length;
-        int[] re;
+        long[] ret = new long[length];
+        long[] re;
 
         re = block.decrypt(src, offset);
-//        xor(ret,vector,0,vl);
         for (int i = 0; i < bl; i++) {
-            ret[i] = re[i] ^ vectori[i];
+            ret[roffset+i] = re[i] ^ vectorl[i];
         }
-
-        int voffset = offset;
+        length += offset;
         offset += bl;
-        roffset += bl;
-        length -= bl;
 
-        while (length > 0) {
+        while (length > offset) {
             re = block.decrypt(src, offset);
             for (int i = 0; i < bl; i++) {
-                ret[roffset++] = re[i] ^ src[voffset++];
+                ret[roffset+i] = re[i] ^ src[offset - bl];
             }
-            length -= bl;
             offset += bl;
+            roffset += bl;
         }
-        System.arraycopy(src, voffset, vectori, 0, bl);
+        System.arraycopy(src, offset - bl, vectorl, 0, bl);
         return ret;
     }
 
@@ -235,16 +224,16 @@ public class CBC extends BlockMode {
      * @return 
      */
     @Override
-    public int[] decrypt(int[] src, int offset) {
-        int[] n = new int[vectori.length];
-        System.arraycopy(src, offset, n, 0, vectori.length);
-        int[] ret = block.decrypt(n, 0);
+    public long[] decrypt(long[] src, int offset) {
+        long[] n = new long[vectorl.length];
+        System.arraycopy(src, offset, n, 0, vectorl.length);
+        long[] ret = block.decrypt(n, 0);
         // 複製が必要かもしれない
 //        xor(ret,vectori,0,vectori.length);
-        for (int i = 0; i < vectori.length; i++) {
-            ret[i] ^= vectori[i];
+        for (int i = 0; i < vectorl.length; i++) {
+            ret[i] ^= vectorl[i];
         }
-        vectori = n;
+        vectorl = n;
         return ret;
     }
 }

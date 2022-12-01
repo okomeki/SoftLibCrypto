@@ -24,12 +24,12 @@ public class AES extends IntBlock {
 
     private static final int[] Rcon = new int[11];
 
-    private static final int[] SBOX = new int[256];
+    private static final long[] SBOX = new long[256];
     private static final long[] LMIX0 = new long[256];
     private static final long[] LMIX1 = new long[256];
     private static final long[] LMIX2 = new long[256];
     private static final long[] LMIX3 = new long[256];
-    private static final int[] IBOX = new int[256];
+    private static final long[] IBOX = new long[256];
     private static final long[] IMIX0 = new long[256];
     private static final long[] IMIX1 = new long[256];
     private static final long[] IMIX2 = new long[256];
@@ -38,13 +38,15 @@ public class AES extends IntBlock {
     static {
         // 2・n
         final int[] GF = new int[256];
+        final int[] rgf = new int[256];
         final int[] logGF = new int[256];
         final int[] expGF = new int[256];
 
         // テーブルにしてしまうといろいろ省略できる 使い捨てだが関数でもいい
-        for (int i = 1; i < 256; i++) {
+        for (int i = 1; i < 256; ++i) {
             // 1と1bに分けずにシフト演算でまとめる
             GF[i] = (i << 1) ^ ((i >> 7) * 0x11b);
+            rgf[i] = (i >> 1) ^ ((i & 1) * 0x1b);
         } // m(x) = x^8 + x^4 * x^3 + x + 1 のビット 100011011 = 0x11b
 
         // sboxつくる
@@ -59,11 +61,12 @@ public class AES extends IntBlock {
         logGF[0] = 0;
         expGF[255] = expGF[0];
 
-        for (int i = 0; i < 256; i++) {
+        for (int i = 0; i < 256; ++i) {
             // r ガロア体の逆数変換 1回しか使わないので使い捨て
             int r = (i == 0) ? 0 : expGF[255 - logGF[i]];  // むつかしいところ
             int s = r ^ (r << 1) ^ (r << 2) ^ (r << 3) ^ (r << 4);
             s = 0x63 ^ s ^ ((s >> 8) * 0x101); // 手抜きローテート
+            System.out.println("r " + r + " rgf " + rgf[i] + " rgf3 "+ (rgf[rgf[i]] ^ rgf[i]) + " s " + s);
 
             SBOX[i] = s;
             /*
@@ -116,10 +119,10 @@ public class AES extends IntBlock {
      * @return
      */
     private static int rotsubWord(int t) {
-        return (SBOX[t >>  16 & 0xff] << 24)
+        return (int)((SBOX[t >>  16 & 0xff] << 24)
              | (SBOX[t >>   8 & 0xff] << 16)
              | (SBOX[t        & 0xff] << 8)
-             |  SBOX[t >>> 24       ];
+             |  SBOX[t >>> 24       ]);
     }
 
     /**
@@ -128,10 +131,10 @@ public class AES extends IntBlock {
      * @return
      */
     private static int subWord(int word) {
-        return (SBOX[word >>> 24       ] << 24)
+        return (int)((SBOX[word >>> 24       ] << 24)
              | (SBOX[word >>  16 & 0xff] << 16)
              | (SBOX[word >>   8 & 0xff] << 8)
-             |  SBOX[word        & 0xff];
+             |  SBOX[word        & 0xff]);
     }
 
     private static final int Nb = 4;
@@ -181,13 +184,8 @@ public class AES extends IntBlock {
             w[i] = w[i - Nk] ^ temp;
         }
 
-        int[] wt = new int[Nb];
         lw = new long[(Nr+1)*2];
-        for (int i = 0; i < (Nr+1); i++ ) {
-            System.arraycopy(w, i * Nb, wt, 0, Nb);
-            lw[i*2  ] = (((long)wt[0]) << 32) | (((long)wt[1]) & 0xffffffffl);
-            lw[i*2+1] = (((long)wt[2]) << 32) | (((long)wt[3]) & 0xffffffffl);
-        }
+        itol(w,0,lw,lw.length);
 
         // デコード用ラウンド鍵 + MixColumns
         ldw = new long[(w.length - 4)/2];
@@ -256,7 +254,7 @@ public class AES extends IntBlock {
             a <<= 8;
             a |= src[offset + i] & 0xff;
             b <<= 8;
-            b |= src[offset + 8 + i] & 0xff;
+            b |= src[offset + i + 8] & 0xff;
         }
         // AddRoundKey
         a ^= lw[0];
@@ -291,22 +289,22 @@ public class AES extends IntBlock {
 
         // SubBytes + ShiftRows
         int e, f, g, d;
-        e =  (SBOX[(int)(a >>> 56)] << 24)
-          |  (SBOX[(int)(a >> 16) & 0xff] << 16);
-        e |= (SBOX[(int)(b >> 40) & 0xff] << 8)
-          |   SBOX[(int) b        & 0xff];
-        f =  (SBOX[(int)(a >> 24) & 0xff] << 24)
-          |  (SBOX[(int)(b >> 48) & 0xff] << 16);
-        f |= (SBOX[(int)(b >>  8) & 0xff] << 8)
-          |   SBOX[(int)(a >> 32) & 0xff];
-        g  = (SBOX[(int)(b >> 56) & 0xff] << 24)
-          |  (SBOX[(int)(b >> 16) & 0xff] << 16);
-        g |= (SBOX[(int)(a >> 40) & 0xff] << 8)
-          |   SBOX[(int) a        & 0xff];
-        d  = (SBOX[(int)(b >> 24) & 0xff] << 24)
+        e =  (int)((SBOX[(int)(a >>> 56)] << 24)
+          |  (SBOX[(int)(a >> 16) & 0xff] << 16));
+        e |= (int)((SBOX[(int)(b >> 40) & 0xff] << 8)
+          |   SBOX[(int) b        & 0xff]);
+        f =  (int)((SBOX[(int)(a >> 24) & 0xff] << 24)
+          |  (SBOX[(int)(b >> 48) & 0xff] << 16));
+        f |= (int)((SBOX[(int)(b >>  8) & 0xff] << 8)
+          |   SBOX[(int)(a >> 32) & 0xff]);
+        g  = (int)((SBOX[(int)(b >> 56) & 0xff] << 24)
+          |  (SBOX[(int)(b >> 16) & 0xff] << 16));
+        g |= (int)((SBOX[(int)(a >> 40) & 0xff] << 8)
+          |   SBOX[(int) a        & 0xff]);
+        d  = (int)((SBOX[(int)(b >> 24) & 0xff] << 24)
           |  (SBOX[(int)(a >> 48) & 0xff] << 16)
           |  (SBOX[(int)(a >> 8) & 0xff] << 8)
-          |   SBOX[(int)(b >> 32) & 0xff];
+          |   SBOX[(int)(b >> 32) & 0xff]);
 
         // AddRoundKey
         return itob(new int[] {
@@ -367,22 +365,22 @@ public class AES extends IntBlock {
 
         // SubBytes + ShiftRows
         int e, f, g, h;
-        e =  (SBOX[(int)(a >>> 56)] << 24)
-          |  (SBOX[(int)(a >> 16) & 0xff] << 16);
-        e |= (SBOX[(int)(b >> 40) & 0xff] << 8)
-          |   SBOX[(int) b        & 0xff];
-        f =  (SBOX[(int)(a >> 24) & 0xff] << 24)
-          |  (SBOX[(int)(b >> 48) & 0xff] << 16);
-        f |= (SBOX[(int)(b >>  8) & 0xff] << 8)
-          |   SBOX[(int)(a >> 32) & 0xff];
-        g  = (SBOX[(int)(b >> 56) & 0xff] << 24)
-          |  (SBOX[(int)(b >> 16) & 0xff] << 16);
-        g |= (SBOX[(int)(a >> 40) & 0xff] << 8)
-          |   SBOX[(int) a        & 0xff];
-        h  = (SBOX[(int)(b >> 24) & 0xff] << 24)
+        e =  (int)((SBOX[(int)(a >>> 56)] << 24)
+          |  (SBOX[(int)(a >> 16) & 0xff] << 16));
+        e |= (int)((SBOX[(int)(b >> 40) & 0xff] << 8)
+          |   SBOX[(int) b        & 0xff]);
+        f =  (int)((SBOX[(int)(a >> 24) & 0xff] << 24)
+          |  (SBOX[(int)(b >> 48) & 0xff] << 16));
+        f |= (int)((SBOX[(int)(b >>  8) & 0xff] << 8)
+          |   SBOX[(int)(a >> 32) & 0xff]);
+        g  = (int)((SBOX[(int)(b >> 56) & 0xff] << 24)
+          |  (SBOX[(int)(b >> 16) & 0xff] << 16));
+        g |= (int)((SBOX[(int)(a >> 40) & 0xff] << 8)
+          |   SBOX[(int) a        & 0xff]);
+        h  = (int)((SBOX[(int)(b >> 24) & 0xff] << 24)
           |  (SBOX[(int)(a >> 48) & 0xff] << 16)
           |  (SBOX[(int)(a >> 8) & 0xff] << 8)
-          |   SBOX[(int)(b >> 32) & 0xff];
+          |   SBOX[(int)(b >> 32) & 0xff]);
 
         // AddRoundKey
         return new int[] {
@@ -390,6 +388,76 @@ public class AES extends IntBlock {
             f ^ w[Nr4 + 1],
             g ^ w[Nr4 + 2],
             h ^ w[Nr4 + 3]
+        };
+    }
+
+    /**
+     * AES エンコード
+     * AMD Ryzen 5 2600X で AES/CBCで 950Mbpsを超える
+     * AMD Ryzen 7 5800X で AES/CBCで 1500Mbpsを超える
+     *
+     * @param src planetext 16byte
+     * @param offset 先頭位置
+     * @return chipertext
+     */
+    @Override
+    public long[] encrypt(final long[] src, int offset) {
+        long a, b;
+        int nr = Nr4/2;
+        // AddRoundKey
+        a = src[offset] ^ lw[0];
+        b = src[offset+1] ^ lw[1];
+
+        for (int r = 2; r < nr; r+=2) {
+            // SubBytes + ShiftRow + MixColumns
+            long c, d;
+            c  = LMIX0[(int)(a >>> 0x38)]
+              ^  LMIX1[(int)(a >> 16) & 0xff];
+            d  = LMIX0[(int)(b >>> 56)]
+              ^  LMIX1[(int)(b >> 16) & 0xff];
+            c ^= LMIX2[(int)(b >> 40) & 0xff]
+              ^  LMIX3[(int)b & 0xff];
+            d ^= LMIX2[(int)(a >> 40) & 0xff]
+              ^  LMIX3[(int)a & 0xff];
+            c <<= 32;
+            d <<= 32;
+            c ^= LMIX0[(int)(a >> 24) & 0xff]
+              ^  LMIX1[(int)(b >> 48) & 0xff];
+            d ^= LMIX0[(int)(b >> 24) & 0xff];
+            d ^= LMIX1[(int)(a >> 48) & 0xff];
+            c ^= LMIX2[(int)(b >> 8) & 0xff]
+              ^  LMIX3[(int)(a >> 32) & 0xff];
+            d ^= LMIX2[(int)(a >> 8) & 0xff];
+            d ^= LMIX3[(int)(b >> 32) & 0xff];
+
+            // AddRoundKey
+            a = c ^ lw[r];
+            b = d ^ lw[r+1];
+        }
+
+        // SubBytes + ShiftRows
+        long e, f;
+        e =  (SBOX[(int)(a >>> 56)]       << 56)
+          |  (SBOX[(int)(a >> 16) & 0xff] << 48);
+        e |= (SBOX[(int)(b >> 40) & 0xff] << 40)
+          |  (SBOX[(int) b        & 0xff] << 32);
+        e |= (SBOX[(int)(a >> 24) & 0xff] << 24)
+          |  (SBOX[(int)(b >> 48) & 0xff] << 16);
+        e |= (SBOX[(int)(b >>  8) & 0xff] << 8)
+          |   SBOX[(int)(a >> 32) & 0xff];
+        f  = (SBOX[(int)(b >> 56) & 0xff] << 56)
+          |  (SBOX[(int)(b >> 16) & 0xff] << 48);
+        f |= (SBOX[(int)(a >> 40) & 0xff] << 40)
+          |  (SBOX[(int) a        & 0xff] << 32);
+        f |= (SBOX[(int)(b >> 24) & 0xff] << 24)
+          |  (SBOX[(int)(a >> 48) & 0xff] << 16)
+          |  (SBOX[(int)(a >> 8) & 0xff] << 8)
+          |   SBOX[(int)(b >> 32) & 0xff];
+
+        // AddRoundKey
+        return new long[] {
+            e ^ lw[nr] ,
+            f ^ lw[nr + 1]
         };
     }
 
@@ -413,45 +481,45 @@ public class AES extends IntBlock {
         b ^= lw[nr+1];
 
         for (int r4 = nr - 2; r4 > 0; r4 -= 2) {
-            long c, d, e, f;
+            long c, e;
 
             c =  IMIX0[(int)(a >>> 56)       ]
               ^  IMIX1[(int)(b >>  16) & 0xff];
             e =  IMIX0[(int)(b >>> 56)       ]
               ^  IMIX1[(int)(a >>  16) & 0xff];
-            d =  IMIX0[(int)(a >>  24) & 0xff]
-              ^  IMIX1[(int)(a >>  48) & 0xff];
-            f =  IMIX0[(int)(b >>  24) & 0xff]
-              ^  IMIX1[(int)(b >>  48) & 0xff];
             c ^= IMIX2[(int)(b >>  40) & 0xff]
               ^  IMIX3[(int) a         & 0xff];
             e ^= IMIX2[(int)(a >>  40) & 0xff]
               ^  IMIX3[(int) b         & 0xff];
-            d ^= IMIX2[(int)(b >>   8) & 0xff]
-              ^  IMIX3[(int)(b >>  32) & 0xff];
-            f ^= IMIX2[(int)(a >>   8) & 0xff]
-              ^  IMIX3[(int)(a >>  32) & 0xff];
             c <<= 32;
             e <<= 32;
-            a = c ^ d ^ ldw[r4];
-            b = e ^ f ^ ldw[r4+1];
+            c ^= IMIX0[(int)(a >>  24) & 0xff]
+              ^  IMIX1[(int)(a >>  48) & 0xff];
+            e ^= IMIX0[(int)(b >>  24) & 0xff]
+              ^  IMIX1[(int)(b >>  48) & 0xff];
+            c ^= IMIX2[(int)(b >>   8) & 0xff]
+              ^  IMIX3[(int)(b >>  32) & 0xff];
+            e ^= IMIX2[(int)(a >>   8) & 0xff]
+              ^  IMIX3[(int)(a >>  32) & 0xff];
+            a = c ^ ldw[r4];
+            b = e ^ ldw[r4+1];
         }
 
         int c, d, e, f;
-        c  = IBOX[(int)(a >>> 56)       ] << 24
-          ^  IBOX[(int)(b >>  16) & 0xff] << 16;
+        c  = (int)(IBOX[(int)(a >>> 56)       ] << 24
+          ^  IBOX[(int)(b >>  16) & 0xff] << 16);
         c ^= IBOX[(int)(b >>  40) & 0xff] << 8;
         c ^= IBOX[(int) a         & 0xff];
-        d  = IBOX[(int)(a >>  24) & 0xff] << 24
-          ^  IBOX[(int)(a >>  48) & 0xff] << 16;
+        d  = (int)(IBOX[(int)(a >>  24) & 0xff] << 24
+          ^  IBOX[(int)(a >>  48) & 0xff] << 16);
         d ^= IBOX[(int)(b >>   8) & 0xff] << 8
           ^  IBOX[(int)(b >>  32) & 0xff];
-        e  = IBOX[(int)(b >>> 56)       ] << 24
-          ^  IBOX[(int)(a >>  16) & 0xff] << 16;
+        e  = (int)(IBOX[(int)(b >>> 56)       ] << 24
+          ^  IBOX[(int)(a >>  16) & 0xff] << 16);
         e ^= IBOX[(int)(a >>  40) & 0xff] << 8;
         e ^= IBOX[(int) b         & 0xff];
-        f  = IBOX[(int)(b >>  24) & 0xff] << 24
-          ^  IBOX[(int)(b >>  48) & 0xff] << 16;
+        f  = (int)(IBOX[(int)(b >>  24) & 0xff] << 24
+          ^  IBOX[(int)(b >>  48) & 0xff] << 16);
         f ^= IBOX[(int)(a >>   8) & 0xff] << 8;
         f ^= IBOX[(int)(a >>  32) & 0xff];
 
@@ -460,5 +528,69 @@ public class AES extends IntBlock {
             d ^ w[1],
             e ^ w[2],
             f ^ w[3]};
+    }
+
+
+    /**
+     * CBCなどで使う
+     * AES/CBC
+     * AMD Ryzen 7 5800X 1490Mbps 程度
+     * @param src int型に納めた元
+     * @param offset 復号化位置
+     * @return 
+     */
+    @Override
+    public long[] decrypt(final long[] src, final int offset) {
+        long a, b;
+        int nr = Nr4 / 2;
+        a = src[offset    ] ^ lw[nr];
+        b = src[offset + 1] ^ lw[nr+1];
+
+        for (int r4 = nr - 2; r4 > 0; r4 -= 2) {
+            long c, d;
+
+            c =  IMIX0[(int)(a >>> 56)       ]
+              ^  IMIX1[(int)(b >>  16) & 0xff];
+            d =  IMIX0[(int)(b >>> 56)       ]
+              ^  IMIX1[(int)(a >>  16) & 0xff];
+            c ^= IMIX2[(int)(b >>  40) & 0xff]
+              ^  IMIX3[(int) a         & 0xff];
+            d ^= IMIX2[(int)(a >>  40) & 0xff]
+              ^  IMIX3[(int) b         & 0xff];
+            c <<= 32;
+            d <<= 32;
+            c ^= IMIX0[(int)(a >>  24) & 0xff]
+              ^  IMIX1[(int)(a >>  48) & 0xff];
+            d ^= IMIX0[(int)(b >>  24) & 0xff]
+              ^  IMIX1[(int)(b >>  48) & 0xff];
+            c ^= IMIX2[(int)(b >>   8) & 0xff]
+              ^  IMIX3[(int)(b >>  32) & 0xff];
+            d ^= IMIX2[(int)(a >>   8) & 0xff]
+              ^  IMIX3[(int)(a >>  32) & 0xff];
+            a = c ^ ldw[r4];
+            b = d ^ ldw[r4+1];
+        }
+
+        long c, d;
+        d  = IBOX[(int)(b >>> 56)       ] << 56
+          ^  IBOX[(int)(a >>  16) & 0xff] << 48;
+        c  = IBOX[(int)(a >>> 56)       ] << 56
+          ^  IBOX[(int)(b >>  16) & 0xff] << 48;
+        d ^= IBOX[(int)(a >>  40) & 0xff] << 40;
+        c ^= IBOX[(int)(b >>  40) & 0xff] << 40;
+        d ^= IBOX[(int) b         & 0xff] << 32;
+        c ^= IBOX[(int) a         & 0xff] << 32;
+        d ^= IBOX[(int)(b >>  24) & 0xff] << 24
+          ^  IBOX[(int)(b >>  48) & 0xff] << 16;
+        c ^= IBOX[(int)(a >>  24) & 0xff] << 24
+          ^  IBOX[(int)(a >>  48) & 0xff] << 16;
+        d ^= IBOX[(int)(a >>   8) & 0xff] << 8;
+        c ^= IBOX[(int)(b >>   8) & 0xff] << 8
+          ^  IBOX[(int)(b >>  32) & 0xff];
+        d ^= IBOX[(int)(a >>  32) & 0xff];
+
+        return new long[] {
+            c ^ lw[0],
+            d ^ lw[1]};
     }
 }

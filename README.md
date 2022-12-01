@@ -35,7 +35,7 @@ code | JDK (OpenSSL AES-NI) | SoftLib
 AES-CBC encode | 2608 | 1510 
 AES-CBC decode | 2716 | 1144
 
-JDKのCBCが遅いのでCPUの半分くらいは出てる
+JDKのCBCが遅いのでAES-NIの半分くらいは出てる
 
 # License
 

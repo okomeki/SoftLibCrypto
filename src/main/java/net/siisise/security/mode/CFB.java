@@ -25,10 +25,9 @@ public final class CFB extends StreamMode {
         super.init(nkey);
         byte[] cfbkey = key[key.length - 1];
         vector = new byte[block.getBlockLength() / 8];
-        vectori = new int[block.getBlockLength() / 32];
 
         System.arraycopy(cfbkey, 0, vector, 0, vector.length > cfbkey.length ? cfbkey.length : vector.length);
-        btoi(vector,0,vectori,vectori.length);
+        vectori = btoi(vector);
         vectori = block.encrypt(vectori, 0);
     }
 
@@ -118,12 +117,12 @@ public final class CFB extends StreamMode {
 
     @Override
     public byte[] encrypt(byte[] src, int offset, int length) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
     @Override
     public byte[] decrypt(byte[] src, int offset, int length) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
 }

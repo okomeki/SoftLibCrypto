@@ -1,15 +1,19 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package net.siisise.security.mode;
 
 import net.siisise.security.block.Block;
-import net.siisise.security.block.IntBlock;
+import net.siisise.security.block.LongBlock;
 
 /**
- * 拡張に拡張を重ねる
+ *
  */
-public abstract class BlockMode extends IntBlock {
+public abstract class LongBlockMode extends LongBlock {
     protected Block block;
     
-    protected BlockMode(Block b) {
+    protected LongBlockMode(Block b) {
         block = b;
     }
     
@@ -38,10 +42,6 @@ public abstract class BlockMode extends IntBlock {
         block.init(params);
     }
 
-    /**
-     * ビット長
-     * @return  ビット長
-     */
     @Override
     public int getBlockLength() {
         return block.getBlockLength();
@@ -72,6 +72,20 @@ public abstract class BlockMode extends IntBlock {
     static final void xor(long[] a, long[] b, int offset, int length) {
         for (int i = 0; i < length; i++) {
             a[i] ^= b[offset + i];
+        }
+    }
+
+    static final void xor(long[] a, byte[] b, int offset, int length) {
+        for (int i = 0; i < length; i++) {
+            for ( int j = 0, k = 56; j < 8; j++, k -= 8) {
+                a[i] ^= ((((long)b[offset + i*8 + j]) & 0xff) << k);
+            }
+        }
+    }
+
+    static final void xor(long[] a, int[] b, int offset, int length) {
+        for (int i = 0; i < length; i++) {
+            a[i] ^= (((long)b[offset + i*2]) << 32) ^ (b[offset + i*2 + 1] & 0xffffffffl);
         }
     }
 }

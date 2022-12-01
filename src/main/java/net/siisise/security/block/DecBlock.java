@@ -13,8 +13,13 @@ public interface DecBlock {
      * @return 復号データ
      */
     byte[] decrypt(byte[] src, int offset, int length);
-    void decrypt(byte[] src, int offset, byte[] dst, int doffset, int length);
     int[] decrypt(int[] src, int offset, int length);
+    long[] decrypt(long[] src, int offset, int length);
+    void decrypt(byte[] src, int offset, byte[] dst, int doffset, int length);
+
+    byte[] decrypt(byte[] src);
+    int[] decrypt(int[] src);
+    long[] decrypt(long[] src);
 
     /**
      * 復号処理.
@@ -27,4 +32,5 @@ public interface DecBlock {
      */
     byte[] decrypt(byte[] src, int offset);
     int[] decrypt(int[] src, int offset);
+    long[] decrypt(long[] src, int offset);
 }

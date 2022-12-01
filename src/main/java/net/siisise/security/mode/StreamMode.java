@@ -52,7 +52,7 @@ public abstract class StreamMode extends BlockMode implements Stream {
      */
     @Override
     public byte[] encrypt(byte[] src, int offset) {
-        return encrypt(src, offset, getBlockLength() * 8);
+        return encrypt(src, offset, getBlockLength() / 8);
     }
 
     /**
@@ -64,7 +64,16 @@ public abstract class StreamMode extends BlockMode implements Stream {
      */
     @Override
     public byte[] decrypt(byte[] src, int offset) {
-        return decrypt(src, offset, getBlockLength() * 8);
+        return decrypt(src, offset, getBlockLength() / 8);
     }
 
+    @Override
+    public int[] encrypt(int[] src, int offset) {
+        return btoi(encrypt(itob(src, offset, getBlockLength() / 32), 0, getBlockLength() / 8));
+    }
+
+    @Override
+    public int[] decrypt(int[] src, int offset) {
+        return btoi(decrypt(itob(src, offset, getBlockLength() / 32), 0, getBlockLength() / 8));
+    }
 }

@@ -18,7 +18,7 @@ public class AESLong extends OneBlock {
 
     /**
      * Rijndael 128～256ビット 32ビット単位
- AESLong 128bit固定
+     * AESLong 128bit固定
      */
     private final int blockLength = 128;
 
@@ -171,7 +171,7 @@ public class AESLong extends OneBlock {
             w[i] = w[i - Nk] ^ temp;
         }
     }
-
+/*
     private static void btoi(final byte[] src, int offset, int[] dst, int length) {
         for (int i = 0; i < length * 4; i += 4) {
             int t = offset + i;
@@ -194,7 +194,7 @@ public class AESLong extends OneBlock {
         }
         return ss;
     }
-
+*/
     /**
      * 複数パラメータは持たない
      *
