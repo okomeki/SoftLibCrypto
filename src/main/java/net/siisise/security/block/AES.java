@@ -66,7 +66,7 @@ public class AES extends IntBlock {
             int r = (i == 0) ? 0 : expGF[255 - logGF[i]];  // むつかしいところ
             int s = r ^ (r << 1) ^ (r << 2) ^ (r << 3) ^ (r << 4);
             s = 0x63 ^ s ^ ((s >> 8) * 0x101); // 手抜きローテート
-            System.out.println("r " + r + " rgf " + rgf[i] + " rgf3 "+ (rgf[rgf[i]] ^ rgf[i]) + " s " + s);
+//            System.out.println("r " + r + " rgf " + rgf[i] + " rgf3 "+ (rgf[rgf[i]] ^ rgf[i]) + " s " + s);
 
             SBOX[i] = s;
             /*

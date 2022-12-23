@@ -1,6 +1,5 @@
-package net.siisise.security;
+package net.siisise.security.mac;
 
-import net.siisise.security.mac.HMAC;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
