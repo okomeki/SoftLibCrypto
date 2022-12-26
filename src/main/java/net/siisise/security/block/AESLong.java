@@ -146,7 +146,6 @@ public class AESLong extends OneBlock {
      *
      * @param key 128,192,256bit (16,24,32byte)のいずれか
      */
-    @Override
     public void init(byte[] key) {
 
         if (key.length != 16 && key.length != 24 && key.length != 32) {

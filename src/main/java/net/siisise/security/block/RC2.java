@@ -62,13 +62,13 @@ public class RC2 extends OneBlock {
      * T1 = 有効鍵長 (128ぐらい)
      * T = 
      * T8 = key.length 
-     * @param key
+     * @param keys 鍵1つ
      */
     @Override
-    public void init(byte[] key) {
+    public void init(byte[]... keys) {
         // ToDo: 長さエラーチェック
-        int t = key.length;
-        System.arraycopy(key,0,L,0,t);
+        int t = keys[0].length;
+        System.arraycopy(keys[0],0,L,0,t);
         int t1 = t*8;
         int t8 = (t1+7)/8; // 実質t
         // 最後ビットのマスク?
@@ -83,11 +83,6 @@ public class RC2 extends OneBlock {
         for ( int i = 127-t8; i >= 0; i-- ) {
             L[i] = PITABLE[(L[i+1] ^ L[i+t8]) & 0xff];
         }
-    }
-
-    @Override
-    public void init(byte[]... keys) {
-        throw new SecurityException("さぽーとしてない");
     }
 
     @Override

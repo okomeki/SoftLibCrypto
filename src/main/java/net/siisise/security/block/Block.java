@@ -25,16 +25,6 @@ public interface Block extends EncBlock, DecBlock {
     int[] getParamLength();
 
     /**
-     * 鍵の設定.
-     * アルゴリズムによって鍵長は異なる.
-     * それぞれ指定の長さに。
-     *
-     * @deprecated 複数とりたいので廃止かな
-     * @param key シークレット鍵
-     */
-    void init(byte[] key);
-
-    /**
      * 後ろの要素が外側のBlockにかかる.
      * AES CBC の場合、ivをCBCがとり、keyをAESがとる。
      * @param keyandparam シークレット鍵とIVなど

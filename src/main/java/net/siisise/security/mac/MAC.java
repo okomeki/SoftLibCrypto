@@ -8,10 +8,15 @@ public interface MAC {
 
     void init(byte[] key);
     
-    void update(byte[] src);
+    default void update(byte[] src) {
+        update(src,0,src.length);
+    }
     void update(byte[] src, int offset, int length);
 
-    byte[] doFinal(byte[] src);
+    default byte[] doFinal(byte[] src) {
+        update(src);
+        return doFinal();
+    }
     byte[] doFinal();
 
     /**

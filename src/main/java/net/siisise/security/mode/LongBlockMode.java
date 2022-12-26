@@ -27,11 +27,6 @@ public abstract class LongBlockMode extends LongBlock {
         block.init(key);
     }
     
-    @Override
-    public void init(byte[] key) {
-        block.init(key);
-    }
-
     /**
      * 初期化
      * 

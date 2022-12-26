@@ -38,7 +38,7 @@ public class AES extends IntBlock {
     static {
         // 2・n
         final int[] GF = new int[256];
-        final int[] rgf = new int[256];
+//        final int[] rgf = new int[256];
         final int[] logGF = new int[256];
         final int[] expGF = new int[256];
 
@@ -46,7 +46,7 @@ public class AES extends IntBlock {
         for (int i = 1; i < 256; ++i) {
             // 1と1bに分けずにシフト演算でまとめる
             GF[i] = (i << 1) ^ ((i >> 7) * 0x11b);
-            rgf[i] = (i >> 1) ^ ((i & 1) * 0x1b);
+//            rgf[i] = (i >> 1) ^ ((i & 1) * 0x1b);
         } // m(x) = x^8 + x^4 * x^3 + x + 1 のビット 100011011 = 0x11b
 
         // sboxつくる
@@ -157,10 +157,11 @@ public class AES extends IntBlock {
      * 鍵.
      * AESは128bit長.
      *
-     * @param key 128,192,256bit (16,24,32byte)のいずれか
+     * @param keys 128,192,256bit (16,24,32byte)のいずれか
      */
     @Override
-    public void init(byte[] key) {
+    public void init(byte[]... keys) {
+        byte[] key = keys[0];
 
         if (key.length != 16 && key.length != 24 && key.length != 32) {
             throw new SecurityException("key length");
@@ -204,16 +205,6 @@ public class AES extends IntBlock {
                         ^ IMIX3[ d        & 0xff];
             }
         }
-    }
-
-    /**
-     * 複数パラメータは持たない
-     *
-     * @param key 鍵1つのみ 128,192,256bit
-     */
-    @Override
-    public void init(byte[]... key) {
-        init(key[0]);
     }
 
     /**

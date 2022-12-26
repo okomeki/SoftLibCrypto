@@ -8,6 +8,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.crypto.spec.SecretKeySpec;
 import net.siisise.io.DumpOutputStream;
+import net.siisise.lang.Bin;
 import net.siisise.security.digest.MD5;
 import net.siisise.security.digest.SHA1;
 import net.siisise.security.digest.SHA224;
@@ -16,6 +17,7 @@ import net.siisise.security.digest.SHA384;
 import net.siisise.security.digest.SHA512;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
+
 /**
  * RFC 2202 HMAC-MD5, HMAC-SHA-1 テスト
  * RFC 4231 HMAC-SHA-224, HMAC-SHA-256, HMAC-SHA-384, HMAC-SHA-512 テスト
@@ -29,13 +31,7 @@ public class HMACTest {
     }
 
     static byte[] toHex(String src) {
-        String b;
-        byte[] data = new byte[src.length() / 2];
-        for (int i = 0; i < src.length(); i += 2) {
-            b = src.substring(i, i + 2);
-            data[i / 2] = (byte) Integer.parseInt(b, 16);
-        }
-        return data;
+        return Bin.toByteArray(src);
     }
 
     public static void dump(byte[] src) {

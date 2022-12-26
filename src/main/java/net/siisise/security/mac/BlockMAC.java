@@ -19,11 +19,6 @@ public abstract class BlockMAC implements MAC,BlockIOListener {
     }
 
     @Override
-    public void update(byte[] src) {
-        update(src,0,src.length);
-    }
-
-    @Override
     public void update(byte[] src, int offset, int length) {
         try {
             pac.write(src, offset, length);
@@ -33,31 +28,25 @@ public abstract class BlockMAC implements MAC,BlockIOListener {
     }
 
     @Override
-    public byte[] doFinal(byte[] src) {
-        update(src);
-        return doFinal();
-    }
-
-    @Override
     public byte[] doFinal() {
         try {
             pac.close();
         } catch (IOException ex) {
             Logger.getLogger(BlockMAC.class.getName()).log(Level.SEVERE, null, ex);
         }
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public int getMacLength() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     // listener
     
     @Override
     public int getBitBlockLength() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
@@ -66,7 +55,7 @@ public abstract class BlockMAC implements MAC,BlockIOListener {
 
     @Override
     public void close() throws IOException {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        throw new UnsupportedOperationException("Not supported yet.");
     }
     
 }

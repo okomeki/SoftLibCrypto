@@ -23,11 +23,6 @@ public abstract class BlockMode extends IntBlock {
         block.init(key);
     }
     
-    @Override
-    public void init(byte[] key) {
-        block.init(key);
-    }
-
     /**
      * 初期化
      * 

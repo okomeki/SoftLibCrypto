@@ -17,11 +17,6 @@ public class PCBC extends BlockMode {
     }
 
     @Override
-    public void init(byte[] key) {
-        throw new SecurityException("iv");
-    }
-
-    @Override
     public void init(byte[]... key) {
         byte[][] nkey = new byte[key.length - 1][];
         System.arraycopy(key,0,nkey,0,key.length - 1);

@@ -189,17 +189,6 @@ public class HMAC implements MAC {
         md.update(src, offset, len);
     }
 
-    /**
-     *
-     * @param src
-     * @return HMAC値
-     */
-    @Override
-    public byte[] doFinal(byte[] src) {
-        md.update(src);
-        return doFinal();
-    }
-
     @Override
     public byte[] doFinal() {
         byte[] m = md.digest();

@@ -14,9 +14,9 @@ PKI系のものは別途パッケージにする予定です。
 AES,DES,TripleDES など
 
 ## 暗号モード
-CBC,ECB,などまだ少ない
+CBC,ECB,CTRなどまだ少ない
 
-GCMまだ
+GCM 仮
 
 # padding
 まだ少ない
@@ -27,7 +27,7 @@ GCMまだ
 MD2,MD4,MD5,SHA-1,SHA-2系,SHA-3系
 
 ## MAC
-HMAC
+HMAC,CMAC
 
 ## 速度
 code | JDK (OpenSSL AES-NI) | SoftLib
@@ -53,5 +53,6 @@ Apache 2.0 License としたいです。
 </dependency>
 ~~~
 バージョンは 1.0.1 です。
+開発版は1.0.2-SNAPSHOTかも。
 
 

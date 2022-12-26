@@ -198,17 +198,12 @@ public class DES extends OneBlock {
     }
 
     @Override
-    public void init(byte[] key) {
+    public void init(byte[]... key) {
         //parityCheck(key);
-        int[] keys0 = pc1(key);
+        int[] keys0 = pc1(key[0]);
         for (int i = 0; i < 16; i++) {
             ks[i] = ks(keys0, i);
         }
-    }
-
-    @Override
-    public void init(byte[]... key) {
-        throw new SecurityException("さぽーとしてない");
     }
 
     final byte[] e = new byte[8];

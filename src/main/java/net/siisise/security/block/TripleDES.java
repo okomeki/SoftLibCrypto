@@ -19,7 +19,6 @@ public class TripleDES extends OneBlock {
         block3 = new DES();
     }
     
-    @Override
     public void init(byte[] key) {
         byte[] k1 = new byte[8];
         byte[] k2 = new byte[8];
