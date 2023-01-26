@@ -1,8 +1,22 @@
+/*
+ * Copyright 2023 Siisise Net.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package net.siisise.security.mode;
 
 import java.util.Arrays;
 import net.siisise.security.block.Block;
-import net.siisise.security.mode.BlockMode;
 
 /**
  * PKCS #7 らしい Padding
@@ -42,17 +56,17 @@ public class PKCS7Padding extends BlockMode {
 
     @Override
     public int[] encrypt(int[] src, int offset, int length) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public byte[] encrypt(byte[] src, int offset) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public int[] encrypt(int[] src, int offset) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
@@ -76,22 +90,22 @@ public class PKCS7Padding extends BlockMode {
     @Override
     public void decrypt(byte[] src, int offset, byte[] dst, int doffset, int length) {
 //        block.decrypt(src, offset, dst, doffset, length);
-        throw new UnsupportedOperationException("正確な長さが出せない."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        throw new UnsupportedOperationException("正確な長さが出せない.");
     }
 
     @Override
     public int[] decrypt(int[] src, int offset, int length) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public byte[] decrypt(byte[] src, int offset) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public int[] decrypt(int[] src, int offset) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        throw new UnsupportedOperationException("Not supported yet.");
     }
     
 }

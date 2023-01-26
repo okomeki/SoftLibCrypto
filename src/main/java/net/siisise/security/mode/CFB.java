@@ -1,3 +1,18 @@
+/*
+ * Copyright 2022 Siisise Net.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package net.siisise.security.mode;
 
 import net.siisise.security.block.Block;
@@ -16,14 +31,12 @@ public final class CFB extends StreamMode {
 
     /**
      * 最後のパラメータがCFB用.
-     * @param key 鍵とInitial Vector
+     * @param params 鍵とInitial Vector
      */
     @Override
-    public void init(byte[]... key) {
-        byte[][] nkey = new byte[key.length - 1][];
-        System.arraycopy(key,0,nkey,0,key.length - 1);
-        super.init(nkey);
-        byte[] cfbkey = key[key.length - 1];
+    public void init(byte[]... params) {
+        super.init(in(1,params));
+        byte[] cfbkey = params[params.length - 1];
         vector = new byte[block.getBlockLength() / 8];
 
         System.arraycopy(cfbkey, 0, vector, 0, vector.length > cfbkey.length ? cfbkey.length : vector.length);

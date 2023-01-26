@@ -98,7 +98,13 @@
         <dependency>
             <groupId>net.siisise</groupId>
             <artifactId>softlib</artifactId>
-            <version>1.1.9-SNAPSHOT</version>
+            <version>1.1.9</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>net.siisise</groupId>
+            <artifactId>softlib-asn1</artifactId>
+            <version>1.0.0</version>
             <type>jar</type>
         </dependency>
     </dependencies>

@@ -1,3 +1,18 @@
+/*
+ * Copyright 2023 Siisise Net.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package net.siisise.security.mode;
 
 import java.util.ArrayList;
@@ -33,8 +48,6 @@ public class GCM extends CTR {
     GHASH gh;
     byte[] tag;
     
-    private byte[] H;
-
     public GCM() {
         super(new AES());
     }
@@ -56,13 +69,12 @@ public class GCM extends CTR {
      * 
      * iv 96bit または ?
      * iv は使い捨て( 再利用禁止、衝突するRNDよりCountがいい )
-     * @param keyAndParam key, iv, a
+     * @param params key, iv, a
      */
     @Override
-    public void init(byte[]... keyAndParam) {
-        block.init(keyAndParam[0]);
-        H = block.encrypt(new byte[128 / 8]);
-        iv = Y0(keyAndParam[0], keyAndParam[1]);
+    public void init(byte[]... params) {
+        block.init(in(1,params)); // CTRのinitは使わない
+        iv = Y0(params[params.length - 1]); // block が状態遷移しないAES前提
         iiv = btoi(iv);
 //        iiv[3] = 1;
 //        iv = itob(iiv);
@@ -71,22 +83,27 @@ public class GCM extends CTR {
         // GHASH
         tag = null;
         gh = new GHASH();
-        if ( keyAndParam.length > 2) {
-            gh.init(keyAndParam[0], keyAndParam[2]);
+        if ( params.length > 2) {
+            gh.init(params[0], params[2]);
         } else {
-            gh.init(keyAndParam[0], new byte[0]);
+            gh.init(params[0], new byte[0]);
         }
     }
 
-    private byte[] Y0(byte[] key, byte[] iv) {
+    /**
+     * 
+     * @param iv 候補
+     * @return iv
+     */
+    private byte[] Y0(byte[] iv) {
         if (iv.length == 12) {
             byte[] m = new byte[16];
             System.arraycopy(iv, 0, m, 0, 12);
             m[15] = 1;
             return m;
         }
-        GHASH ivgh = new GHASH();
-        ivgh.init(key);// aなし
+        GHASH ivgh = new GHASH(block);
+        ivgh.init(null);// key, aなし
         return ivgh.doFinal(iv);
     }
 
