@@ -25,6 +25,22 @@ import net.siisise.security.key.RSAPublicKey;
  * m = ハッシュ
  * m^d mod n = 署名
  * 署名^e mod n = m
+ * 
+ * 公開鍵で実装するもの.
+ * 5.1.1. RSAEP 
+ * 5.2.2. RSAVP1
+ * 秘密鍵で実装するもの.
+ * 5.1.2. RSADP
+ * 5.2.1. RSASP1
+ * 
+ * ToDo: Section 7 から
+ * 
+ * ほか
+ * 7.1. RSAES-OAEP
+ * 7.2. RSAES-PKCS1-v1_5
+ * 8.1. RSASSA-PSS
+ * 8.2. RSASSA-PKCS1-v1_5
+ * 
  * @deprecated まだ不安定かも
  */
 public class RSA extends OneBlock {
@@ -69,14 +85,15 @@ public class RSA extends OneBlock {
 
     /**
      * Integer to Octet String primitive
-     * @param x
-     * @param xLen
+     * RFC 8017 4.1. I2OSP
+     * @param x データ
+     * @param xLen 長さ
      * @return 長さ
      */
     public static byte[] i2osp(BigInteger x, int xLen) {
         byte[] xnum = x.toByteArray();
         if ( xnum.length != xLen ) {
-            if ( xnum.length < xLen ) {
+            if ( xnum.length < xLen ) { // 短い
                 byte[] t = new byte[xLen];
                 System.arraycopy(xnum, 0, t, xLen - xnum.length, xnum.length);
                 xnum = t;
@@ -94,6 +111,7 @@ public class RSA extends OneBlock {
     /**
      * Octet String to Integer primitive
      * 4. Data Conversion Primitives
+     * 4.2. OS2IP
      * signed になりそうなものをunsigned に拡張してからBigIntegerにする.
      * @param em 符号略バイトデータ
      * @return 符号なしBigInteger

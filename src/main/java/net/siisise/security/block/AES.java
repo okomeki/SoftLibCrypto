@@ -179,7 +179,7 @@ public class AES extends IntBlock {
         byte[] key = keys[0];
 
         if (key.length != 16 && key.length != 24 && key.length != 32) {
-            throw new SecurityException("key length");
+            throw new SecurityException("key length (" + key.length + ")");
         }
 
         int Nk = key.length / 4; // ぐらい
