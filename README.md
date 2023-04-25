@@ -47,12 +47,12 @@ Apache 2.0 License としたいです。
 <dependency>
     <groupId>net.siisise</groupId>
     <artifactId>softlib-crypto</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <scope>test</scope>
     <type>jar</type>
 </dependency>
 ~~~
-バージョンは 1.0.1 です。
-開発版は1.0.2-SNAPSHOTかも。
+バージョンは 1.0.2 です。
+開発版は1.0.3-SNAPSHOTかも。
 
 

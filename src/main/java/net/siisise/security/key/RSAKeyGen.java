@@ -25,14 +25,13 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import net.siisise.iso.asn1.ASN1Object;
 import net.siisise.iso.asn1.ASN1Util;
 import net.siisise.iso.asn1.tag.INTEGER;
-import net.siisise.iso.asn1.tag.NULL;
-import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
-import net.siisise.iso.asn1.tag.OCTETSTRING;
 import net.siisise.iso.asn1.tag.SEQUENCE;
-import net.siisise.security.key.RSAFullPrivateKey.OtherPrimeInfo;
+import net.siisise.security.key.RSAMultiPrivateKey.OtherPrimeInfo;
 
 /**
  * RFC 8017 PKCS #1 3.2. RSA Private Key
@@ -58,7 +57,7 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
      */
     @Override
     public KeyPair generateKeyPair() {
-        RSAFullPrivateKey fkey = generatePrivateKey(keysize, srnd, 2);
+        RSAPrivateCrtKey fkey = generatePrivateKey(keysize, srnd, 2);
         return new KeyPair(fkey.getPublicKey(), fkey.getPrivateKey());
     }
 
@@ -69,7 +68,7 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
      * @return 全要素入り.
      * @throws java.security.NoSuchAlgorithmException
      */
-    public static RSAFullPrivateKey generatePrivateKey(int len) throws NoSuchAlgorithmException {
+    public static RSAPrivateCrtKey generatePrivateKey(int len) throws NoSuchAlgorithmException {
         return generatePrivateKey(len, SecureRandom.getInstanceStrong(), 2);
     }
 
@@ -80,20 +79,22 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
      * @param u 2 または 3以上 まるちぷらいむ
      * @return 全要素入り.
      */
-    static RSAFullPrivateKey generatePrivateKey(int len, SecureRandom srnd, int u) {
-        RSAFullPrivateKey key = new RSAFullPrivateKey();
+    static RSAPrivateCrtKey generatePrivateKey(int len, SecureRandom srnd, int u) {
+        //RSAFullPrivateKey key = new RSAPrivateCrtKey();
         BigInteger lambda;
-       
+        BigInteger n;
+        BigInteger e;
+
         int pbit = len % u;
 //        do {
         srnd.nextBytes(new byte[srnd.nextInt() & 0x7ff]); // てきとー
-        key.publicExponent = BigInteger.probablePrime(17, srnd); // e = 3 から n - 1 , GCD(e, \lambda(n)) = 1
+        e = BigInteger.probablePrime(17, srnd); // e = 3 から n - 1 , GCD(e, \lambda(n)) = 1
 //        } while ( key.publicExponent.compareTo(BigInteger.valueOf(2)) <= 0 );
         Set<BigInteger> primes = new HashSet<>();
         List<OtherPrimeInfo> pis = new ArrayList<>();
         do {
             lambda = BigInteger.ONE;
-            key.modulus = BigInteger.ONE; // R_i と n 兼用
+            n = BigInteger.ONE; // R_i と n 兼用
             primes.clear();
             pis.clear();
 
@@ -102,36 +103,37 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
                 srnd.nextBytes(new byte[srnd.nextInt() & 0x7ff]); // てきとー
                 pi.prime = BigInteger.probablePrime(len / u + (i < pbit ? 1 : 0), srnd); // r_i
                 BigInteger p1e = pi.prime.subtract(BigInteger.ONE); // r_i - 1
-                if ( primes.contains(pi.prime) || !gcd(key.publicExponent,p1e).equals(BigInteger.ONE) ) {
+                if ( primes.contains(pi.prime) || !gcd(e,p1e).equals(BigInteger.ONE) ) {
                     System.out.println("重複素数 または r_i-1とeが素でない");
                     i--;
                     continue;
                 }
                 primes.add(pi.prime);
-                pi.exponent = key.publicExponent.modInverse(p1e); // e * d_i = 1 (mod (r_i - 1))
+                pi.exponent = modInverse(e,p1e); // e * d_i = 1 (mod (r_i - 1))
                 if ( i > 0 ) { // u > 2 と p
-                    pi.coefficient = key.modulus.modInverse(pi.prime); // R_i * t_i = 1 (mod r_i)
+                    pi.coefficient = modInverse(n,pi.prime); // R_i * t_i = 1 (mod r_i)
                 }
                 lambda = lcm(lambda, p1e);
                 pis.add(pi);
-                key.modulus = key.modulus.multiply(pi.prime); // n : R_i = r_1 * r_2 * ... * r_(i - 1)
+                n = n.multiply(pi.prime); // n : R_i = r_1 * r_2 * ... * r_(i - 1)
             }
-            
-        } while (!gcd(key.publicExponent,lambda).equals(BigInteger.ONE) || key.modulus.bitLength() < len); // 念のため
+        } while (!gcd(e,lambda).equals(BigInteger.ONE) || n.bitLength() < len); // 念のため
 
-        OtherPrimeInfo q = pis.remove(0); // coefficient 用に q p の順
-        OtherPrimeInfo p = pis.remove(0);
-        key.privateExponent = key.publicExponent.modInverse(lambda); // e * d = 1 mod  lambda(n)    (p-1)(q-1) 
-        key.prime1 = p.prime; // p
-        key.prime2 = q.prime; // q
-        key.exponent1 = p.exponent; // e * dP = 1 (mod (p-1))
-        key.exponent2 = q.exponent; // e * dQ = 1 (mod (q-1))
-        key.coefficient = p.coefficient; // qInv prime2(q) prime1(p) r_3 r_4 の並びを想定 3以降とは逆
+        OtherPrimeInfo oq = pis.remove(0); // coefficient 用に q p の順
+        OtherPrimeInfo op = pis.remove(0);
+        BigInteger d = modInverse(e,lambda); // e * d = 1 mod  lambda(n)    (p-1)(q-1) 
+        BigInteger p = op.prime; // p
+        BigInteger q = oq.prime; // q
+        BigInteger dP = op.exponent; // e * dP = 1 (mod (p-1))
+        BigInteger dQ = oq.exponent; // e * dQ = 1 (mod (q-1))
+        BigInteger coefficient = op.coefficient; // qInv prime2(q) prime1(p) r_3 r_4 の並びを想定 3以降とは逆
 
+        RSAPrivateCrtKey key;
         if ( u > 2 ) {
+            key = new RSAMultiPrivateKey(n,e,d,p,q,dP,dQ,coefficient, pis);
             key.version = 1;
-            key.otherPrimeInfos = pis;
         } else {
+            key = new RSAPrivateCrtKey(n,e,d,p,q,dP,dQ,coefficient);
             key.version = 0;
             if ( !validate(key)) {
                 throw new SecurityException();
@@ -147,51 +149,56 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
      * @return
      * @throws IOException
      */
-    public static RSAFullPrivateKey decodeSecret1(byte[] src) throws IOException {
+    public static RSAPrivateCrtKey decodeSecret1(byte[] src) throws IOException {
         SEQUENCE rsa = (SEQUENCE) ASN1Util.toASN1(src);
-        RSAFullPrivateKey pkey = new RSAFullPrivateKey();
-        pkey.version = ((INTEGER)rsa.get(0)).getValue().intValue();
-        pkey.modulus = ((INTEGER)rsa.get(1)).getValue(); // n
-        pkey.publicExponent = ((INTEGER)rsa.get(2)).getValue(); // e
-        pkey.privateExponent = ((INTEGER)rsa.get(3)).getValue(); // d
-        pkey.prime1 = ((INTEGER)rsa.get(4)).getValue(); // p
-        pkey.prime2 = ((INTEGER)rsa.get(5)).getValue(); // q
-        pkey.exponent1 = ((INTEGER)rsa.get(6)).getValue(); // d mod (p-1) : e * dP = 1 (mod (p-1))
-        pkey.exponent2 = ((INTEGER)rsa.get(7)).getValue(); // d mod (q-1) : e * dQ = 1 (mod (q-1))
-        pkey.coefficient = ((INTEGER)rsa.get(8)).getValue(); // (inverse of q) mod p
+        BigInteger n = ((INTEGER)rsa.get(1)).getValue(); // n
+        BigInteger e = ((INTEGER)rsa.get(2)).getValue(); // e
+        BigInteger d = ((INTEGER)rsa.get(3)).getValue(); // d
+        BigInteger p = ((INTEGER)rsa.get(4)).getValue(); // p
+        BigInteger q = ((INTEGER)rsa.get(5)).getValue(); // q
+        BigInteger dP = ((INTEGER)rsa.get(6)).getValue(); // d mod (p-1) : e * dP = 1 (mod (p-1))
+        BigInteger dQ = ((INTEGER)rsa.get(7)).getValue(); // d mod (q-1) : e * dQ = 1 (mod (q-1))
+        BigInteger c = ((INTEGER)rsa.get(8)).getValue();  // (inverse of q) mod p
+        int v = ((INTEGER)rsa.get(0)).getValue().intValue();
         // オプションは未対応
-        if ( pkey.version > 0 ) {
-            pkey.otherPrimeInfos = new ArrayList<>();
+        if ( v == 0 ) {
+            RSAPrivateCrtKey pkey = new RSAPrivateCrtKey(n, e, d, p, q, dP, dQ, c);
+            if ( !validate(pkey)) {
+                throw new SecurityException("Invalid RSA Private Key");
+            }
+            return pkey;
+        } else if ( v == 1 ) {
+            List<RSAMultiPrivateKey.OtherPrimeInfo> op = new ArrayList<>();
             List<ASN1Object> apis = ((SEQUENCE) rsa.get(9)).getValue();
             for ( ASN1Object api : apis ) {
-                SEQUENCE p = (SEQUENCE) api;
-                RSAFullPrivateKey.OtherPrimeInfo pi = new RSAFullPrivateKey.OtherPrimeInfo();
-                pi.prime = ((INTEGER)p.get(0)).getValue();
-                pi.exponent = ((INTEGER)p.get(1)).getValue();
-                pi.coefficient = ((INTEGER)p.get(2)).getValue();
-                pkey.otherPrimeInfos.add(pi);
+                SEQUENCE mp = (SEQUENCE) api;
+                RSAMultiPrivateKey.OtherPrimeInfo pi = new RSAMultiPrivateKey.OtherPrimeInfo();
+                pi.prime = ((INTEGER)mp.get(0)).getValue();
+                pi.exponent = ((INTEGER)mp.get(1)).getValue();
+                pi.coefficient = ((INTEGER)mp.get(2)).getValue();
+                op.add(pi);
             }
+            RSAMultiPrivateKey pkey = new RSAMultiPrivateKey(n, e, d, p, q, dP, dQ, c, op);
+            return pkey;
         }
-        if ( !validate(pkey)) {
-            throw new SecurityException("Invalid RSA Private Key");
-        }
-        return pkey;
+        throw new SecurityException("Invalid RSA Private Key");
     }
     
+    public static SEQUENCE encodePublic8(RSAPublicKey pub) {
+        return pub.getPKCS8ASN1();
+    }
+
     /**
      * PKCS #1 を PKCS #8 でくるんだらしいもの
      * @param key
      * @return 
      */
-    public static SEQUENCE encodeSecret8(RSAFullPrivateKey key) {
-        SEQUENCE s = new SEQUENCE();
-        s.add(new INTEGER(0));
-        SEQUENCE ids = new SEQUENCE();
-        ids.add(new OBJECTIDENTIFIER("1.2.840.113549.1.1.1"));
-        ids.add(new NULL());
-        s.add(ids);
-        s.add(new OCTETSTRING(encodeSecret1(key).encodeAll()));
-        return s;
+    public static SEQUENCE encodePrivate8(RSAPrivateCrtKey key) {
+        return key.getPKCS8PrivateKeyInfoASN1();
+    }
+    
+    public static SEQUENCE encodePublic1(RSAPublicKey pub) {
+        return pub.getPKCS1ASN1();
     }
     
     /**
@@ -199,29 +206,8 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
      * @param key
      * @return 
      */
-    public static SEQUENCE encodeSecret1(RSAFullPrivateKey key) {
-        SEQUENCE prv = new SEQUENCE(); // PKCS #1 の定義の範囲
-        prv.add(new INTEGER(key.version));
-        prv.add(new INTEGER(key.modulus));
-        prv.add(new INTEGER(key.publicExponent));
-        prv.add(new INTEGER(key.privateExponent));
-        prv.add(new INTEGER(key.prime1));
-        prv.add(new INTEGER(key.prime2));
-        prv.add(new INTEGER(key.exponent1));
-        prv.add(new INTEGER(key.exponent2));
-        prv.add(new INTEGER(key.coefficient));
-        if ( key.version > 0 ) {
-            SEQUENCE ots = new SEQUENCE();
-            for ( OtherPrimeInfo pi : key.otherPrimeInfos ) {
-                SEQUENCE dpi = new SEQUENCE();
-                dpi.add(new INTEGER(pi.prime));
-                dpi.add(new INTEGER(pi.exponent));
-                dpi.add(new INTEGER(pi.coefficient));
-                ots.add(dpi);
-            }
-            prv.add(ots);
-        }
-        return prv;
+    public static SEQUENCE encodePrivate1(RSAPrivateCrtKey key) {
+        return key.getPKCS1ASN1();
     }
 
     /**
@@ -229,44 +215,48 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
      * @param key
      * @return 
      */
-    public static boolean validate(RSAFullPrivateKey key) {
+    public static boolean validate(RSAPrivateCrtKey key) {
         BigInteger ps = key.prime1.subtract(BigInteger.ONE);
         BigInteger qs = key.prime2.subtract(BigInteger.ONE);
-        BigInteger l = lcm(ps,qs);
-        return key.version == 0 && key.modulus.equals(key.prime1.multiply(key.prime2)) &&
+        BigInteger lambda = lcm(ps,qs);
+        return key.version == 0 && isPrime(key.prime1) && isPrime(key.prime2) &&
+                key.modulus.equals(key.prime1.multiply(key.prime2)) &&
                 key.prime1.isProbablePrime(100) && key.prime2.isProbablePrime(100) &&
-                (!key.prime1.equals(key.prime2)) && gcd(key.publicExponent,l).equals(BigInteger.ONE) &&
-                key.publicExponent.multiply(key.privateExponent).mod(l).equals(BigInteger.ONE) &&
+                (!key.prime1.equals(key.prime2)) && gcd(key.publicExponent,lambda).equals(BigInteger.ONE) &&
+                key.publicExponent.multiply(key.privateExponent).mod(lambda).equals(BigInteger.ONE) &&
                 key.exponent1.equals(key.privateExponent.mod(ps)) && key.exponent2.equals(key.privateExponent.mod(qs)) &&
                 key.coefficient.equals(key.prime2.modInverse(key.prime1));
     }
 
     /**
-     * 素数判定 (てきとー)
+     * 確率的素数 probable prime 判定 (てきとー)
      * ToDo: Read FIPS 186-4 Appendix C 3.1
-     * a^(m-1) = a mod m 素数っぽい
-     * a.modPow(m-1,m) = a mod m
+     *  a^(p-1) = 1 mod p 素数っぽい
+     *  a.modPow(p,p) = a mod p
+     *  a.modPow(p-1,p) = 1 mod p
      * 
-     * a^(e・dp)=a mod p 
+     *  a^(e・dp)=a mod p 
      * 
-     * @param m
-     * @return
-     * @throws NoSuchAlgorithmException 
+     * @param p 素数候補
+     * @return true たぶん素数 false 素数ではない 
      */
-/*
-    static boolean isPrime(BigInteger m) throws NoSuchAlgorithmException {
-        BigInteger b = m.subtract(BigInteger.ONE);
-        SecureRandom r = SecureRandom.getInstanceStrong();
-        for (int i = 10; i < 2000; i++ ) {
-            BigInteger a = new BigInteger(r.generateSeed(m.bitCount() / 8 + 1)).mod(m);
-            if (!a.modPow(b, m).equals(a)) {
-                return false;
+    static boolean isPrime(BigInteger p) {
+        try {
+            BigInteger b = p.subtract(BigInteger.ONE);
+            SecureRandom srnd = SecureRandom.getInstanceStrong();
+            for (int i = 10; i < 500; i++ ) {
+                BigInteger a = new BigInteger(srnd.generateSeed(p.bitCount() / 8 + 1)).abs().mod(p);
+                if (!a.modPow(b, p).equals(BigInteger.ONE)) {
+                    return false;
+                }
             }
+        } catch (NoSuchAlgorithmException ex) {
+            Logger.getLogger(RSAKeyGen.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
         }
-        
+            
         return true; // たぶん
     }
-*/  
 
     /**
      * (非不整数の)最小公倍数.
@@ -294,5 +284,38 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
             a = m;
         }
         return b;
+    }
+    
+    /**
+     * ax + by = gcd(a,b)
+     * ax - 1 = qm
+     * ax - qm = 1
+     * @param a
+     * @param m
+     * @return 
+     */
+    static BigInteger modInverse(BigInteger a, BigInteger m) {
+        if (BigInteger.ONE.equals(m)) {
+            return BigInteger.ZERO;
+        }
+
+        BigInteger m0 = m;
+        BigInteger y = BigInteger.ZERO;
+        BigInteger x = BigInteger.ONE;
+
+        while (a.compareTo(BigInteger.ONE) > 0) {
+            BigInteger q = a.divide(m);  // q = a / m
+            BigInteger t = m;
+                           m = a.mod(m); // m = a % m
+                               a = t;
+                       t = y;
+                           y = x.subtract(q.multiply(y));
+                               x = t;
+        }
+
+        if (x.compareTo(BigInteger.ZERO) < 0) {
+            x = x.add(m0);
+        }
+        return x;
     }
 }
