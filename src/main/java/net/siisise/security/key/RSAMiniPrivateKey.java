@@ -16,11 +16,14 @@
 package net.siisise.security.key;
 
 import java.math.BigInteger;
-import net.siisise.security.block.RSA;
+import net.siisise.ietf.pkcs1.PKCS1;
+import net.siisise.iso.asn1.tag.INTEGER;
+import net.siisise.iso.asn1.tag.SEQUENCE;
 
 /**
  * RFC 8017 PKCS #1 3.2.
  * RSA Private Key (RSA秘密鍵)
+ * n と d だけ持っている最小版.
  * X.509 系Encode出力には未対応.
  */
 public class RSAMiniPrivateKey implements java.security.interfaces.RSAPrivateKey {
@@ -43,6 +46,11 @@ public class RSAMiniPrivateKey implements java.security.interfaces.RSAPrivateKey
     protected RSAMiniPrivateKey() {
     }
 
+    /**
+     * 秘密鍵要素のみ
+     * @param n modulus
+     * @param d privateExponent
+     */
     public RSAMiniPrivateKey(BigInteger n, BigInteger d) {
         modulus = n;
         privateExponent = d;
@@ -50,56 +58,95 @@ public class RSAMiniPrivateKey implements java.security.interfaces.RSAPrivateKey
 
     /**
      * RSA Decryption Primitive
-     * 5.1.2. RSADP
+     * RFC 8017 5.1.2. RSADP
      * m = c ^ d ( mod n ) オプションは省略する.
      *
      * @param c ciphertext 暗号文 0 ～ n - 1 の整数
-     * @return m プレーンテキスト 0 ～ n - 1 の範囲
+     * @return m message メッセージ 0 - n-1 の整数
      * @see RSAPublicKey#rsaep(java.math.BigInteger) 
      */
     public BigInteger rsadp(BigInteger c) {
         if (c.compareTo(BigInteger.ZERO) < 0 || c.compareTo(modulus) >= 0) {
             throw new SecurityException("ciphertext representative out of range");
         }
-        return c.modPow(privateExponent, modulus);
+        return modPow(c);
     }
 
     /**
      * RSA Decryption Primitive
-     * @param v
-     * @return 
+     * RSADP(OS2IP(c))
+     * @param c ciphertext 暗号文 0 - n-1 の整数
+     * @return m message メッセージ 0 - n-1 の整数
      */
-    public BigInteger rsadp(byte[] v) {
-        return rsadp(RSA.os2ip(v));
+    public BigInteger rsadp(byte[] c) {
+        return rsadp(PKCS1.OS2IP(c));
+    }
+
+    /**
+     * I2OSP(RSADP(OS2IP(c)))
+     * @param c ciphertext 暗号文 0 ～ n - 1 の整数
+     * @param xLen 戻り長さ
+     * @return m message メッセージ 0 - n-1 の整数
+     */
+    public byte[] rsadp(byte[] c, int xLen) {
+        return PKCS1.I2OSP(rsadp(PKCS1.OS2IP(c)), xLen);
     }
 
     /**
      * 5.2.1. RSASP1
      *
-     * @param m
+     * @param m データ
      * @return
      */
     public BigInteger rsasp1(BigInteger m) {
         if (m.compareTo(BigInteger.ZERO) < 0 || m.compareTo(modulus) >= 0) {
             throw new SecurityException("message representative out of range");
         }
-        return m.modPow(privateExponent, modulus);
+        return modPow(m);
     }
 
+    /**
+     * 5.2.1. RSASP1
+     * RSASP1 の前後の変換をまとめたもの
+     * I2OSP(RSASP1(OS2IP(m)),xLen)
+     * @param m データ
+     * @param xlen 戻りバイト長
+     * @return I2OSP(RSASP1(OS2IP(m)),xLen)
+     */
+    public byte[] rsasp1(byte[] m, int xlen) {
+        return PKCS1.I2OSP(rsasp1(PKCS1.OS2IP(m)), xlen);
+    }
+
+    /**
+     * @param s
+     * @return s.modPow(d, n)
+     */
     public BigInteger modPow(BigInteger s) {
         return s.modPow(privateExponent, modulus);
     }
 
+    /**
+     * private exponent
+     * @return d プライベート指数
+     */
     @Override
     public BigInteger getPrivateExponent() {
         return privateExponent;
     }
 
+    /**
+     * modulus
+     * @return n モジュラス
+     */
     @Override
     public BigInteger getModulus() {
         return modulus;
     }
 
+    /**
+     * 暗号アルゴリズム
+     * @return RSA
+     */
     @Override
     public String getAlgorithm() {
         return "RSA";
@@ -117,11 +164,23 @@ public class RSAMiniPrivateKey implements java.security.interfaces.RSAPrivateKey
 
     /**
      * PKCS #1 A.1.2. RSA Private Key Syntax の出力はできない.
+     * 公開鍵相当にしておく.
      * @return 
      */
     @Override
     public byte[] getEncoded() {
+        SEQUENCE seq = getPKCS1ASN1();
+        return seq.encodeAll();
+    }
 
-        throw new UnsupportedOperationException("Not supported yet.");
+    /**
+     * 公開鍵の形式を借り
+     * @return 
+     */
+    SEQUENCE getPKCS1ASN1() {
+        SEQUENCE seq = new SEQUENCE();
+        seq.add(new INTEGER(modulus)); // n
+        seq.add(new INTEGER(privateExponent)); // e
+        return seq;
     }
 }

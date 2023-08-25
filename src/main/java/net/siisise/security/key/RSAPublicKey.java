@@ -16,6 +16,7 @@
 package net.siisise.security.key;
 
 import java.math.BigInteger;
+import net.siisise.ietf.pkcs1.PKCS1;
 import net.siisise.iso.asn1.tag.BITSTRING;
 import net.siisise.iso.asn1.tag.INTEGER;
 import net.siisise.iso.asn1.tag.NULL;
@@ -30,9 +31,20 @@ import net.siisise.iso.asn1.tag.SEQUENCE;
 public class RSAPublicKey implements java.security.interfaces.RSAPublicKey {
 
     private static final long serialVersionUID = 1L;
+    /**
+     * n modulus
+     */
     private final BigInteger modulus;
+    /**
+     * e 公開指数
+     */
     private final BigInteger publicExponent;
 
+    /**
+     * nとeで公開鍵をつくる
+     * @param n modulus
+     * @param e publicExponent
+     */
     public RSAPublicKey(BigInteger n, BigInteger e) {
         modulus = n;
         publicExponent = e;
@@ -48,8 +60,8 @@ public class RSAPublicKey implements java.security.interfaces.RSAPublicKey {
     }
 
     /**
-     * 
-     * @return modulus
+     * n modulus を返す
+     * @return n modulus
      */
     @Override
     public BigInteger getModulus() {
@@ -73,7 +85,7 @@ public class RSAPublicKey implements java.security.interfaces.RSAPublicKey {
     }
     
     /**
-     * 
+     * エンコードタイプ
      * @return 
      */
     @Override
@@ -138,14 +150,13 @@ public class RSAPublicKey implements java.security.interfaces.RSAPublicKey {
         return s.encodeAll();
     }
         
-
     /**
      * RSA Encryption Primitive
      * 5.1.1. RSAEP
      * 暗号化.
      * 秘密鍵の RSADP と対
-     * @param m ブレーンテキスト
-     * @return c 暗号
+     * @param m メッセージ 0 から n-1の間の整数
+     * @return 暗号 c 0 から n-1 の間の整数
      * @see RSAMiniPrivateKey#rsadp(java.math.BigInteger) 
      */
     public BigInteger rsaep(BigInteger m) {
@@ -153,6 +164,26 @@ public class RSAPublicKey implements java.security.interfaces.RSAPublicKey {
             throw new SecurityException("message representative out of range");
         }
         return m.modPow(publicExponent, modulus);
+    }
+
+    /**
+     * 暗号化.
+     * 秘密鍵の RSADP と対
+     * @param m メッセージ 0 から n-1の間の整数 のバイナリ
+     * @return 暗号 c 0 から n-1 の間の整数
+     */
+    public BigInteger rsaep(byte[] m) {
+        return rsaep(PKCS1.OS2IP(m));
+    }
+    
+    /**
+     * 入出力をbyte array にしたもの
+     * @param m メッセージ 0 から n-1の間の整数
+     * @param l 戻りオクテット長
+     * @return 
+     */
+    public byte[] rsaep(byte[] m, int l) {
+        return PKCS1.I2OSP(rsaep(PKCS1.OS2IP(m)), l);
     }
 
     /**
@@ -166,6 +197,10 @@ public class RSAPublicKey implements java.security.interfaces.RSAPublicKey {
             throw new SecurityException("signature representative out of range");
         }
         return s.modPow(publicExponent, modulus);
+    }
+    
+    public byte[] rsavp1(byte[] s, int l) {
+        return PKCS1.I2OSP( rsavp1(PKCS1.OS2IP(s)), l);
     }
     
     /**
