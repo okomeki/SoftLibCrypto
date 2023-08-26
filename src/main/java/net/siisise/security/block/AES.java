@@ -39,7 +39,7 @@ public class AES extends IntBlock {
 
     private static final int[] Rcon = new int[11];
 
-    private static final long[] SBOX = new long[256];
+    private static final long[] SBOX = new long[256]; // FIPS 197-upd1 Table 4.
     private static final long[] LMIX0 = new long[256];
     private static final long[] LMIX1 = new long[256];
     private static final long[] LMIX2 = new long[256];
@@ -53,7 +53,6 @@ public class AES extends IntBlock {
     static {
         // 2・n
         final int[] GF = new int[256];
-//        final int[] rgf = new int[256];
         final int[] logGF = new int[256];
         final int[] expGF = new int[256];
 
@@ -61,7 +60,6 @@ public class AES extends IntBlock {
         for (int i = 1; i < 256; ++i) {
             // 1と1bに分けずにシフト演算でまとめる
             GF[i] = (i << 1) ^ ((i >> 7) * 0x11b);
-//            rgf[i] = (i >> 1) ^ ((i & 1) * 0x1b);
         } // m(x) = x^8 + x^4 * x^3 + x + 1 のビット 100011011 = 0x11b
 
         // sboxつくる
@@ -115,6 +113,7 @@ public class AES extends IntBlock {
             IMIX3[s] = gf9x ^  gf7x;
         }
 
+        // upd1 5.2. Table 5. Round constants
         n = 1;
         for (int i = 1; i < 11; i++) { // 使う範囲で生成
             Rcon[i] = n << 24;
@@ -171,6 +170,7 @@ public class AES extends IntBlock {
     /**
      * 鍵.
      * AESは128bit長.
+     * keyExpansion()
      *
      * @param keys 128,192,256bit (16,24,32byte)のいずれか
      */
@@ -182,8 +182,8 @@ public class AES extends IntBlock {
             throw new SecurityException("key length (" + key.length + ")");
         }
 
-        int Nk = key.length / 4; // ぐらい
-        int Nr = Nk + 6;
+        int Nk = key.length / 4; // ぐらい 4 6 8
+        int Nr = Nk + 6;         // ラウンド数 10 12 14
         Nr4 = Nr * 4;
 
         // ラウンド鍵の初期化 ワード列版 128*11?
@@ -270,22 +270,22 @@ public class AES extends IntBlock {
             // SubBytes + ShiftRow + MixColumns
             long e, g;
             e  = LMIX0[(int)(a >>> 0x38)]
-              ^  LMIX1[(int)(a >> 16) & 0xff];
+              ^  LMIX1[(int)(a >>  0x10) & 0xff];
             g  = LMIX0[(int)(b >>> 56)]
-              ^  LMIX1[(int) b >> 16 & 0xff];
+              ^  LMIX1[(int) b >> 0x10  & 0xff];
             e ^= LMIX2[(int)(b >> 40) & 0xff]
-              ^  LMIX3[(int)b & 0xff];
+              ^  LMIX3[(int) b        & 0xff];
             g ^= LMIX2[(int)(a >> 40) & 0xff]
-              ^  LMIX3[(int)a & 0xff];
+              ^  LMIX3[(int) a        & 0xff];
             e <<= 32;
             g <<= 32;
             e ^= LMIX0[(int)(a >> 24) & 0xff]
               ^  LMIX1[(int)(b >> 48) & 0xff];
-            g ^= LMIX0[(int)b >> 24 & 0xff];
+            g ^= LMIX0[(int) b >> 24  & 0xff];
             g ^= LMIX1[(int)(a >> 48) & 0xff];
-            e ^= LMIX2[(int)b >> 8 & 0xff]
+            e ^= LMIX2[(int) b >>  8  & 0xff]
               ^  LMIX3[(int)(a >> 32) & 0xff];
-            g ^= LMIX2[(int)(a >> 8) & 0xff];
+            g ^= LMIX2[(int)(a >>  8) & 0xff];
             g ^= LMIX3[(int)(b >> 32) & 0xff];
 
             // AddRoundKey

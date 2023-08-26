@@ -43,6 +43,10 @@ public class GHASH implements MAC {
         block = new AES();
     }
     
+    /**
+     * AES(等)鍵の初期化
+     * @param key AES鍵
+     */
     @Override
     public void init(byte[] key) {
         init(key, new byte[0]);
@@ -123,24 +127,30 @@ public class GHASH implements MAC {
 
     @Override
     public void update(byte[] src, int offset, int length) {
-        int l = Math.min(pool.size() - 16, length);
+//        int l = Math.min(16 - pool.size(), length);
         blen += length;
-        pool.write(src,offset,l);
-        offset += l;
-        length -= l;
+        pool.write(src,offset,length);
+//        offset += l;
+//        length -= l;
         byte[] d = new byte[16];
         if (pool.length() > 16) {
             pool.read(d);
             xorMul(d);
         }
+/*
         while ( length > 16 ) {
             xorMul(src,offset);
             offset += 16;
             length -= 16;
         }
         pool.write(src,offset,length);
+*/
     }
 
+    /**
+     * 
+     * @return tag
+     */
     @Override
     public byte[] doFinal() {
         long n = (blen + 15) / 16;

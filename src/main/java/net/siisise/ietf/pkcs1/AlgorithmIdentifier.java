@@ -1,6 +1,7 @@
 package net.siisise.ietf.pkcs1;
 
 import net.siisise.iso.asn1.ASN1Object;
+import net.siisise.iso.asn1.tag.NULL;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.SEQUENCE;
 
@@ -10,19 +11,20 @@ import net.siisise.iso.asn1.tag.SEQUENCE;
  */
 public class AlgorithmIdentifier {
     public OBJECTIDENTIFIER algorithm;
-    public ASN1Object parameters; // OPTIONAL
-
-    /**
-     * X.697 (仮)
-     */
-    void encodeJSON() {
-        
+    public ASN1Object parameters = new NULL(); // OPTIONAL
+/*    
+    AlgorithmIdentifier(OBJECTIDENTIFIER alg, ASN1Object params) {
+        algorithm = alg;
+        parameters = params;
     }
+*/
 
     public SEQUENCE encodeASN1() {
         SEQUENCE s = new SEQUENCE();
         s.add(algorithm);
-        s.add(parameters);
+        if ( parameters != null ) {
+            s.add(parameters);
+        }
         return s;
     }
 

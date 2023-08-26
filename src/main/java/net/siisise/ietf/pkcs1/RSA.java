@@ -25,22 +25,23 @@ import net.siisise.security.key.RSAPublicKey;
 public class RSA {
 
     /**
-     * Section .PublicKey
+     * 暗号化 (公開鍵)
+     * Section 5.1.1. RSAEP
      *
-     * @param key 公開鍵
-     * @param m メッセージ
-     * @return 暗号
+     * @param key (n, e) 公開鍵
+     * @param m message メッセージ 0 から n-1の間の整数
+     * @return c ciohertext 暗号 0 から n-1 の間の整数
      */
     public static BigInteger rsaep(RSAPublicKey key, BigInteger m) {
         return key.rsaep(m);
     }
 
     /**
-     * 暗号の復号 (数値渡し)
-     * 
+     * 暗号の復号 (数値渡し) (秘密鍵)
+     * Section 5.1.2. RSADP
      * @param key 秘密鍵
-     * @param c 暗号
-     * @return プレーン
+     * @param c ciphertext 暗号文 0 ～ n - 1 の整数
+     * @return m message メッセージ 0 - n-1 の整数
      */
     public static BigInteger rsadp(RSAMiniPrivateKey key, BigInteger c) {
         return key.rsadp(c);
@@ -54,6 +55,27 @@ public class RSA {
      */
     public static BigInteger rsadp(RSAMiniPrivateKey key, byte[] v) {
         return key.rsadp(v);
+    }
+
+    /**
+     * 秘密鍵で署名
+     * Section 5.2.1. RSASP1
+     * @param key 秘密鍵
+     * @param m 
+     * @return 
+     */
+    public static BigInteger rsasp1(RSAMiniPrivateKey key, BigInteger m) {
+       return key.rsasp1(m);
+}
+
+    /**
+     * 署名検証的なもの
+     * @param key 公開鍵
+     * @param s
+     * @return 
+     */
+    public static BigInteger rsavp1(RSAPublicKey key, BigInteger s) {
+        return key.rsavp1(s);
     }
 
 }
