@@ -28,17 +28,23 @@ import net.siisise.security.key.RSAPublicKey;
  */
 public class RSASSA_PKCS1_v1_5 extends RSASSA {
     
+    /**
+     * 省略時 SHA-1 を使用(非推奨)
+     */
     public RSASSA_PKCS1_v1_5() {
         this(new SHA1());
     }
 
+    /**
+     * @param md ダイジェストを直接指定
+     */
     public RSASSA_PKCS1_v1_5(MessageDigest md) {
         emsa = new EMSA_PKCS1_v1_5(md);
     }
     
     @Override
     public byte[] sign(RSAMiniPrivateKey key) {
-        int k = (key.getModulus().bitLength() * + 7) / 8;
+        int k = (key.getModulus().bitLength() + 7) / 8;
         byte[] EM = emsa.encode(k);
         return key.rsasp1(EM, k);
     }

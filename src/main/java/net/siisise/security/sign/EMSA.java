@@ -40,6 +40,12 @@ public interface EMSA {
         update(M);
         return encode(emLen);
     }
+    
+    /**
+     * 
+     * @param emLen ビット数またはバイト数 まだ揃えていない
+     * @return 
+     */
     byte[] encode(int emLen);
 
     default boolean verify(byte[] M, byte[] EM, int emLen) {

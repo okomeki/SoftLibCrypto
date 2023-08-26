@@ -34,6 +34,7 @@ public class EMSA_PSS implements EMSA {
     static byte[] PAD = new byte[8];
     
     MessageDigest md;
+    long len;
     MGF mgf;
     int sLen;
     
@@ -59,16 +60,20 @@ public class EMSA_PSS implements EMSA {
     @Override
     public void update(byte[] M) {
         md.update(M);
+        len += M.length;
     }
 
     @Override
     public void update(byte[] M, int offset, int length) {
         md.update(M, offset, length);
+        len += length;
     }
 
     @Override
     public void update(ByteBuffer buffer) {
+        len += buffer.limit() - buffer.position();
         md.update(buffer);
+        
     }
 
     /**

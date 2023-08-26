@@ -15,6 +15,7 @@
  */
 package net.siisise.security.sign;
 
+import java.nio.ByteBuffer;
 import net.siisise.security.key.RSAMiniPrivateKey;
 import net.siisise.security.key.RSAPublicKey;
 
@@ -26,18 +27,43 @@ import net.siisise.security.key.RSAPublicKey;
 public abstract class RSASSA {
     EMSA emsa;
     
+    /**
+     * 署名/検証用メッセージをハッシュにかける.
+     * MessageDigestのupdateと同じ
+     * 本文を分割して繰り返し利用可能.
+     * @param M メッセージまたはその一部
+     */
     public void update(byte[] M) {
         emsa.update(M);
     }
     
+    /**
+     * 署名/検証用メッセージをハッシュにかける.
+     * MessageDigestのupdateと同じ
+     * 本文を分割して繰り返し利用可能.
+     * @param M メッセージを含む配列
+     * @param offset 開始位置
+     * @param length 長さ
+     */
     public void update(byte[] M, int offset, int length) {
         emsa.update(M, offset, length);
     }
 
     /**
+     * 署名/検証用メッセージをハッシュにかける.
+     * MessageDigestのupdateと同じ
+     * 本文を分割して繰り返し利用可能.
+     * 
+     * @param buffer メッセージを含むBuffer
+     */
+    public void update(ByteBuffer buffer) {
+        emsa.update(buffer);
+    }
+    
+    /**
      * 署名
      * @param key 秘密鍵
-     * @param M メッセージ
+     * @param M メッセージ (updateを使っている場合は末尾に当たる部分)
      * @return 署名
      */
     public byte[] sign(RSAMiniPrivateKey key, byte[] M) {
@@ -45,19 +71,32 @@ public abstract class RSASSA {
         return sign(key);
     }
     
+    /**
+     * 署名.
+     * メッセージは事前にupdateを使用してハッシュ関数に渡す.
+     * @param key 秘密鍵
+     * @return 署名
+     */
     public abstract byte[] sign(RSAMiniPrivateKey key);
     
     /**
      * 検証
      * @param pub 公開鍵
-     * @param M メッセージ
+     * @param M メッセージ (updateを使っている場合は末尾に当たる部分)
      * @param S 署名
-     * @return 判定
+     * @return 判定 true false
      */
     public boolean verify(RSAPublicKey pub, byte[] M, byte[] S) {
         update(M);
         return verify(pub, S);
     }
 
+    /**
+     * 検証.
+     * メッセージは事前にupdateを使用してハッシュ関数に渡す.
+     * @param pub 公開鍵
+     * @param S 署名
+     * @return 判定 true false
+     */
     public abstract boolean verify(RSAPublicKey pub, byte[] S);
 }

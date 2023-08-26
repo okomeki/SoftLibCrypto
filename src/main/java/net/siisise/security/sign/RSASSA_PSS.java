@@ -22,20 +22,27 @@ import net.siisise.security.padding.MGF;
 
 /**
  * PKCS #1 Section 8.1.
+ * MessageDigest、MGF, salt length を初期設定
  * update で本体を渡してから sign または verify をするといい
  */
 public class RSASSA_PSS extends RSASSA {
     
     /**
-     * 
-     * @param md hash function
-     * @param mgf
-     * @param sLen 
+     * とりあえずinitの代わり
+     * @param hash hash function
+     * @param mgf ちょっと拡張する関数
+     * @param sLen salt(乱数生成)の長さ
      */
-    public RSASSA_PSS(MessageDigest md, MGF mgf, int sLen) {
-        emsa = new EMSA_PSS(md,mgf, sLen);
+    public RSASSA_PSS(MessageDigest hash, MGF mgf, int sLen) {
+        emsa = new EMSA_PSS(hash, mgf, sLen);
     }
-
+    
+    /**
+     * 署名.
+     * 本文はupdateで先に渡す.
+     * @param key 秘密鍵
+     * @return RSASSA-PSS 署名
+     */
     @Override
     public byte[] sign(RSAMiniPrivateKey key) {
         int modBits = key.getModulus().bitLength();
@@ -49,9 +56,11 @@ public class RSASSA_PSS extends RSASSA {
     /**
      * 署名検証
      * 8.1.2. Signature Verification Operation
+     * 署名を検証する.
+     * 本文はupdateで先に渡す.
      * @param pub 公開鍵
-     * @param S 署名
-     * @return 有効 / 無効な署名
+     * @param S RSASSA-PSS 署名
+     * @return true:有効 / false:無効な署名
      */
     @Override
     public boolean verify(RSAPublicKey pub, byte[] S) {
