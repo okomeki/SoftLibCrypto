@@ -20,13 +20,13 @@ import net.siisise.security.digest.SHA1;
 import net.siisise.security.padding.EME_OAEP;
 
 /**
- * RFC 8017 PKCS #1 Section 7. Encryption Schemes
+ * RFC 8017 PKCS #1
+ * Section 7. 暗号化スキーム Encryption Schemes
  * 
  * Section 5.1.1. RSAEP, Section 5.1.2. RSADP
- * Scction 7.1.1. Step 2, 7.1.2. Step 3 EME-OAEP
- * 
  * 
  * 7.1. RSAES-OAEP
+ * Scction 7.1.1. Step 2, 7.1.2. Step 3 EME-OAEP
  * 
  * IEEE 1363 IFES
  * IFES-RSA
@@ -40,28 +40,31 @@ public class RSAES_OAEP extends RSAES {
     
     /**
      * いろいろな初期値.
+     * L ラベルは PKCS #1 v2.2 では使用しないのでコンストラクタからは外す形
      * @param md L用 DEFAULT sha1
      * @param mgfMd MGF用 DEFAULT mgf1SHA1
+     */
+    public RSAES_OAEP(MessageDigest md, MessageDigest mgfMd) {
+        super(new EME_OAEP(mgfMd, md));
+    }
+    
+    /**
+     * ラベルはOption
      * @param L label (Optional)
      */
-    public RSAES_OAEP(MessageDigest md, MessageDigest mgfMd, byte[] L) {
-        super(new EME_OAEP(mgfMd, md, L));
+    public void updateLabel(byte[] L) {
+        ((EME_OAEP)eme).updateLabel(L);
     }
 
     /**
-     * いろいろな初期値.
-     * @param md MGF用 と L用
-     * @param l label (Optional)
+     * 
+     * @param md L用とMGF用兼用 省略時 SHA1
      */
-    public RSAES_OAEP(MessageDigest md, byte[] l) {
-        super(new EME_OAEP(md, md, l));
-    }
-    
     public RSAES_OAEP(MessageDigest md) {
-        this(md, null);
+        this(md, md);
     }
-    
+
     public RSAES_OAEP() {
-        this(new SHA1(), null);
+        this(new SHA1());
     }
 }

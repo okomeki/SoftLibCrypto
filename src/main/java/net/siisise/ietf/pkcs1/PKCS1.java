@@ -1,13 +1,12 @@
 package net.siisise.ietf.pkcs1;
 
 import net.siisise.security.sign.RSAES;
-import net.siisise.security.sign.RSAES_v1_5;
+import net.siisise.security.sign.RSAES_PKCS1_v1_5;
 import net.siisise.security.sign.RSAES_OAEP;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import net.siisise.iso.asn1.ASN1;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
-import net.siisise.security.digest.SHA1;
 import net.siisise.security.key.RSAMiniPrivateKey;
 import net.siisise.security.key.RSAPublicKey;
 import net.siisise.security.sign.RSASSA;
@@ -96,28 +95,33 @@ public class PKCS1 {
     }
 
     /**
+     * 公開鍵によるRSAES OAEP暗号化 仮.
      * 7.Encryption Schemes 暗号化スキーム.
      * 推奨ハッシュ、マスク生成関数は Appendix B
      * LはPKCS #1では未使用
+     * 
+     * ハッシュはSHA1 で仮 L用とMGF1用の2つが必要
      * 
      * @param pkey 公開鍵 (n, e)
      * @param m メッセージ (モジュラス長 - 2*ハッシュ長(SHA1) - 2)バイト より短いこと
      * @return 暗号化メッセージ
      */
     public static byte[] RSAES_OAEP_encryption(RSAPublicKey pkey, byte[] m) {
-        RSAES rsaes = new RSAES_OAEP(new SHA1());
+        RSAES rsaes = new RSAES_OAEP();
         return rsaes.encrypt(pkey, m);
     }
 
     /**
-     * 
+     * 秘密鍵によるRSAES OAEP復号. 仮
+     * 7.Encryption Schemes
+     * ハッシュはSHA1 で仮 L用とMGF1用の2つが必要
      * LはPKCS #1では未使用
      * @param prv 秘密鍵
      * @param c 暗号化メッセージ
      * @return メッセージ
      */
     public static byte[] RSAES_OAEP_decryption(RSAMiniPrivateKey prv, byte[] c) {
-        RSAES rsaes = new RSAES_OAEP(new SHA1());
+        RSAES rsaes = new RSAES_OAEP();
         return rsaes.decrypt(prv, c);
     }
 
@@ -131,19 +135,20 @@ public class PKCS1 {
      * @return 暗号化メッセージ
      */
     public static byte[] RSAES_v1_5_encryption(RSAPublicKey pkey, byte[] m) {
-        RSAES rsaes = new RSAES_v1_5();
+        RSAES rsaes = new RSAES_PKCS1_v1_5();
         return rsaes.encrypt(pkey, m);
     }
 
     /**
+     * 7.Encryption Schemes 暗号化スキーム.
      * 
      * @deprecated 古い
-     * @param prv
-     * @param c
-     * @return 
+     * @param prv 秘密鍵
+     * @param c 暗号化メッセージ
+     * @return メッセージ m
      */
     public static byte[] RSAES_v1_5_decryption(RSAMiniPrivateKey prv, byte[] c) {
-        RSAES rsaes = new RSAES_v1_5();
+        RSAES rsaes = new RSAES_PKCS1_v1_5();
         return rsaes.decrypt(prv, c);
     }
 

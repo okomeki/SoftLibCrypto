@@ -30,16 +30,14 @@ import net.siisise.security.padding.MGF;
  * EMSA4 のオクテット文字列版らしい
  */
 public class EMSA_PSS implements EMSA {
-    
-    static byte[] PAD = new byte[8];
-    
-    MessageDigest md;
+
+    final MessageDigest md;
     long len;
-    MGF mgf;
-    int sLen;
-    
+    final MGF mgf;
+    final int sLen;
+
     SecureRandom rnd;
-    
+
     /**
      * 9.1.1 Encoding Operation のOptionsパラメータを受ける
      * @param hash hash function (hLen denotes the length in octets of the hash function output)
@@ -56,7 +54,7 @@ public class EMSA_PSS implements EMSA {
             Logger.getLogger(EMSA_PSS.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     @Override
     public void update(byte[] M) {
         md.update(M);
@@ -73,7 +71,11 @@ public class EMSA_PSS implements EMSA {
     public void update(ByteBuffer buffer) {
         len += buffer.limit() - buffer.position();
         md.update(buffer);
-        
+    }
+
+    @Override
+    public long size() {
+        return len;
     }
 
     /**
@@ -86,6 +88,7 @@ public class EMSA_PSS implements EMSA {
     @Override
     public byte[] encode(int emBits) {
         byte[] mHash = md.digest();
+        len = 0; // 判定はまだしていない
         //int emBit2 = (mHash.length + sLen) * 8 + 9;
         int emLen = (emBits + 7) / 8;
         // 3.
@@ -96,7 +99,7 @@ public class EMSA_PSS implements EMSA {
         byte[] salt = new byte[sLen];
         rnd.nextBytes(salt);
         // 5. 6.
-        md.update(PAD); // Padding1
+        md.update(new byte[8]); // Padding1
         md.update(mHash);
         byte[] H = md.digest(salt);
         // 7.
@@ -130,6 +133,7 @@ public class EMSA_PSS implements EMSA {
         // 1. 省略
         byte[] mHash = md.digest();
         int emLen = (emBits + 7) / 8;
+        len = 0; // 判定はまだしていない
         // 3.
         if ( emLen < mHash.length + sLen + 2 ) {
             return false;

@@ -22,6 +22,7 @@ import java.util.Arrays;
 import net.siisise.io.Packet;
 import net.siisise.io.PacketA;
 import net.siisise.lang.Bin;
+import net.siisise.security.digest.SHA1;
 
 /**
  * EME の md と MGF1 の MessageDigest を別々に指定する必要あり?
@@ -32,19 +33,23 @@ public class EME_OAEP implements EME {
     
     private SecureRandom rnd;
     private MGF mgf;
-    
+    MessageDigest md;
     byte[] lHash;
     int hLen;
+//    long llen;
     
     /**
      * 再利用できるものであれば mgfmdとmd は同じインスタンス指定可能.
      * @param mgf MGF
      * @param md L用ハッシュ
-     * @param L ラベル
      */
-    public EME_OAEP(MGF mgf, MessageDigest md, byte[] L) {
-        lHash = md.digest(L == null ? new byte[0] : L);
-        hLen = lHash.length;
+    public EME_OAEP(MGF mgf, MessageDigest md) {
+        if ( md == null ) {
+            md = new SHA1();
+        }
+        this.md = md;
+        hLen = md.getDigestLength();
+        // a.
         this.mgf = mgf;
         try {
             rnd = SecureRandom.getInstanceStrong();
@@ -57,12 +62,22 @@ public class EME_OAEP implements EME {
      * 
      * @param mgfMd MGF用 hash
      * @param md L用 hash
-     * @param L 
      */
-    public EME_OAEP(MessageDigest mgfMd, MessageDigest md, byte[] L) {
-        this(new MGF1(mgfMd), md, L );
+    public EME_OAEP(MessageDigest mgfMd, MessageDigest md) {
+        this(new MGF1(mgfMd), md);
     }
-    
+
+    /**
+     * encoding の開始前まで L を追加できる.
+     * encoding後は固定して再利用する (初期化しない)
+     * ToDo: 長さのチェックが必要だがチェックはしていない.
+     * @param L ラベル
+     */
+    public void updateLabel(byte[] L) {
+        md.update(L);
+//        llen += L.length;
+    }
+
     /**
      * 2.EME-OAEP encoding
      * MessageDigest と L はコンストラクタで指定する
@@ -73,6 +88,14 @@ public class EME_OAEP implements EME {
      */
     @Override
     public byte[] encoding(int k, byte[] m) {
+        // 2.a.
+        if (lHash == null) { // Lを指定できるのは1回のみ
+//            if ( llen >= (1l << 61)) { // SHA-1 どこで判定する?
+//                throw new SecurityException("label too long");
+//            }
+            lHash = md.digest();
+        }
+        
         int mLen = m.length;
         // 1. 長さチェック a. Lの長さ長すぎるので省略
         // b.

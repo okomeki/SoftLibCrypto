@@ -34,7 +34,7 @@ public class RSASSA_PSS extends RSASSA {
      * @param sLen salt(乱数生成)の長さ
      */
     public RSASSA_PSS(MessageDigest hash, MGF mgf, int sLen) {
-        emsa = new EMSA_PSS(hash, mgf, sLen);
+        super(new EMSA_PSS(hash, mgf, sLen));
     }
     
     /**

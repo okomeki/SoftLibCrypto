@@ -29,28 +29,50 @@ public interface EMSA {
     void update(byte[] M);
     void update(byte[] M, int offset, int length);
     void update(ByteBuffer buffer);
+
+    /*
+     * 受け取ってハッシュにかけたMのサイズ
+     * @return Mのサイズ
+     */
+    long size();
     
     /**
-     * 
+     * 署名.
+     * 事前にupdateでM メッセージが必要
+     * @param emLen ビット数またはバイト数 まだ揃えていない
+     * @return EM 署名
+     */
+    byte[] encode(int emLen);
+    
+    /**
+     * 署名
      * @param M メッセージ
      * @param emLen emBits maximal bit length of the integer
-     * @return EM
+     * @return EM 署名
      */
     default byte[] encode(byte[] M, int emLen) {
         update(M);
         return encode(emLen);
     }
-    
+
     /**
-     * 
-     * @param emLen ビット数またはバイト数 まだ揃えていない
+     * 署名確認.
+     * 事前にupdateでM メッセージが必要
+     * @param EM 署名
+     * @param emLen
      * @return 
      */
-    byte[] encode(int emLen);
+    boolean verify(byte[] EM, int emLen);
 
+    /**
+     * 署名確認.
+     * @param M メッセージ
+     * @param EM 署名
+     * @param emLen
+     * @return 
+     */
     default boolean verify(byte[] M, byte[] EM, int emLen) {
         update(M);
         return verify(EM, emLen);
     }
-    boolean verify(byte[] EM, int emLen);
 }

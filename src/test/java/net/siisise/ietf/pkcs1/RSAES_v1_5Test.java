@@ -16,7 +16,7 @@
 package net.siisise.ietf.pkcs1;
 
 import net.siisise.security.sign.RSAES;
-import net.siisise.security.sign.RSAES_v1_5;
+import net.siisise.security.sign.RSAES_PKCS1_v1_5;
 import java.security.NoSuchAlgorithmException;
 import java.util.Random;
 import net.siisise.security.key.RSAKeyGen;
@@ -61,7 +61,7 @@ public class RSAES_v1_5Test {
         Random rnd = new Random();
         rnd.nextBytes(msg);
         
-        RSAES es = new RSAES_v1_5();
+        RSAES es = new RSAES_PKCS1_v1_5();
         byte[] encd = es.encrypt(pub, msg);
         byte[] dec = es.decrypt(key, encd);
         assertArrayEquals(msg, dec);

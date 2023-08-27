@@ -36,7 +36,7 @@ public class MGF1 implements MGF {
      * @param hash オプション Hash hash finction (hLen denotes the length in octets of the hash function output)
      */
     public MGF1(MessageDigest hash) {
-        this.hash = hash;
+        this.hash = (hash == null) ? new SHA1() : hash;
     }
 
     public MGF1() {

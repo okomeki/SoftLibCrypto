@@ -24,7 +24,6 @@ import net.siisise.security.key.RSAPublicKey;
 /**
  * 互換性のためにあるらしい.
  * PKCS #7 RFC 2315
- * @deprecated ふるい
  */
 public class RSASSA_PKCS1_v1_5 extends RSASSA {
     
@@ -39,7 +38,7 @@ public class RSASSA_PKCS1_v1_5 extends RSASSA {
      * @param md ダイジェストを直接指定
      */
     public RSASSA_PKCS1_v1_5(MessageDigest md) {
-        emsa = new EMSA_PKCS1_v1_5(md);
+        super(new EMSA_PKCS1_v1_5(md));
     }
     
     @Override

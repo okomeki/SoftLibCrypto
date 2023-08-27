@@ -15,7 +15,6 @@
  */
 package net.siisise.security.sign;
 
-import net.siisise.security.key.RSAMiniPrivateKey;
 import net.siisise.security.padding.EME_PKCS1_v1_5;
 
 /**
@@ -25,20 +24,10 @@ import net.siisise.security.padding.EME_PKCS1_v1_5;
  * 
  * @deprecated 古い方式. RSAES-OAEP が推奨されている
  */
-public class RSAES_v1_5 extends RSAES {
+public class RSAES_PKCS1_v1_5 extends RSAES {
 
-    public RSAES_v1_5() {
+    public RSAES_PKCS1_v1_5() {
         super(new EME_PKCS1_v1_5());
     }
 
-    /**
-     * 署名の一般的な拡張(旧式).JWS7515.rsaSign で使ってるかも.
-     * @param prv private key
-     * @param msg message
-     */
-    public void sign(RSAMiniPrivateKey prv, byte[] msg) {
-//        msg;
-        
-//        prv.rsasp1(msg);
-    }
 }

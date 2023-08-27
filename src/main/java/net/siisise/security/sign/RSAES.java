@@ -21,13 +21,15 @@ import net.siisise.security.padding.EME;
 
 /**
  * RFC 8017 PKCS #1
- * Section 7 Encryption Schemes とりあえずまとめ
+ * Section 7 暗号化スキーム Encryption Schemes とりあえずまとめ.
  * modulus より短いデータのPadding と署名
+ * 
+ * RSAESの枠組み と EME に分けて実装してあるだけ.
  * 
  * IEEE 1363
  */
 public class RSAES {
-    EME eme;
+    final EME eme;
 
     public RSAES(EME eme) {
         this.eme = eme;

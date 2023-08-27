@@ -29,24 +29,34 @@ import net.siisise.iso.asn1.tag.SEQUENCE;
 public class EMSA_PKCS1_v1_5 implements EMSA {
     
     private final MessageDigest md;
+    long len;
     
     EMSA_PKCS1_v1_5(MessageDigest hash) {
         md = hash;
+        len = 0;
     }
     
     @Override
     public void update(byte[] M) {
         md.update(M);
+        len += M.length;
     }
 
     @Override
     public void update(byte[] M, int offset, int length) {
         md.update(M, offset, length);
+        len += length;
     }
 
     @Override
     public void update(ByteBuffer buffer) {
+        len += buffer.limit() - buffer.position();
         md.update(buffer);
+    }
+    
+    @Override
+    public long size() {
+        return len;
     }
 
     @Override

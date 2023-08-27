@@ -25,7 +25,11 @@ import net.siisise.security.key.RSAPublicKey;
  * https://www.cryptrec.go.jp/en/cryptrec_03_spec_cypherlist_files/PDF/pkcs-1v2-12.pdf
  */
 public abstract class RSASSA {
-    EMSA emsa;
+    final EMSA emsa;
+    
+    RSASSA(EMSA emsa) {
+        this.emsa = emsa;
+    }
     
     /**
      * 署名/検証用メッセージをハッシュにかける.
