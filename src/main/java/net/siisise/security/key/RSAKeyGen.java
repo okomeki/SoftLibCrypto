@@ -82,8 +82,8 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
     static RSAPrivateCrtKey generatePrivateKey(int len, SecureRandom srnd, int u) {
         //RSAFullPrivateKey key = new RSAPrivateCrtKey();
         BigInteger lambda;
-        BigInteger n;
-        BigInteger e;
+        BigInteger n; // modulus
+        BigInteger e; // publicExponent
 
         int pbit = len % u;
 //        do {
@@ -124,8 +124,8 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
         BigInteger d = modInverse(e,lambda); // e * d = 1 mod  lambda(n)    (p-1)(q-1) 
         BigInteger p = op.prime; // p
         BigInteger q = oq.prime; // q
-        BigInteger dP = op.exponent; // e * dP = 1 (mod (p-1))
-        BigInteger dQ = oq.exponent; // e * dQ = 1 (mod (q-1))
+        BigInteger dP = op.exponent; // e * dP = 1 (mod (p-1)) = d mod (p - 1)
+        BigInteger dQ = oq.exponent; // e * dQ = 1 (mod (q-1)) = d mod (q - 1)
         BigInteger coefficient = op.coefficient; // qInv prime2(q) prime1(p) r_3 r_4 の並びを想定 3以降とは逆
 
         RSAPrivateCrtKey key;
