@@ -13,13 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.siisise.ietf.pkcs1;
+package net.siisise.security.sign;
 
-import net.siisise.security.sign.RSAES_OAEP;
-import net.siisise.security.sign.RSAES;
 import java.security.NoSuchAlgorithmException;
 import java.util.Random;
-import net.siisise.security.digest.SHA1;
 import net.siisise.security.key.RSAKeyGen;
 import net.siisise.security.key.RSAPrivateCrtKey;
 import net.siisise.security.key.RSAPublicKey;
@@ -32,11 +29,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
- * @author okome
  */
-public class RSAES_OAEPTest {
+public class RSAES_PKCS1_v1_5Test {
     
-    public RSAES_OAEPTest() {
+    public RSAES_PKCS1_v1_5Test() {
     }
     
     @BeforeAll
@@ -54,20 +50,20 @@ public class RSAES_OAEPTest {
     @AfterEach
     public void tearDown() {
     }
-
+    
     @Test
-    public void testSomeMethod() throws NoSuchAlgorithmException {
-        
+    public void testCode() throws NoSuchAlgorithmException {
         RSAPrivateCrtKey key = RSAKeyGen.generatePrivateKey(1000);
         RSAPublicKey pub = key.getPublicKey();
         byte[] msg = new byte[80];
         Random rnd = new Random();
         rnd.nextBytes(msg);
         
-        RSAES es = new RSAES_OAEP(new SHA1());
+        RSAES es = new RSAES_PKCS1_v1_5();
         byte[] encd = es.encrypt(pub, msg);
         byte[] dec = es.decrypt(key, encd);
         assertArrayEquals(msg, dec);
+        
     }
-    
+
 }
