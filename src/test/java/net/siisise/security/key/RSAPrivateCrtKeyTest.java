@@ -26,11 +26,11 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  *
  */
-public class RSAFullPrivateKeyTest {
+public class RSAPrivateCrtKeyTest {
     SecureRandom srnd;
     int keylen = 1024 * 3;
     
-    public RSAFullPrivateKeyTest() throws NoSuchAlgorithmException {
+    public RSAPrivateCrtKeyTest() throws NoSuchAlgorithmException {
         srnd = SecureRandom.getInstanceStrong();
     }
 
