@@ -19,11 +19,13 @@ import java.security.MessageDigest;
 
 /**
  * 巡回冗長検査.
+ * IEEE 802.3. CRC-32 GF(2)
  *
+ * ZIPやPNGなどて使われたり.
  * CRC8,16,32と64があるかもしれない.
  * CRC8
  * CRC8-CCITT CRC8-SAE CRC8-ATM CRC8-Dallas/Maxum
- *
+ * RFC 1952 gzip RFC 2083 PNG
  * CRC-32 Wikipedia のものを実装
  */
 public class CRC extends MessageDigest {
@@ -31,10 +33,11 @@ public class CRC extends MessageDigest {
     static final int[] crc = new int[256];
 
     static {
+        // ビット反転版GF 32bit の8ビットくり抜き?
         for (int i = 0; i < 256; i++) {
             int c = i;
-            for (int j = 0; j < 8; j++) {
-                c = ((c & 1) != 0) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+            for (int j = 0; j < 8; j++) { // iが8bitしかないので8回?
+                c = (c >>> 1) ^ ((c & 1) * 0xedb88320);
             }
             crc[i] = c;
         }

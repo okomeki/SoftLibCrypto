@@ -16,6 +16,8 @@
 package net.siisise.security.key;
 
 import java.math.BigInteger;
+import java.util.LinkedHashMap;
+import net.siisise.bind.format.TypeFormat;
 import net.siisise.ietf.pkcs1.PKCS1;
 import net.siisise.iso.asn1.tag.BITSTRING;
 import net.siisise.iso.asn1.tag.INTEGER;
@@ -108,10 +110,28 @@ public class RSAPublicKey implements java.security.interfaces.RSAPublicKey {
     }
 
     public SEQUENCE getPKCS1ASN1() {
+/*      // rebind 任せでもいい
+        return (SEQUENCE)rebind(new ASN1Convert());
+/*/
         SEQUENCE pub = new SEQUENCE();
-        pub.add(new INTEGER(modulus)); // n
-        pub.add(new INTEGER(publicExponent)); // e
+        pub.add(modulus); // n
+        pub.add(publicExponent); // e
         return pub;
+//*/
+    }
+    
+    /**
+     * ASN.1 その他適度な型に変換する.
+     * modulus と publicExponent のみ
+     * @param <T> 出力型
+     * @param format 出力先、書式
+     * @return 出力
+     */
+    public <T> T rebind(TypeFormat<T> format) {
+        LinkedHashMap rsaPublicKey = new LinkedHashMap();
+        rsaPublicKey.put("modulus", modulus); // n
+        rsaPublicKey.put("publicExponent", publicExponent); // e
+        return format.mapFormat(rsaPublicKey);
     }
     
     /**

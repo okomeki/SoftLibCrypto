@@ -62,6 +62,7 @@ public class EMSA_PKCS1_v1_5 implements EMSA {
     @Override
     public byte[] encode(int emLen) {
         byte[] H = md.digest();
+        len = 0;
         // DigestInfo
         SEQUENCE digestInfo = new SEQUENCE();
         DigestAlgorithm alg = new DigestAlgorithm();

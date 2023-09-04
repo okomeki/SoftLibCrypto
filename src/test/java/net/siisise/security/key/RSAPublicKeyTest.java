@@ -15,12 +15,24 @@
  */
 package net.siisise.security.key;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
+import net.siisise.bind.Rebind;
+import net.siisise.iso.asn1.ASN1Decoder;
+import net.siisise.iso.asn1.ASN1Object;
+import net.siisise.iso.asn1.ASN1Util;
+import net.siisise.iso.asn1.tag.ASN1Convert;
+import net.siisise.iso.asn1.tag.SEQUENCE;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -150,6 +162,38 @@ public class RSAPublicKeyTest {
   //      System.out.println("algorithm: " + pub.getAlgorithm());
         System.out.println("format: " + pub.getFormat());
         assertEquals(pub.getFormat(), instance.getFormat());
+    }
+    
+    @Test
+    public void testRebind() throws NoSuchAlgorithmException {
+        System.out.println("rebind");
+        BigInteger n = BigInteger.valueOf(1234567890123456l);
+        BigInteger e = BigInteger.valueOf(65537);
+        RSAPublicKey instance = new RSAPublicKey(n,e);
+        SEQUENCE ex1ASN1 = new SEQUENCE();
+        ex1ASN1.add(instance.getModulus());
+        ex1ASN1.add(instance.getPublicExponent());
+        ASN1Convert asncnv = new ASN1Convert();
+//        ASN1Object asn1 = instance.rebind(asncnv);
+        byte[] pubASN1 = instance.getPKCS1Encoded();
+//        byte[] rebindASN1 = instance.rebind(asncnv).encodeAll();
+        byte[] rebind2ASN1 = Rebind.valueOf(instance, asncnv).encodeAll();
+        try {
+            ASN1Object ex1 = ASN1Decoder.toASN1(new ByteArrayInputStream(rebind2ASN1));
+            
+            System.out.println(ASN1Util.toString(ASN1Util.toXML(ex1)));
+        } catch (IOException ex) {
+            Logger.getLogger(RSAPublicKeyTest.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ParserConfigurationException ex) {
+            Logger.getLogger(RSAPublicKeyTest.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (TransformerException ex) {
+            Logger.getLogger(RSAPublicKeyTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        byte[] exASN1 = {0x30,0x0e,0x02,0x07,0x04,0x62,-43,60,-118,-70,-64,0x02,0x03,0x01,0,0x01};
+        assertArrayEquals(pubASN1, ex1ASN1.encodeAll());
+//        assertArrayEquals(pubASN1, rebindASN1);
+        assertArrayEquals(pubASN1, rebind2ASN1);
+        assertArrayEquals(pubASN1, exASN1);
     }
     
 }

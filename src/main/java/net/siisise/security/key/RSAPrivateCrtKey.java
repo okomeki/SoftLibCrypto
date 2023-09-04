@@ -16,6 +16,8 @@
 package net.siisise.security.key;
 
 import java.math.BigInteger;
+import java.util.LinkedHashMap;
+import net.siisise.bind.format.TypeFormat;
 import net.siisise.ietf.pkcs5.PBES2;
 import net.siisise.ietf.pkcs5.PBKDF2;
 import net.siisise.iso.asn1.ASN1Object;
@@ -288,6 +290,26 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
     }
 
     /**
+     * RFC 8017 A.1.2.RSA Private Key Syntax.
+     * Optional なし
+     * @param <T>
+     * @param format 
+     */
+    public <T> T rebind(TypeFormat<T> format) {
+        LinkedHashMap prv = new LinkedHashMap();
+        prv.put("version", 0);
+        prv.put("modulus", modulus);
+        prv.put("publicExponent", publicExponent);
+        prv.put("privateExponent", privateExponent);
+        prv.put("prime1", prime1);
+        prv.put("prime2", prime2);
+        prv.put("exponent1", exponent1);
+        prv.put("exponent2", exponent2);
+        prv.put("coefficient", coefficient);
+        return format.mapFormat(prv);
+    }
+
+    /**
      * RFC 8017 A.1.2. RSA Private Key Syntax
      * PKCS #1
      * @return ASN.1 DER 出力
@@ -301,6 +323,7 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
      * PKCS #1 A.1.2. で定義されている範囲のASN.1 DER 符号化
      * @return 
      */
+    @Override
     public SEQUENCE getPKCS1ASN1() {
         SEQUENCE prv = new SEQUENCE();
         prv.add(0);

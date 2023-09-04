@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.siisise.security.sign;
+package net.siisise.security.block;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.Random;
@@ -30,7 +30,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
- * @author okome
  */
 public class RSAES_OAEPTest {
     

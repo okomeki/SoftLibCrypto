@@ -39,7 +39,6 @@ import net.siisise.security.mac.HMACSpi;
 
 /**
  *
- * @author okome
  */
 public final class SiisiseJCA extends Provider {
 

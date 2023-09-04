@@ -19,6 +19,18 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
 /**
+ * RFC 2313 PKCS #1 Version 1.5 Section 8. 暗号化プロセス
+ * Section 8.1. 暗号化ブロックのフォーマット
+ * EB = 00 || BT || PS || 00 || D.
+ * 
+ * BT の名称は廃止?
+ * 00, 01 秘密鍵操作 (署名)
+ * 02 公開鍵操作 (暗号化)
+ * BT 00 PS は 00 または Paddingなし
+ * BT 01 PS は FF
+ * BT 02 PS は 疑似ランダム 00 以外
+ * RFC 1423 と互換あり
+ * 
  * @deprecated 脆弱
  */
 public class EME_PKCS1_v1_5 implements EME {
@@ -33,6 +45,11 @@ public class EME_PKCS1_v1_5 implements EME {
         }
     }
     
+    /**
+     * PS は 8オクテット以上
+     * @param k
+     * @return k - 11
+     */
     @Override
     public int maxLength(int k) {
         return k - 11;

@@ -17,7 +17,9 @@ package net.siisise.security.key;
 
 import java.io.Serializable;
 import java.math.BigInteger;
+import java.util.LinkedHashMap;
 import java.util.List;
+import net.siisise.bind.format.TypeFormat;
 import net.siisise.iso.asn1.tag.SEQUENCE;
 
 /**
@@ -35,6 +37,14 @@ public class RSAMultiPrivateKey extends RSAPrivateCrtKey {
         public BigInteger prime;        // r
         public BigInteger exponent;     // d
         public BigInteger coefficient;  // t
+        
+        public <T> T rebind(TypeFormat<T> format) {
+            LinkedHashMap info = new LinkedHashMap();
+            info.put("prime", prime);
+            info.put("exponent", exponent);
+            info.put("coefficient", coefficient);
+            return format.mapFormat(info);
+        }
     }
 
     OtherPrimeInfo[] otherPrimeInfos; // OPTIONAL
@@ -99,7 +109,7 @@ public class RSAMultiPrivateKey extends RSAPrivateCrtKey {
         prv.add(exponent2);
         prv.add(coefficient);
         if ( version > 0 ) {
-            SEQUENCE ots = new SEQUENCE();
+            SEQUENCE ots = new SEQUENCE(); // SEQUENCE OF OtherPrimeInfo
             for ( OtherPrimeInfo pi : otherPrimeInfos ) {
                 SEQUENCE dpi = new SEQUENCE();
                 dpi.add(pi.prime);
@@ -112,4 +122,30 @@ public class RSAMultiPrivateKey extends RSAPrivateCrtKey {
         return prv;
     }
 
+    /**
+     * RFC 8017 PKCS #1 A.1.2.
+     * 
+     * ASN.1 と同じ出力を他フォーマットでも可能に
+     * @param <T>
+     * @param format 
+     * @return 
+     */
+    @Override
+    public <T> T rebind(TypeFormat<T> format) {
+        LinkedHashMap prv = new LinkedHashMap();
+        prv.put("version", version);
+        prv.put("modulus", modulus);
+        prv.put("publicExponent", publicExponent);
+        prv.put("privateExponent", privateExponent);
+        prv.put("prime1", prime1);
+        prv.put("prime2", prime2);
+        prv.put("exponent1", exponent1);
+        prv.put("exponent2", exponent2);
+        prv.put("coefficient", coefficient);
+        if ( version > 0 ) {
+            // SEQUENCE OF OtherPrimeInfo
+            prv.put("otherPrimeInfos", otherPrimeInfos);
+        }
+        return format.mapFormat(prv);
+    }
 }

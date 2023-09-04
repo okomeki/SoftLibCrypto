@@ -1,12 +1,12 @@
 package net.siisise.ietf.pkcs1;
 
-import net.siisise.security.sign.RSAES;
-import net.siisise.security.sign.RSAES_PKCS1_v1_5;
-import net.siisise.security.sign.RSAES_OAEP;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import net.siisise.iso.asn1.ASN1;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
+import net.siisise.security.block.RSAES;
+import net.siisise.security.block.RSAES_OAEP;
+import net.siisise.security.block.RSAES_PKCS1_v1_5;
 import net.siisise.security.key.RSAMiniPrivateKey;
 import net.siisise.security.key.RSAPublicKey;
 import net.siisise.security.sign.RSASSA;
