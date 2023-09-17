@@ -26,6 +26,7 @@ public interface BlockIOListener {
     
     /**
      * 必要なブロック長.
+     * 出力長とは異なる.
      * @return ビット長
      */
     int getBitBlockLength();

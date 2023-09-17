@@ -49,9 +49,21 @@ public class RSAMultiPrivateKey extends RSAPrivateCrtKey {
 
     OtherPrimeInfo[] otherPrimeInfos; // OPTIONAL
 
-    public RSAMultiPrivateKey(BigInteger m, BigInteger e, BigInteger d, BigInteger p, BigInteger q, BigInteger dP, BigInteger dQ, BigInteger coefficient,
+    /**
+     * 
+     * @param n modulus
+     * @param e publicExponent
+     * @param d privateExponent
+     * @param p prime1
+     * @param q prime2
+     * @param dP exponent1
+     * @param dQ exponent2
+     * @param coefficient coefficient
+     * @param op other prime info
+     */
+    public RSAMultiPrivateKey(BigInteger n, BigInteger e, BigInteger d, BigInteger p, BigInteger q, BigInteger dP, BigInteger dQ, BigInteger coefficient,
             List<OtherPrimeInfo> op) {
-        super(m, e, d, p, q, dP, dQ, coefficient);
+        super(n, e, d, p, q, dP, dQ, coefficient);
         otherPrimeInfos = op.toArray(new OtherPrimeInfo[op.size()]);
     }
 

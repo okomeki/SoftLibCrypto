@@ -13,22 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.siisise.ietf.pkcs5;
+package net.siisise.ietf.pkcs.asn1;
 
-import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
-import net.siisise.iso.asn1.tag.SEQUENCE;
+import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 
 /**
  *
  */
-public class PBES2params {
-    public AlgorithmIdentifier keyDerivationFunc;
-    public AlgorithmIdentifier encryptionScheme;
-
-    public static PBES2params decode(SEQUENCE s) {
-        PBES2params params = new PBES2params();
-        params.keyDerivationFunc = AlgorithmIdentifier.decode((SEQUENCE) s.get(0));
-        params.encryptionScheme = AlgorithmIdentifier.decode((SEQUENCE) s.get(1));
-        return params;
+public class PrivateKeyAlgorithmIdentifier extends AlgorithmIdentifier {
+    public PrivateKeyAlgorithmIdentifier(OBJECTIDENTIFIER oid) {
+        super(oid);
     }
+
+    public PrivateKeyAlgorithmIdentifier(String oid) {
+        super(oid);
+    }
+    
 }

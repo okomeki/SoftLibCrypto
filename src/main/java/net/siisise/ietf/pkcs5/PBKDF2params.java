@@ -16,7 +16,7 @@
 package net.siisise.ietf.pkcs5;
 
 import net.siisise.iso.asn1.ASN1Object;
-import net.siisise.ietf.pkcs1.AlgorithmIdentifier;
+import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.iso.asn1.tag.INTEGER;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.SEQUENCE;

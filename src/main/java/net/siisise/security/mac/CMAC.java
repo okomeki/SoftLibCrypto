@@ -25,7 +25,11 @@ import net.siisise.security.block.Block;
 /**
  * Cipher-based Message Authentication Code (CMAC).
  * 
- * GFなどで128bit 固定なのかも.
+ * OMAC は OMAC1 と OMAC2 の総称
+ * OMAC1 は CMAC と同じ、これはCMAC
+ * http://www.nuee.nagoya-u.ac.jp/labs/tiwata/omac/omac.html
+ * 
+ * GFなどで128bit または64bit 固定なのかも.
  * 
  * One-Key CBC MAC1 (OMAC1) と同じ
  * 
@@ -41,8 +45,8 @@ public class CMAC implements MAC {
 
     private final Block block; // E
 
-    byte[] k1; // 最後のブロックがブロック長と等しい場合
-    byte[] k2; // 最後のブロックがブロック長より短い場合
+    byte[] k1; // L・2 最後のブロックがブロック長と等しい場合
+    byte[] k2; // k1・2 最後のブロックがブロック長より短い場合
     private long len;
     private Packet m;
     // Step 5.
@@ -74,37 +78,39 @@ public class CMAC implements MAC {
         x = new byte[(block.getBlockLength() + 7 ) / 8];
     }
 
-    /** BinかGF へ */
-    private byte[] shl(byte[] l) {
-        byte[] n = new byte[l.length];
-        n[0] = (byte)(l[0] << 1);
-        int v = (l[0] & 0xff);
-        for (int i = 1; i < l.length; i++) {
-            v = (v << 8) | (l[i] & 0xff);
-            n[i - 1] = (byte)(v >>> 7);
-        }
-        n[l.length - 1] = (byte)(v << 1);
-        return n;
-    }
-
     /**
      * RFC 4493 Section 2.3. Subkey Generation Algorithm
-     * @param key AES鍵 AES-128 128bit
+     * @param key AES鍵 AES-128 128bit AES-192 AES-256 でもいいかも
      */
     @Override
     public void init(byte[] key) {
-        if ( key.length != (block.getBlockLength() + 7) / 8 ) { // 128bit 鍵とブロック長が同じなのは(仮)
-            throw new SecurityException();
-        }
+        // Generate_Subkey
         block.init(key);
-        byte[] L = block.encrypt(new byte[key.length]);
-        GF gf = new GF(128,GF.FF128);
-        k1 = gf.x(L);
-        k2 = gf.x(k1);
+        int blen = getMacLength();
+        byte[] L = block.encrypt(new byte[blen]);
+        // RFC 4493にガロア体の説明はないが、実体はガロア体 OMAC1a に説明がある?
+        GF gf;
+        if (blen == 16) { // AES 128bit
+            gf = new GF(blen*8,GF.FF128); // 0x87
+        } else { // TDEA TripleDES 64bit 8bitも同じ
+            gf = new GF(blen*8,GF.FF64 ); // 0x1b
+        }
+        initk(L,gf);
+        // Generate_Subkey ここまで
         m = new PacketA();
         len = 0;
         // Step 5.
-        x = new byte[key.length];
+        x = new byte[blen];
+    }
+
+    /**
+     * OMAC1 と OMAC2で違いそうなところ
+     * @param L
+     * @param gf 
+     */
+    void initk(byte[] L, GF gf) {
+        k1 = gf.x(L);
+        k2 = gf.x(k1);
     }
 /*    
     private void step6a() {
@@ -151,20 +157,20 @@ public class CMAC implements MAC {
     @Override
     public byte[] doFinal() {
         // Step 3. Step 4.
-        byte[] M_last;
         if ( (len == 0) || ( len % k1.length != 0 ) ) { // padding(M)
             m.write(0x80);
             m.write(new byte[k2.length - m.size()]);
-            M_last = Bin.xor(m.toByteArray(), k2);
+            Bin.xorl(x, k2);
         } else {
-            M_last = Bin.xor(m.toByteArray(), k1);
+            Bin.xorl(x, k1);
         }
+        Bin.xorl(x, m.toByteArray());
         // Step 6. B Step 7.
-        M_last = block.encrypt(Bin.xorl(M_last, x));
+        byte[] T = block.encrypt(x);
         // 次の初期化
         x = new byte[x.length];
         len = 0;
-        return M_last;
+        return T;
     }
 
     @Override

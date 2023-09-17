@@ -16,9 +16,14 @@
 package net.siisise.ietf.pkcs5;
 
 import java.io.IOException;
+import net.siisise.block.ReadableBlock;
+import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.io.PacketA;
+import net.siisise.iso.asn1.ASN1Object;
 import net.siisise.iso.asn1.ASN1Util;
+import net.siisise.iso.asn1.tag.INTEGER;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
+import net.siisise.iso.asn1.tag.OCTETSTRING;
 import net.siisise.iso.asn1.tag.SEQUENCE;
 import net.siisise.security.digest.SHA1;
 import net.siisise.security.mac.HMAC;
@@ -35,9 +40,10 @@ public class PBKDF2 implements PBKDF {
     public static final OBJECTIDENTIFIER PKCS5 = PKCS.sub(5); // pkcs-5
     public static final OBJECTIDENTIFIER OID = PKCS5.sub(12); // id-PBKDF2
     
-    private MAC prf;
     byte[] salt;
     int c;
+    int dkLen;
+    private MAC prf;
     
     /**
      * デフォルトはSHA-1
@@ -59,12 +65,18 @@ public class PBKDF2 implements PBKDF {
     
     /**
      * 
-     * @param prf 使用するHMACアルゴリズム
+     * @param prf 疑似乱数関数 HMACなど
      */
     public void init(MAC prf) {
         this.prf = prf;
     }
     
+    /**
+     * 
+     * @param prf 疑似乱数関数 HMACなど
+     * @param salt PKCS #5 64bit以上、 アメリカ国立標準技術研究所 128bit 推奨
+     * @param c 繰り返し数 4000以上くらい
+     */
     public void init(MAC prf, byte[] salt, int c) {
         this.prf = prf;
         this.salt = salt;
@@ -77,6 +89,8 @@ public class PBKDF2 implements PBKDF {
     }
     
     /**
+     * Appendix A. ASN.1 Syntax
+     * A.2. PBKDF2
      * salt と c かな?
      * @deprecated まだない
      * @param params
@@ -84,40 +98,84 @@ public class PBKDF2 implements PBKDF {
      */
     public void setASN1Params(byte[] params) throws IOException {
         SEQUENCE ps = (SEQUENCE) ASN1Util.toASN1(params);
-        
+        setASN1Params(ps);
+    }
+    
+    public void setASN1Params(SEQUENCE ps) {
+        ASN1Object s = ps.get(0);
+        if ( s instanceof OCTETSTRING ) {
+            salt = ((OCTETSTRING)s).getValue();
+        } else if ( s instanceof SEQUENCE ) {
+            AlgorithmIdentifier pbkdf2SaltSources = AlgorithmIdentifier.decode((SEQUENCE)s);
+            throw new UnsupportedOperationException();
+        }
+        c = ((INTEGER)ps.get(1)).intValue();
+        int offset = 2;
+        s = ps.get(offset);
+        if ( s instanceof INTEGER) {
+            dkLen = ((INTEGER)ps.get(2)).intValue();
+            offset++;
+        }
+        AlgorithmIdentifier prfId = AlgorithmIdentifier.decode((SEQUENCE) ps.get(offset++));
+        OBJECTIDENTIFIER oid = prfId.algorithm;
+//        if ( oid.equals(s))
+        throw new UnsupportedOperationException();
     }
     
     /**
-     * 
+     * 派生鍵を生成するよ.
      * @param password HMAC パスワード
      * @param salt ソルト
      * @param c 繰り返す数 1000以上ぐらい
-     * @param dkLen 戻り値の長さ
-     * @return 
+     * @param dkLen 派生鍵の長さ
+     * @return DK 派生鍵
      */
     @Override
     public byte[] pbkdf(byte[] password, byte[] salt, int c, int dkLen) {
         return pbkdf2(prf, password, salt, c, dkLen);
     }
     
+    /**
+     * 派生鍵を生成するよ.
+     * 他のパラメータは事前に設定すること.
+     * @param password HMAC パスワード
+     * @param dkLen 派生鍵の長さ
+     * @return DK 派生鍵
+     */
     @Override
-    public byte[] pbkdf(byte[] password, int dkLen) {
+    public byte[] kdf(byte[] password, int dkLen) {
         return pbkdf2(prf, password, salt, c, dkLen);
     }
-    
+
+    /**
+     * 派生鍵を生成するよ.
+     * 他のパラメータは事前に設定すること.
+     * @param password HMAC パスワード
+     * @return DK 派生鍵
+     */
+    @Override
+    public byte[] kdf(byte[] password) {
+        return pbkdf2(prf, password, salt, c, dkLen);
+    }
+
+    /**
+     * 複数生成する.
+     * @param password
+     * @param dkLens
+     * @return 
+     */
     public byte[][] pbkdf(byte[] password, int... dkLens) {
         int sum = 0;
         for ( int i = 0; i < dkLens.length; i++) {
             sum += dkLens[i];
         }
         
-        byte[] dkbase = pbkdf(password, sum);
-        int offset = 0;
+        byte[] dkbase = kdf(password, sum);
+        ReadableBlock dk = ReadableBlock.wrap(dkbase);
         byte[][] dks = new byte[dkLens.length][];
         for (int i = 0; i < dkLens.length; i++ ) {
             dks[i] = new byte[dkLens[i]];
-            System.arraycopy(dkbase,offset,dks[i],0,dkLens[i]);
-            offset += dkLens[i];
+            dk.read(dks[i]);
         }
         return dks;
     }
@@ -125,7 +183,7 @@ public class PBKDF2 implements PBKDF {
     /**
      * PBKDF2 本体.
      * HMAC以外も使えるようにしてある
-     * @param prf HMACアルゴリズム
+     * @param prf MACアルゴリズム
      * @param password HMAC用パスワード
      * @param salt ソルト
      * @param c 繰り返す数

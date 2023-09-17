@@ -16,6 +16,7 @@
 package net.siisise.security.key;
 
 import java.math.BigInteger;
+import java.security.PrivateKey;
 import net.siisise.ietf.pkcs1.PKCS1;
 import net.siisise.iso.asn1.tag.INTEGER;
 import net.siisise.iso.asn1.tag.SEQUENCE;
@@ -26,7 +27,7 @@ import net.siisise.iso.asn1.tag.SEQUENCE;
  * n と d だけ持っている最小版.
  * X.509 系Encode出力には未対応.
  */
-public class RSAMiniPrivateKey implements java.security.interfaces.RSAPrivateKey {
+public class RSAMiniPrivateKey implements PrivateKey, java.security.interfaces.RSAPrivateKey {
 
     private static final long serialVersionUID = 1L;
 
@@ -94,9 +95,10 @@ public class RSAMiniPrivateKey implements java.security.interfaces.RSAPrivateKey
 
     /**
      * 5.2.1. RSASP1
+     * RSADP と同じ計算
      *
-     * @param m データ
-     * @return
+     * @param m メッセージ
+     * @return 署名?
      */
     public BigInteger rsasp1(BigInteger m) {
         if (m.compareTo(BigInteger.ZERO) < 0 || m.compareTo(modulus) >= 0) {

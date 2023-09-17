@@ -48,6 +48,7 @@ import net.siisise.security.digest.BlockMessageDigest;
  * HMAC-SHA3-256    B 1088bit L 256bit
  * HMAC-SHA3-384    B  832bit L 384bit
  * HMAC-SHA3-512    B  576bit L 512bit
+ * RIPEMD-128/160   B  512bit
  *
  * FIPS PUB 198-1
  * FIPS 202 7 Conformance SHA-3のHMAC
@@ -61,10 +62,13 @@ public class HMAC implements MAC {
 
     public static final String RSADSI = "1.2.840.113549";
     public static final String DIGESTALGORITHM = RSADSI + ".2";
+    public static final String idhmacWithSHA1 = DIGESTALGORITHM + ".7";
     public static final String idhmacWithSHA224 = DIGESTALGORITHM + ".8";
     public static final String idhmacWithSHA256 = DIGESTALGORITHM + ".9";
     public static final String idhmacWithSHA384 = DIGESTALGORITHM + ".10";
     public static final String idhmacWithSHA512 = DIGESTALGORITHM + ".11";
+    public static final String idhmacWithSHA512224 = DIGESTALGORITHM + ".12";
+    public static final String idhmacWithSHA512256 = DIGESTALGORITHM + ".13";
 
 //    private HMACSpi spi;
     private MessageDigest md;
@@ -150,6 +154,10 @@ public class HMAC implements MAC {
         init(key.getEncoded());
     }
     
+    /**
+     * BlockMessageDigest以外はブロック長 512bit 固定想定 MD5, SHA1, SHA-244, SHA-256 くらいなら使える.
+     * @param md 正確なLとBがほしいのでBlockMessageDigest がいい
+     */
     private void setMD(MessageDigest md) {
         this.md = md;
         if ( md instanceof BlockMessageDigest) {

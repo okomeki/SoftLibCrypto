@@ -32,7 +32,7 @@ public class CBC extends LongBlockMode {
 
     /**
      * iv をとる
-     * @param params 
+     * @param params key, [iv]
      */
     @Override
     public void init(byte[]... params) {

@@ -18,11 +18,12 @@ package net.siisise.security.key;
 import java.math.BigInteger;
 import java.util.LinkedHashMap;
 import net.siisise.bind.format.TypeFormat;
+import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
+import net.siisise.ietf.pkcs.asn1.PrivateKeyInfo;
+import net.siisise.ietf.pkcs1.PKCS1;
 import net.siisise.ietf.pkcs5.PBES2;
 import net.siisise.ietf.pkcs5.PBKDF2;
-import net.siisise.iso.asn1.ASN1Object;
 import net.siisise.iso.asn1.tag.INTEGER;
-import net.siisise.iso.asn1.tag.NULL;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
 import net.siisise.iso.asn1.tag.SEQUENCE;
@@ -33,6 +34,7 @@ import net.siisise.security.mac.HMAC;
  * 全要素使うパターン.
  * 公開鍵も作れる.
  * 証明書等は持っていない.
+ * PKCS #1 と PKCS #8 のDERで出力可能
  * 
  * 作り方は RSAKeyGen
  * 
@@ -54,9 +56,20 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
     final BigInteger exponent2;        // d mod (q-1) :dQ
     final BigInteger coefficient;      // (inverse of q) mod p :qInv CRT 係数
 
-    RSAPrivateCrtKey(BigInteger m, BigInteger e, BigInteger d, BigInteger p, BigInteger q,
+    /**
+     * 公開鍵が生成できる秘密鍵.
+     * @param n modulus
+     * @param e publicExponent
+     * @param d privateExponent
+     * @param p prime1
+     * @param q prime2
+     * @param dP exponent1
+     * @param dQ exponent2
+     * @param c coefficient
+     */
+    RSAPrivateCrtKey(BigInteger n, BigInteger e, BigInteger d, BigInteger p, BigInteger q,
             BigInteger dP, BigInteger dQ, BigInteger c) {
-        super(m,d);
+        super(n,d);
         publicExponent = e;
         prime1 = p;
         prime2 = q;
@@ -96,39 +109,9 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
     }
 
     /**
-     * 5.1.2. RSADP
-     * m = c ^ d ( mod n )
-     * オプションは省略する.
-     *
-     * @param c 暗号
-     * @return m プレーンテキスト
-     */
-    @Override
-    public BigInteger rsadp(BigInteger c) {
-        if (c.compareTo(BigInteger.ZERO) < 0 || c.compareTo(modulus) >= 0) {
-            throw new SecurityException("ciphertext representative out of range");
-        }
-        return modPow(c);
-    }
-    
-    /**
-     * 5.2.1. RSASP1
-     * RSADP と同じ計算
-     *
-     * @param m
-     * @return 
-     */
-    @Override
-    public BigInteger rsasp1(BigInteger m) {
-        if (m.compareTo(BigInteger.ZERO) < 0 || m.compareTo(modulus) >= 0) {
-            throw new SecurityException("message representative out of range");
-        }
-        return modPow(m);
-    }
-
-    /**
-     * 仮名.
+     * 中国余剰定理.
      * エラー判定を省略して計算するだけ
+     * 公開鍵側や(d &lt; e)の条件のときは失敗することがあるのかも
      * c to m
      * m to s
      * @param s c または m
@@ -141,11 +124,10 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
         } else { // b.
             // 細かい鍵があるターン.
             BigInteger m = s.modPow(exponent2, prime2);
-            BigInteger R = prime2;
 
             BigInteger em = s.modPow(exponent1, prime1);
             BigInteger h = em.subtract(m).multiply(coefficient).mod(prime1);
-            return m.add(R.multiply(h));
+            return m.add(prime2.multiply(h));
         }
     }
 
@@ -189,7 +171,7 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
      */
     public static enum Format {
         PKCS1, // RFC 8017 A.1.2. DER
-        PKCS8, // RFC 5208 BER ?
+        PKCS8, // RFC 5208 BER ?  IDをふったもの
         RFC5958 //  RFC 5958 PKCS #8 の後継 PKCSの名がない 出力:DER 入力:DER/BER
 //        PKCS8PEM // PEM (予定)
     }
@@ -223,19 +205,33 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
 
     /**
      * PKCS #8 DER ぐらい
+     * OBJECTIDENTIFIER が判別する容器に梱包したもの
      * RFC 5208 5. Private-Key Information Syntax
+     * 
+     * PrivateKeyInfo ::= SEQUENCE {
+     *   vrsion Version,
+     *   privateKeyAlgorithm  PrivateKeyAlgorithmIdentifier,
+     *   privateKey   PrivateKey,
+     *   attributes     [0] IMPLICIT Attributes OPTIONAL }
+     * 
+     * Version ::= INTEGER
+     * 
+     * PrivateKeyAlgorithmIdentifier ::= AlgorithmIdentifier
+     * 
+     * PrivateKey :: = OCTET STRING
+     * 
+     * Attributes ::= SET OF Attribute
+     * 
      * @return 形を真似しただけ
      */
     public SEQUENCE getPKCS8PrivateKeyInfoASN1() {
-        SEQUENCE s = new SEQUENCE();
-        s.add(0); // version Version
-        SEQUENCE ids = new SEQUENCE(); // AlgorithmIdentifier
-        ids.add(new OBJECTIDENTIFIER("1.2.840.113549.1.1.1")); // rsaEncryption
-        ids.add((ASN1Object)null);
-        s.add(ids); // privateKeyAlgotirhm PrivateKeyAlgorithmIdentifier
-        s.add(new OCTETSTRING(getPKCS1Encoded())); // privateKey PrivateKey (BER / RFC 5208)
-        // attributes [0] IMPLICIT Attributes OPTIONAL
-        return s;
+        // rsaEncryption
+        byte[] body = getPKCS1Encoded(); // privateKey PrivateKey (BER / RFC 5208)
+        return new PrivateKeyInfo(PKCS1.rsaEncryption, body).encodeASN1();
+    }
+
+    static class EncryptedPrivateKeyInfo {
+        
     }
 
     /**
@@ -245,9 +241,8 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
      */
     public SEQUENCE getEncryptedPrivateKeyInfoASN1() {
         SEQUENCE s = new SEQUENCE(); // EncryptedPrivateKeyInfo
-        SEQUENCE ids = new SEQUENCE(); // AlgorithmIdentifier
-        ids.add(new OBJECTIDENTIFIER("")); // PKCS #5 PBES1の
-        ids.add(new NULL());
+        AlgorithmIdentifier aid = new AlgorithmIdentifier(""); // PKCS #5 PBES1の
+        SEQUENCE ids = aid.encodeASN1(); // AlgorithmIdentifier
         s.add(ids); // encryptionAlgorithm EncryptionAlgorithmIdentifier
         
         throw new UnsupportedOperationException();
@@ -274,10 +269,8 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
             SEQUENCE s3 = new SEQUENCE();
             s3.add(new OCTETSTRING(new byte[8])); // 乱数?
             s3.add(new INTEGER(2048));
-             SEQUENCE s4 = new SEQUENCE();
-             s4.add(new OBJECTIDENTIFIER(HMAC.idhmacWithSHA256)); // HMACwithSHA256
-             s4.add(new NULL());
-            s3.add(s4);
+             AlgorithmIdentifier ai = new AlgorithmIdentifier(HMAC.idhmacWithSHA256); // HMACwithSHA256
+            s3.add(ai.encodeASN1());
            s2.add(s3);
           s1.add(s2);
            s2 = new SEQUENCE();
@@ -312,6 +305,7 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
     /**
      * RFC 8017 A.1.2. RSA Private Key Syntax
      * PKCS #1
+     * 鍵の要素だけを格納したもの
      * @return ASN.1 DER 出力
      */
     public byte[] getPKCS1Encoded() {

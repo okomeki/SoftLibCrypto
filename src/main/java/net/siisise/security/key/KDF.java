@@ -13,22 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.siisise.ietf.pkcs5;
-
-import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
-import net.siisise.iso.asn1.tag.SEQUENCE;
+package net.siisise.security.key;
 
 /**
- *
+ * 鍵導出関数.
+ * 擬似的な共通鍵を生成する
+ * ASN.1 から出力まで繋げる予定
  */
-public class PBES2params {
-    public AlgorithmIdentifier keyDerivationFunc;
-    public AlgorithmIdentifier encryptionScheme;
-
-    public static PBES2params decode(SEQUENCE s) {
-        PBES2params params = new PBES2params();
-        params.keyDerivationFunc = AlgorithmIdentifier.decode((SEQUENCE) s.get(0));
-        params.encryptionScheme = AlgorithmIdentifier.decode((SEQUENCE) s.get(1));
-        return params;
-    }
+public interface KDF {
+    byte[] kdf(byte[] password);
 }

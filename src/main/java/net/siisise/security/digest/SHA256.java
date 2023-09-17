@@ -95,11 +95,6 @@ public class SHA256 extends BlockMessageDigest {
         return (x & y) ^ (x & z) ^ (y & z);
     }
 
-    @Override
-    protected void engineUpdate(byte input) {
-        engineUpdate(new byte[]{input}, 0, 1);
-    }
-
     private static int ROTR(final int x, final int n) {
         return (x >>> n) | (x << (32 - n));
     }

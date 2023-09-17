@@ -61,39 +61,9 @@ public class RSAFullPrivateKey extends RSAMiniPrivateKey {
     List<OtherPrimeInfo> otherPrimeInfos = new ArrayList<>(); // OPTIONAL
 
     /**
-     * 5.1.2. RSADP
-     * m = c ^ d ( mod n )
-     * オプションは省略する.
-     *
-     * @param c 暗号
-     * @return m プレーンテキスト
-     */
-    @Override
-    public BigInteger rsadp(BigInteger c) {
-        if (c.compareTo(BigInteger.ZERO) < 0 || c.compareTo(modulus) >= 0) {
-            throw new SecurityException("ciphertext representative out of range");
-        }
-        return modPow(c);
-    }
-    
-    /**
-     * 5.2.1. RSASP1
-     * RSADP と同じ計算
-     *
-     * @param m
-     * @return 
-     */
-    @Override
-    public BigInteger rsasp1(BigInteger m) {
-        if (m.compareTo(BigInteger.ZERO) < 0 || m.compareTo(modulus) >= 0) {
-            throw new SecurityException("message representative out of range");
-        }
-        return modPow(m);
-    }
-    
-    /**
-     * 仮名.
+     * 中国余剰定理.
      * エラー判定を省略して計算するだけ
+     * s.modPow(privateExponent, modulus) s.modPow(e, n)と同等 
      * c to m
      * m to s
      * @param s c または m

@@ -18,6 +18,7 @@ package net.siisise.security.key;
 import java.math.BigInteger;
 import java.util.LinkedHashMap;
 import net.siisise.bind.format.TypeFormat;
+import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.ietf.pkcs1.PKCS1;
 import net.siisise.iso.asn1.tag.BITSTRING;
 import net.siisise.iso.asn1.tag.INTEGER;
@@ -145,10 +146,8 @@ public class RSAPublicKey implements java.security.interfaces.RSAPublicKey {
 
     public SEQUENCE getPKCS8ASN1() {
         SEQUENCE s = new SEQUENCE();
-        SEQUENCE v = new SEQUENCE();
-        v.add(new OBJECTIDENTIFIER("1.2.840.113549.1.1.1")); // rsaEncrypted
-        v.add(new NULL());
-        s.add(v);
+        AlgorithmIdentifier aid = new AlgorithmIdentifier("1.2.840.113549.1.1.1");
+        s.add(aid.encodeASN1());
         s.add(new BITSTRING(getPKCS1Encoded()));
         return s;
     }

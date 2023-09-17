@@ -23,6 +23,7 @@ import net.siisise.security.io.BlockIOOutputStream;
 
 /**
  * Block系をもっていないときになんとかする
+ * CMACか?
  */
 public abstract class BlockMAC implements MAC,BlockIOListener {
     

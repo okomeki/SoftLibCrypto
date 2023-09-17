@@ -15,8 +15,10 @@
  */
 package net.siisise.security;
 
-import net.siisise.security.mac.HMAC;
 import java.security.MessageDigest;
+import net.siisise.security.key.KDF;
+import net.siisise.security.mac.HMAC;
+import net.siisise.security.mac.MAC;
 
 /**
  * 鍵導出関数. Key Derivation Function KDF.
@@ -27,16 +29,41 @@ import java.security.MessageDigest;
  * RFC 8619 HKDFのOID.
  *
  */
-public class HKDF {
+public class HKDF implements KDF {
 
-    private HMAC hmac;
+    private final MAC mac;
+    byte[] salt;
+    byte[] info;
+    int dkLen;
 
+    /**
+     * 規格ではSHAアルゴリズムを指定する。
+     * その他も指定可能。
+     * SHAのパラメータはなし
+     * @param sha SHA-256, SHA-384, SHA-512 くらいを想定されているらしい
+     */
     public HKDF(MessageDigest sha) {
-        hmac = new HMAC(sha);
+        mac = new HMAC(sha);
     }
-    
-    public HKDF(HMAC mac) {
-        hmac = mac;
+
+    /**
+     * ハッシュベースでなくてもMACであれば利用可能?
+     * @param mac 繰り返し利用できること
+     */
+    public HKDF(MAC mac) {
+        this.mac = mac;
+    }
+
+    /**
+     * 
+     * @param salt 塩 (HMAC鍵) null可
+     * @param info 付加 null可 saltっぽいもの
+     * @param dkLen 出力派生鍵長
+     */
+    public void init(byte[] salt, byte[] info, int dkLen) {
+        this.salt = salt;
+        this.info = info;
+        this.dkLen = dkLen;
     }
 
     /**
@@ -44,26 +71,33 @@ public class HKDF {
      * @param salt 塩 (HMAC鍵) null可
      * @param ikm 秘密鍵
      * @param info 付加 null可 saltっぽいもの
-     * @param length リクエスト鍵長 (HMACの255倍まで)
-     * @return
+     * @param length L リクエスト鍵長 (HMACの255倍まで)
+     * @return OKM output keying maerial (of L octets)
      */
     public byte[] hkdf(byte[] salt, byte[] ikm, byte[] info, int length) {
         byte[] prk = extract(salt, ikm);
         return expand(prk, info, length);
     }
+    
+    @Override
+    public byte[] kdf(byte[] ikm) {
+        return hkdf(salt, ikm, info, dkLen);
+    }
 
     /**
-     *
+     * Extract
+     * Section 2.2.
+     * HMAC 1回目 HMAC(salt).doFinal(ikm)
      * @param salt 塩 (HMAC鍵)
      * @param ikm 秘密鍵
-     * @return 中間鍵
+     * @return prk 疑似ランダム鍵
      */
-    byte[] extract( byte[] salt, byte[] ikm) {
+    byte[] extract(byte[] salt, byte[] ikm) {
         if (salt == null) {
             salt = new byte[0];
         }
-        hmac.init(salt);
-        return hmac.doFinal(ikm);
+        mac.init(salt);
+        return mac.doFinal(ikm);
     }
 
     /**
@@ -75,20 +109,20 @@ public class HKDF {
      * @return OKM output keying maerial (of L octets)
      */
     private byte[] expand(byte[] prk, byte[] info, int length) {
-        int l = hmac.getMacLength();
+        int l = mac.getMacLength();
         int n = ((length + l - 1) / l);
         if (info == null) {
             info = new byte[0];
         }
         PacketS pt = new PacketS();
         byte[] t = new byte[0];
-        hmac.init(prk);
+        mac.init(prk);
         byte[] d = new byte[1];
         for (int i = 1; i <= n; i++) {
-            hmac.update(t);
-            hmac.update(info);
+            mac.update(t);
+            mac.update(info);
             d[0] = (byte) i;
-            t = hmac.doFinal(d);
+            t = mac.doFinal(d);
             pt.write(t);
         }
         byte[] r = new byte[length];

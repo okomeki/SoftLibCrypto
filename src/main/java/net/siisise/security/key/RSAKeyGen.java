@@ -35,6 +35,7 @@ import net.siisise.security.key.RSAMultiPrivateKey.OtherPrimeInfo;
 
 /**
  * RFC 8017 PKCS #1 3.2. RSA Private Key
+ * FIPS 186-5
  * RSAKeyGen (Rivest-Shamir-Adleman).
  * RSA鍵 static系のまとめ
  * 鍵生成と検証ぐらいに使えるといい
@@ -104,7 +105,7 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
                 pi.prime = BigInteger.probablePrime(len / u + (i < pbit ? 1 : 0), srnd); // r_i
                 BigInteger p1e = pi.prime.subtract(BigInteger.ONE); // r_i - 1
                 if ( primes.contains(pi.prime) || !gcd(e,p1e).equals(BigInteger.ONE) ) {
-                    System.out.println("重複素数 または r_i-1とeが素でない");
+//                    System.out.println("重複素数 または r_i-1とeが素でない");
                     i--;
                     continue;
                 }
@@ -144,9 +145,10 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
     }
     
     /**
-     *
-     * @param src
-     * @return
+     * PKCS #1 DER 形式のデコード.
+     * RFC 8017 A.1.2. RSA Private Key Syntax
+     * @param src ASN.1 DER
+     * @return RSA Crt Key
      * @throws IOException
      */
     public static RSAPrivateCrtKey decodeSecret1(byte[] src) throws IOException {
@@ -200,7 +202,14 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
     public static SEQUENCE encodePublic1(RSAPublicKey pub) {
         return pub.getPKCS1ASN1();
     }
-    
+
+    public static RSAPublicKey decodePublic1(byte[] asn) throws IOException {
+        SEQUENCE seq = (SEQUENCE) ASN1Util.toASN1(asn);
+        BigInteger n = ((INTEGER)seq.get(0)).getValue();
+        BigInteger e = ((INTEGER)seq.get(1)).getValue();
+        return new RSAPublicKey(n, e);
+    }
+
     /**
      * PKCS #1 A.1.2. の構文出力
      * @param key
@@ -209,6 +218,8 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
     public static SEQUENCE encodePrivate1(RSAPrivateCrtKey key) {
         return key.getPKCS1ASN1();
     }
+
+    private static final int PRIMECOUNT = 500;
 
     /**
      * version 0 のみ可.
@@ -221,7 +232,7 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
         BigInteger lambda = lcm(ps,qs);
         return key.version == 0 && isPrime(key.prime1) && isPrime(key.prime2) &&
                 key.modulus.equals(key.prime1.multiply(key.prime2)) &&
-                key.prime1.isProbablePrime(100) && key.prime2.isProbablePrime(100) &&
+                key.prime1.isProbablePrime(PRIMECOUNT) && key.prime2.isProbablePrime(PRIMECOUNT) &&
                 (!key.prime1.equals(key.prime2)) && gcd(key.publicExponent,lambda).equals(BigInteger.ONE) &&
                 key.publicExponent.multiply(key.privateExponent).mod(lambda).equals(BigInteger.ONE) &&
                 key.exponent1.equals(key.privateExponent.mod(ps)) && key.exponent2.equals(key.privateExponent.mod(qs)) &&
@@ -244,7 +255,7 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
         try {
             BigInteger b = p.subtract(BigInteger.ONE);
             SecureRandom srnd = SecureRandom.getInstanceStrong();
-            for (int i = 10; i < 500; i++ ) {
+            for (int i = 0; i < PRIMECOUNT; i++ ) {
                 BigInteger a = new BigInteger(srnd.generateSeed(p.bitCount() / 8 + 1)).abs().mod(p);
                 if (!a.modPow(b, p).equals(BigInteger.ONE)) {
                     return false;

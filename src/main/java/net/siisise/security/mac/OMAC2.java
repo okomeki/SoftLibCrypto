@@ -13,22 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.siisise.ietf.pkcs5;
+package net.siisise.security.mac;
 
-import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
-import net.siisise.iso.asn1.tag.SEQUENCE;
+import net.siisise.math.GF;
+import net.siisise.security.block.Block;
 
 /**
- *
+ * OMAC2
+ * K1は変わらないらしい
+ * k2 が L^-1っぽくなる.
+ * http://www.nuee.nagoya-u.ac.jp/labs/tiwata/omac/omac.html
  */
-public class PBES2params {
-    public AlgorithmIdentifier keyDerivationFunc;
-    public AlgorithmIdentifier encryptionScheme;
+public class OMAC2 extends CMAC {
+    
+    public OMAC2() {
+        super();
+    }
+    
+    public OMAC2(byte[] key) {
+        init(key);
+    }
+    
+    public OMAC2(Block block) {
+        super(block);
+    }
 
-    public static PBES2params decode(SEQUENCE s) {
-        PBES2params params = new PBES2params();
-        params.keyDerivationFunc = AlgorithmIdentifier.decode((SEQUENCE) s.get(0));
-        params.encryptionScheme = AlgorithmIdentifier.decode((SEQUENCE) s.get(1));
-        return params;
+    @Override
+    void initk(byte[] L, GF gf) {
+        k1 = gf.x(L);
+        k2 = gf.r(L);
     }
 }

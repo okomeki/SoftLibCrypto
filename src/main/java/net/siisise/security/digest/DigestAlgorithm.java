@@ -20,8 +20,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import net.siisise.ietf.pkcs1.AlgorithmIdentifier;
+import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
+import net.siisise.iso.asn1.tag.SEQUENCE;
 
 /**
  * RFC 8017 PKCS #1 A. と C.
@@ -111,6 +112,18 @@ public class DigestAlgorithm extends AlgorithmIdentifier {
         return null;
     }
     
+    public static DigestAlgorithm decode(SEQUENCE s) {
+        AlgorithmIdentifier alg = AlgorithmIdentifier.decode(s);
+        BlockMessageDigest md = getAlgorithm(alg.algorithm);
+        if ( md == null ) {
+            return null;
+        }
+        DigestAlgorithm da = new DigestAlgorithm();
+        da.algorithm = alg.algorithm;
+        da.parameters = alg.parameters;
+        return da;
+    }
+
     public static OBJECTIDENTIFIER toOID(MessageDigest md) {
         String name = md.getAlgorithm();
         return OIDS.get(name);
