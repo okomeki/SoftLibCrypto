@@ -13,19 +13,4 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.siisise.security.key;
-
-/**
- * 鍵導出関数.
- * 擬似的な共通鍵を生成する
- * ASN.1 から出力まで繋げる予定
- */
-public interface KDF {
-    /**
-     * 共通鍵のようなものを生成する.
-     * 他の要素はASN.1 などから読み込む想定.
-     * @param password パスワードのようなもの(可変長)
-     * @return DK 共通鍵的なもの(指定サイズ)
-     */
-    byte[] kdf(byte[] password);
-}
+package net.siisise.security;

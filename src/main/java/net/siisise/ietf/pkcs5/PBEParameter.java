@@ -13,19 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.siisise.security.key;
+package net.siisise.ietf.pkcs5;
+
+import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
+import net.siisise.iso.asn1.tag.OCTETSTRING;
+import net.siisise.iso.asn1.tag.SEQUENCE;
 
 /**
- * 鍵導出関数.
- * 擬似的な共通鍵を生成する
- * ASN.1 から出力まで繋げる予定
+ * PBES1用
  */
-public interface KDF {
-    /**
-     * 共通鍵のようなものを生成する.
-     * 他の要素はASN.1 などから読み込む想定.
-     * @param password パスワードのようなもの(可変長)
-     * @return DK 共通鍵的なもの(指定サイズ)
-     */
-    byte[] kdf(byte[] password);
+public class PBEParameter {
+    byte[] salt;
+    int iterationCount;
+
+    public SEQUENCE encodeASN1() {
+        SEQUENCE s = new SEQUENCE();
+        s.add(new OCTETSTRING(salt));
+        s.add(iterationCount);
+        return s;
+    }
+    
+    public PBES1 encode(OBJECTIDENTIFIER oid, byte[] password) {
+        PBES1 es = new PBES1();
+        es.init(oid, password, salt, iterationCount);
+        return es;
+    }
 }

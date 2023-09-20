@@ -115,7 +115,7 @@ public final class CFB extends StreamMode {
                 l = length;
             }
             for (int i = 0; i < l; i++) {
-                ret[ro++] = (byte) (vectori[this.offset + i] ^ src[offset + i]);
+                ret[ro++] = vectori[this.offset + i] ^ src[offset + i];
                 vectori[this.offset++] = src[offset++];
                 length--;
             }
@@ -130,12 +130,48 @@ public final class CFB extends StreamMode {
 
     @Override
     public byte[] encrypt(byte[] src, int offset, int length) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        int l = vector.length - this.offset;
+        byte[] ret = new byte[length];
+        int ro = 0;
+        while (ro < ret.length) {
+            if (length < l) {
+                l = length;
+            }
+            for (int i = 0; i < l; i++) {
+                vector[this.offset] ^= src[offset++];
+                ret[ro++] = vector[this.offset++];
+                length--;
+            }
+            if (this.offset >= vector.length) {
+                this.offset = 0;
+                vector = block.encrypt(vector, 0);
+                l = vector.length;
+            }
+        }
+        return ret;
     }
 
     @Override
     public byte[] decrypt(byte[] src, int offset, int length) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        int l = vector.length - this.offset;
+        byte[] ret = new byte[length];
+        int ro = 0;
+        while (ro < ret.length) {
+            if (length < l) {
+                l = length;
+            }
+            for (int i = 0; i < l; i++) {
+                ret[ro++] = (byte)(vector[this.offset + i] ^ src[offset + i]);
+                vector[this.offset++] = src[offset++];
+                length--;
+            }
+            if (this.offset >= vector.length) {
+                this.offset = 0;
+                vector = block.encrypt(vector, 0);
+                l = vector.length;
+            }
+        }
+        return ret;
     }
 
 }

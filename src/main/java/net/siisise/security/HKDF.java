@@ -68,7 +68,7 @@ public class HKDF implements KDF {
 
     /**
      *
-     * @param salt 塩 (HMAC鍵) null可
+     * @param salt 塩 (1段目のHMAC鍵) HMACの長さ推奨 null可
      * @param ikm 秘密鍵
      * @param info 付加 null可 saltっぽいもの
      * @param length L リクエスト鍵長 (HMACの255倍まで)
@@ -88,7 +88,7 @@ public class HKDF implements KDF {
      * Extract
      * Section 2.2.
      * HMAC 1回目 HMAC(salt).doFinal(ikm)
-     * @param salt 塩 (HMAC鍵)
+     * @param salt 塩 (HMAC鍵) HMACの長さ推奨 null可
      * @param ikm 秘密鍵
      * @return prk 疑似ランダム鍵
      */

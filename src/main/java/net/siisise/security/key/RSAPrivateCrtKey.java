@@ -200,13 +200,15 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
     }
 
     public byte[] getPKCS8Encoded() {
-        return getPKCS8PrivateKeyInfoASN1().encodeAll();
+        return getPKCS8PrivateKeyInfo().encodeASN1().encodeAll();
     }
 
     /**
-     * PKCS #8 DER ぐらい
+     * PKCS #8 DER ぐらい.
      * OBJECTIDENTIFIER が判別する容器に梱包したもの
      * RFC 5208 5. Private-Key Information Syntax
+     * 
+     * OID = rsaEncryption
      * 
      * PrivateKeyInfo ::= SEQUENCE {
      *   vrsion Version,
@@ -224,10 +226,9 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
      * 
      * @return 形を真似しただけ
      */
-    public SEQUENCE getPKCS8PrivateKeyInfoASN1() {
-        // rsaEncryption
+    public PrivateKeyInfo getPKCS8PrivateKeyInfo() {
         byte[] body = getPKCS1Encoded(); // privateKey PrivateKey (BER / RFC 5208)
-        return new PrivateKeyInfo(PKCS1.rsaEncryption, body).encodeASN1();
+        return new PrivateKeyInfo(PKCS1.rsaEncryption, body);
     }
 
     static class EncryptedPrivateKeyInfo {

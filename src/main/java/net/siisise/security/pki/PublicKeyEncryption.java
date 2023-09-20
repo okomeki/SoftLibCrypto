@@ -13,19 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.siisise.security.key;
+package net.siisise.security.pki;
 
 /**
- * 鍵導出関数.
- * 擬似的な共通鍵を生成する
- * ASN.1 から出力まで繋げる予定
+ * 公開鍵暗号的なもの.
+ * key でいい気がする.
+ * 暗号化、復号、署名、検証がひつよう
  */
-public interface KDF {
+public interface PublicKeyEncryption {
+    
     /**
-     * 共通鍵のようなものを生成する.
-     * 他の要素はASN.1 などから読み込む想定.
-     * @param password パスワードのようなもの(可変長)
-     * @return DK 共通鍵的なもの(指定サイズ)
+     * 鍵など設定する.
+     * @param param 
      */
-    byte[] kdf(byte[] password);
+    void init(byte[]... param);
+    
+    /**
+     * 暗号化可能な最大サイズっぽいもの.
+     * マイナスなら制限なしくらい.
+     * @return 
+     */
+    long maxLength();
+    
+    byte[] encode(byte[] src);
+    byte[] decode(byte[] encd);
+
+    byte[] sign(byte[] src);
+    byte[] verify(byte[] src, byte[] sign);
+    
 }

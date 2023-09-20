@@ -196,7 +196,7 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
      * @return 
      */
     public static SEQUENCE encodePrivate8(RSAPrivateCrtKey key) {
-        return key.getPKCS8PrivateKeyInfoASN1();
+        return key.getPKCS8PrivateKeyInfo().encodeASN1();
     }
     
     public static SEQUENCE encodePublic1(RSAPublicKey pub) {

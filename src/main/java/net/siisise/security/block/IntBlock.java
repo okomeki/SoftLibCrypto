@@ -22,24 +22,50 @@ package net.siisise.security.block;
  */
 public abstract class IntBlock extends BaseBlock {
 
+    /**
+     * byte列をint列に変換して1ブロック暗号化.
+     * サイズは暗号に依存するため指定しない.
+     * @param src 平文ブロック
+     * @param offset 位置
+     * @return 暗号ブロック
+     */
     @Override
     public byte[] encrypt(byte[] src, int offset) {
         int bl = getBlockLength() / 32;
         return itob(encrypt(btoi(src, offset, bl), 0));
     }
-    
+
+    /**
+     * long列で1ブロック暗号化.
+     * サイズは暗号に依存するため指定しない.
+     * @param src 平文ブロック
+     * @param offset 位置
+     * @return 暗号ブロック
+     */
     @Override
     public long[] encrypt(long[] src, int offset) {
         int bl = getBlockLength() / 32;
         return itol(encrypt(ltoi(src, offset, bl), 0));
     }
-    
+
+    /**
+     * int列に変換して1ブロック復号.
+     * @param src 暗号ブロック
+     * @param offset 位置
+     * @return 平文ブロック
+     */
     @Override
     public byte[] decrypt(byte[] src, int offset) {
         int bl = getBlockLength() / 32;
         return itob(decrypt(btoi(src, offset, bl), 0));
     }
 
+    /**
+     * 1ブロック復号.
+     * @param src 暗号ブロック
+     * @param offset 位置
+     * @return 平文ブロック
+     */
     @Override
     public long[] decrypt(long[] src, int offset) {
         int bl = getBlockLength() / 32;
@@ -49,10 +75,11 @@ public abstract class IntBlock extends BaseBlock {
     /**
      * 暗号化.
      * ストリームモードでも使用する
-     * @param src 元ブロック列
+     * 4バイト境界に依存するためPaddingが必要な場合やストリームモードはそのまま使わない方がいいかも.
+     * @param src 平文データ列
      * @param offset 符号化位置
-     * @param length ブロック長
-     * @return 
+     * @param length データ長
+     * @return 暗号列
      */
     @Override
     public byte[] encrypt(byte[] src, int offset, int length) {
@@ -63,6 +90,13 @@ public abstract class IntBlock extends BaseBlock {
         return itob(ret);
     }
 
+    /**
+     * 
+     * @param src
+     * @param offset
+     * @param length
+     * @return 
+     */
     @Override
     public int[] encrypt(int[] src, int offset, int length) {
         int[] ret = new int[length];

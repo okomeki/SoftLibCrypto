@@ -53,7 +53,7 @@ public class CMAC implements MAC {
     private byte[] x;
 
     /**
-     * AES-CMAC
+     * AES-CMAC.
      */
     public CMAC() {
         this(new AES());
@@ -71,11 +71,11 @@ public class CMAC implements MAC {
     /**
      * 特定のブロック暗号のCMACっぽいものにする?
      * XXX-CMAC
+     * 別途init必要
      * @param e ブロック暗号 E 
      */
     public CMAC(Block e) {
         block = e;
-        x = new byte[(block.getBlockLength() + 7 ) / 8];
     }
 
     /**
@@ -125,6 +125,7 @@ public class CMAC implements MAC {
     }
 */
     /**
+     * CBC 相当
      * x = Ek(x^a)
      * @param a データ
      */

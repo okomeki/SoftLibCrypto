@@ -1,5 +1,7 @@
 package net.siisise.ietf.pkcs.asn1;
 
+import java.util.LinkedHashMap;
+import net.siisise.bind.format.TypeFormat;
 import net.siisise.iso.asn1.ASN1Object;
 import net.siisise.iso.asn1.tag.NULL;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
@@ -36,6 +38,15 @@ public class AlgorithmIdentifier {
             s.add(parameters);
         }
         return s;
+    }
+    
+    public <T> T rebind(TypeFormat<T> format) {
+        LinkedHashMap s = new LinkedHashMap();
+        s.put("algorithm", algorithm.getValue());
+        if ( parameters != null ) {
+            s.put("parameters", parameters.getValue());
+        }
+        return format.mapFormat(s);
     }
     
     public static AlgorithmIdentifier decode(SEQUENCE s) {

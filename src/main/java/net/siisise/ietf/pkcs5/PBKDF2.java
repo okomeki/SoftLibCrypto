@@ -19,9 +19,7 @@ import java.io.IOException;
 import net.siisise.block.ReadableBlock;
 import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.io.PacketA;
-import net.siisise.iso.asn1.ASN1Object;
 import net.siisise.iso.asn1.ASN1Util;
-import net.siisise.iso.asn1.tag.INTEGER;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
 import net.siisise.iso.asn1.tag.SEQUENCE;
@@ -82,7 +80,14 @@ public class PBKDF2 implements PBKDF {
         this.salt = salt;
         this.c = c;
     }
-    
+
+    public void init(MAC prf, byte[] salt, int c, int dkLen) {
+        this.prf = prf;
+        this.salt = salt;
+        this.c = c;
+        this.dkLen = dkLen;
+    }
+
     public void init(byte[] salt, int c) {
         this.salt = salt;
         this.c = c;
@@ -101,25 +106,27 @@ public class PBKDF2 implements PBKDF {
         setASN1Params(ps);
     }
     
+    /**
+     * ToDo: PBKDF2params の方にあるので消す?
+     * @param ps 
+     */
     public void setASN1Params(SEQUENCE ps) {
-        ASN1Object s = ps.get(0);
-        if ( s instanceof OCTETSTRING ) {
-            salt = ((OCTETSTRING)s).getValue();
-        } else if ( s instanceof SEQUENCE ) {
-            AlgorithmIdentifier pbkdf2SaltSources = AlgorithmIdentifier.decode((SEQUENCE)s);
+        PBKDF2params params = PBKDF2params.decode(ps);
+        if ( params.salt instanceof OCTETSTRING ) {
+            salt = ((OCTETSTRING)params.salt).getValue();
+        } else if ( params.salt instanceof SEQUENCE ) {
+            AlgorithmIdentifier pbkdf2SaltSources = AlgorithmIdentifier.decode((SEQUENCE)params.salt);
             throw new UnsupportedOperationException();
         }
-        c = ((INTEGER)ps.get(1)).intValue();
-        int offset = 2;
-        s = ps.get(offset);
-        if ( s instanceof INTEGER) {
-            dkLen = ((INTEGER)ps.get(2)).intValue();
-            offset++;
+        c = params.iterationCount.intValue();
+        if ( params.keyLength != null ) {
+            dkLen = params.keyLength.intValue();
         }
-        AlgorithmIdentifier prfId = AlgorithmIdentifier.decode((SEQUENCE) ps.get(offset++));
-        OBJECTIDENTIFIER oid = prfId.algorithm;
-//        if ( oid.equals(s))
-        throw new UnsupportedOperationException();
+        if ( params.prf != null ) {
+            prf = HMAC.decode(params.prf);
+        } else {
+            prf = new HMAC(new SHA1());
+        }
     }
     
     /**
@@ -159,7 +166,7 @@ public class PBKDF2 implements PBKDF {
     }
 
     /**
-     * 複数生成する.
+     * 複数パラメータを生成する.
      * @param password
      * @param dkLens
      * @return 

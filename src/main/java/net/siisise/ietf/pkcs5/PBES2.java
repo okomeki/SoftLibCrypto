@@ -22,7 +22,8 @@ import net.siisise.security.block.Block;
 import net.siisise.security.mac.MAC;
 
 /**
- * RFC 8018 6.2. PBES2
+ * RFC 8018 PKCS #5
+ * Section 6.2. PBES2
  *
  */
 public class PBES2 implements PBES {
@@ -50,8 +51,9 @@ public class PBES2 implements PBES {
      * @param password password
      * @param salt salt
      * @param c iteration count
+     * @return 
      */
-    public void init(Block block, byte[] password, byte[] salt, int c) {
+    public Block init(Block block, byte[] password, byte[] salt, int c) {
 //        digest.getDigestLength();
         int[] nlen = block.getParamLength();
         int[] blen = new int[nlen.length];
@@ -64,6 +66,7 @@ public class PBES2 implements PBES {
         byte[][] dk = kdf.pbkdf(password, blen);
         block.init(dk); // k, iv
         this.block = block;
+        return block;
     }
     
     /**
@@ -73,8 +76,9 @@ public class PBES2 implements PBES {
      * @param password password
      * @param salt salt
      * @param c iteration count
+     * @return 
      */
-    public void init(Block block, MAC hmac, byte[] password, byte[] salt, int c) {
+    public Block init(Block block, MAC hmac, byte[] password, byte[] salt, int c) {
 //        digest.getDigestLength();
         int[] nlen = block.getParamLength(); // ビット
         int[] blen = new int[nlen.length]; // バイト
@@ -86,8 +90,24 @@ public class PBES2 implements PBES {
         byte[][] dk = kdf.pbkdf(password, blen);
         block.init(dk); // k, iv
         this.block = block;
+        return block;
     }
 
+    /**
+     * PBES2params から生成したあとパスワードだけ
+     * @param block
+     * @param password 
+     */
+    public void init(Block block, byte[] password) {
+        
+    }
+
+    /**
+     * メッセージ1つを暗号化する.
+     * 
+     * @param message 
+     * @return ブロック長にpaddingされたメッセージの暗号
+     */
     @Override
     public byte[] encrypt(byte[] message) {
         int blength = block.getBlockLength();
@@ -99,6 +119,11 @@ public class PBES2 implements PBES {
         return block.encrypt(src, 0, src.length);
     }
 
+    /**
+     * 
+     * @param message 暗号
+     * @return 元メッセージ
+     */
     @Override
     public byte[] decrypt(byte[] message) {
         byte[] mpad = block.decrypt(message, 0, message.length);
@@ -106,5 +131,9 @@ public class PBES2 implements PBES {
         byte[] d = new byte[mpad.length - mpad[mpad.length - 1]];
         System.arraycopy(mpad, 0, d, 0, d.length);
         return d;
+    }
+
+    void setBlock(Block encryptionScheme) {
+        this.block = encryptionScheme;
     }
 }

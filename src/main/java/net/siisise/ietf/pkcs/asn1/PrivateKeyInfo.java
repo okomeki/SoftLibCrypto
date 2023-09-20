@@ -15,7 +15,10 @@
  */
 package net.siisise.ietf.pkcs.asn1;
 
+import java.math.BigInteger;
 import java.util.List;
+import net.siisise.iso.asn1.tag.INTEGER;
+import net.siisise.iso.asn1.tag.NULL;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
 import net.siisise.iso.asn1.tag.SEQUENCE;
@@ -29,7 +32,12 @@ public class PrivateKeyInfo {
     public PrivateKeyAlgorithmIdentifier privateKeyAlgorithm;
     public byte[] privateKey;
     public List attributes;
-    
+
+    /**
+     * AlgorithmIdentifier (パラメータはNULL) と privateKey を設定する
+     * @param oid AlgorithmIdentifier のalgorithm
+     * @param privateKey 秘密鍵のASN.1 DER
+     */
     public PrivateKeyInfo(OBJECTIDENTIFIER oid, byte[] privateKey) {
         version = 0;
         privateKeyAlgorithm = new PrivateKeyAlgorithmIdentifier(oid);
@@ -52,5 +60,19 @@ public class PrivateKeyInfo {
             throw new UnsupportedOperationException();
         }
         return s;
+    }
+
+    public static PrivateKeyInfo decode(SEQUENCE seq) {
+        INTEGER ver = (INTEGER) seq.get(0);
+        if ( ver.getValue().equals(BigInteger.ZERO)) {
+            AlgorithmIdentifier ai = AlgorithmIdentifier.decode((SEQUENCE) seq.get(1));
+            if (ai.parameters.equals(new NULL()) ) {
+                PrivateKeyInfo info = new PrivateKeyInfo(ai.algorithm, ((OCTETSTRING)seq.get(2)).getValue());
+                if (seq.size() == 3) {
+                    return info;
+                }
+            }
+        }
+        throw new UnsupportedOperationException();
     }
 }

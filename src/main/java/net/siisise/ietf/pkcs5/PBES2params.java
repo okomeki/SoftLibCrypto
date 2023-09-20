@@ -17,6 +17,7 @@ package net.siisise.ietf.pkcs5;
 
 import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.iso.asn1.tag.SEQUENCE;
+import net.siisise.security.block.Block;
 
 /**
  *
@@ -30,5 +31,35 @@ public class PBES2params {
         params.keyDerivationFunc = AlgorithmIdentifier.decode((SEQUENCE) s.get(0));
         params.encryptionScheme = AlgorithmIdentifier.decode((SEQUENCE) s.get(1));
         return params;
+    }
+    
+    public PBES2 decode() {
+        PBES2 es;
+        Block block;
+        if ( keyDerivationFunc.algorithm.equals(PBKDF2.OID)) {
+            PBKDF2 kdf = PBKDF2params.decode((SEQUENCE) keyDerivationFunc.parameters).decode();
+            es = new PBES2(kdf);
+        } else {
+            throw new UnsupportedOperationException(keyDerivationFunc.algorithm.toString());
+        }
+        es.setBlock(getEncryptionScheme());
+        return es;
+    }
+    
+    public Block getEncryptionScheme() {
+        // B.2.2. DES-EDE3-CBC-Pad
+        // RFC 1423 Padding
+        //       24 octet encryption keey
+        // param CBC 8 byte ぐらい initialization vector
+        
+        // B.2.3. RC2-CBC-Pad
+        // RFC 2268
+        // param 1-128 octet 鍵
+        //       1-1024 bit effective key bits
+        //       8 octet initicalization vector
+        
+        
+        System.out.println("encryptionScheme:" + encryptionScheme.algorithm.toString());
+        throw new UnsupportedOperationException("encryptionScheme:" + encryptionScheme.algorithm.toString());
     }
 }

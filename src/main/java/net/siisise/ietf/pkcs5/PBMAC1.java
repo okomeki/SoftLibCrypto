@@ -22,24 +22,59 @@ import net.siisise.security.mac.MAC;
  * PKCS #5
  * RFC 8018 7.1. PBMAC1
  */
-public class PBMAC1 {
+public class PBMAC1 implements MAC {
     static final OBJECTIDENTIFIER id_PBMAC1 = PBKDF2.PKCS5.sub(14);
 
     private final PBKDF2 kdf;
-//    private MAC mac;
+    private MAC mac;
+    /**
+     * 7.1.1. 1. salt S
+     */
+    byte[] salt;
+    /**
+     * 7.1.1. 反復回数 iteration count
+     */
+    int c;
     
     /**
      * 
      * @param kdf MD 設定済みのPBKDF2
+     * @param kdfMac PBKDF2用MAC 省略時 HMAC-SHA1
+     * @param mac 本体MAC
      */
-    public PBMAC1(PBKDF2 kdf) {
+    public PBMAC1(PBKDF2 kdf, MAC kdfMac, MAC mac) {
         this.kdf = kdf;
+        if ( kdfMac != null ) {
+            kdf.init(kdfMac);
+        }
+        this.mac = mac;
     }
     
-    public void init(MAC mac) {
-        kdf.init(mac);
+    public PBMAC1(MAC mac) {
+        this(new PBKDF2(), null, mac);
+    }
+    
+    /**
+     * 7.1.1. PBMAC1 生成
+     * @param password パスワード
+     * @param salt 7.1.1. ソルト S
+     * @param c 反復回数 最小1000ぐらいから
+     */
+    public void init(byte[] password, byte[] salt, int c) {
+        this.salt = salt;
+        this.c = c;
+        if (mac != null) {
+            kdf.init(mac);
+        }
         int dkLen = mac.getMacLength();
-//        this.mac = mac;
+        // 3.
+        byte[] dk = kdf.pbkdf(password, salt, c, dkLen);
+        mac.init(dk);
+    }
+
+    @Override
+    public void init(byte[] key) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     /**
@@ -48,14 +83,27 @@ public class PBMAC1 {
      * @param src メッセージ M
      * @param mac HMAC-XXXX
      * @param password パスワード P
-     * @param salt ソルト S
-     * @param c 繰り返し最小1000ぐらいから
      * @return メッセージ認証コード T
      */
-    public byte[] mac(byte[] src, MAC mac, byte[] password, byte[] salt, int c) {
+    public byte[] mac(byte[] src, MAC mac, byte[] password) {
         int dkLen = mac.getMacLength(); // 長さ(オクテット)
         byte[] dk = kdf.pbkdf(password, salt, c, dkLen);
         mac.init(dk);
         return mac.doFinal(src);
+    }
+
+    @Override
+    public void update(byte[] src, int offset, int length) {
+        mac.update(src, offset, length);
+    }
+
+    @Override
+    public byte[] doFinal() {
+        return mac.doFinal();
+    }
+
+    @Override
+    public int getMacLength() {
+        return mac.getMacLength();
     }
 }

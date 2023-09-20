@@ -18,7 +18,16 @@ package net.siisise.security.mac;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import javax.crypto.SecretKey;
+import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
+import net.siisise.iso.asn1.tag.NULL;
 import net.siisise.security.digest.BlockMessageDigest;
+import net.siisise.security.digest.SHA1;
+import net.siisise.security.digest.SHA224;
+import net.siisise.security.digest.SHA256;
+import net.siisise.security.digest.SHA384;
+import net.siisise.security.digest.SHA512;
+import net.siisise.security.digest.SHA512224;
+import net.siisise.security.digest.SHA512256;
 
 /**
  * The Keyed-Hash Message Authentication Code (HMAC) FIPS 198-1.
@@ -224,4 +233,25 @@ public class HMAC implements MAC {
         return r;
     }
 
+    public static HMAC decode(AlgorithmIdentifier ai) {
+        if ( ai.parameters != null && !(ai.parameters instanceof NULL)) {
+            return null;
+        }
+        if ( ai.algorithm.equals(idhmacWithSHA1)) {
+            return new HMAC(new SHA1());
+        } else if ( ai.algorithm.equals(idhmacWithSHA224)) {
+            return new HMAC(new SHA224());
+        } else if (ai.algorithm.equals(idhmacWithSHA256)) {
+            return new HMAC(new SHA256());
+        } else if (ai.algorithm.equals(idhmacWithSHA384)) {
+            return new HMAC(new SHA384());
+        } else if (ai.algorithm.equals(idhmacWithSHA512)) {
+            return new HMAC(new SHA512());
+        } else if (ai.algorithm.equals(idhmacWithSHA512224)) {
+            return new HMAC(new SHA512224());
+        } else if (ai.algorithm.equals(idhmacWithSHA512256)) {
+            return new HMAC(new SHA512256());
+        }
+        return null;
+    }
 }

@@ -20,6 +20,12 @@ package net.siisise.security.block;
  */
 public abstract class LongBlock extends BaseBlock {
 
+    /**
+     * 1ブロック暗号化.
+     * @param src 平文ブロック
+     * @param offset 位置
+     * @return 暗号ブロック
+     */
     @Override
     public byte[] encrypt(byte[] src, int offset) {
         int bl = getBlockLength() / 64;
@@ -28,6 +34,12 @@ public abstract class LongBlock extends BaseBlock {
         return ltob(encrypt(block, 0));
     }
 
+    /**
+     * 1ブロック暗号化.
+     * @param src 平文ブロック
+     * @param offset 位置
+     * @return 暗号ブロック
+     */
     @Override
     public int[] encrypt(int[] src, int offset) {
         int bl = getBlockLength() / 64;
@@ -36,6 +48,12 @@ public abstract class LongBlock extends BaseBlock {
         return ltoi(encrypt(block, 0));
     }
 
+    /**
+     * 1ブロック復号.
+     * @param src 暗号ブロック
+     * @param offset 位置
+     * @return 平文ブロック
+     */
     @Override
     public byte[] decrypt(byte[] src, int offset) {
         int bl = getBlockLength() / 64;
@@ -44,6 +62,12 @@ public abstract class LongBlock extends BaseBlock {
         return ltob(decrypt(block, 0));
     }
 
+    /**
+     * 1ブロック復号.
+     * @param src 暗号ブロック
+     * @param offset 位置
+     * @return 平文ブロック
+     */
     @Override
     public int[] decrypt(int[] src, int offset) {
         int bl = getBlockLength() / 64;
