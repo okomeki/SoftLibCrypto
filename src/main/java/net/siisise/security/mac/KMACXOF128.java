@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Siisise Net.
+ * Copyright 2023 okome.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,29 +15,17 @@
  */
 package net.siisise.security.mac;
 
+import net.siisise.security.digest.SHA3Derived;
+
 /**
- * SHA-3系に用意されているらしい標準MAC
+ *
  */
-public class KMAC implements MAC {
-
-    @Override
-    public void init(byte[] key) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void update(byte[] src, int offset, int length) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
+public class KMACXOF128 extends KMAC128 {
+    
     @Override
     public byte[] doFinal() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public int getMacLength() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        cshake.update(SHA3Derived.right_encode(0));
+        return cshake.digest();
     }
     
 }
