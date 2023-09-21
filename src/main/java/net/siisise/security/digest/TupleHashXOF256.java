@@ -13,20 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.siisise.ietf.pkcs.asn1;
-
-import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
+package net.siisise.security.digest;
 
 /**
- * RFC 5208
+ *
  */
-public class PrivateKeyAlgorithmIdentifier extends AlgorithmIdentifier {
-    public PrivateKeyAlgorithmIdentifier(OBJECTIDENTIFIER oid) {
-        super(oid);
-    }
-
-    public PrivateKeyAlgorithmIdentifier(String oid) {
-        super(oid);
-    }
+public class TupleHashXOF256 extends TupleHash256 {
     
+    public TupleHashXOF256(int L, String S) {
+        super(L, S);
+        this.L = 0;
+    }
 }

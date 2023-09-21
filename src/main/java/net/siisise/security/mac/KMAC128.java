@@ -15,20 +15,15 @@
  */
 package net.siisise.security.mac;
 
-import net.siisise.io.Packet;
-import net.siisise.io.PacketA;
-import net.siisise.security.digest.SHA3Derived;
-import net.siisise.security.digest.cSHAKE128;
-
 /**
  * KECCAK Message Authentication Code
  * SHA-3系に用意されているらしい標準MAC
  * NIST SP 800-185
- * @deprecated まだ
  */
-public class KMAC128 implements MAC {
-    cSHAKE128 cshake;
-    long L;
+public class KMAC128 extends KMAC implements MAC {
+
+    public KMAC128() {
+    }
 
     @Override
     public void init(byte[] key) {
@@ -36,25 +31,6 @@ public class KMAC128 implements MAC {
     }
     
     public void init(byte[] key, int length, String S) {
-        Packet newX = new PacketA();
-        L = length;
-        newX.write(SHA3Derived.bytepad(SHA3Derived.encode_string(key),168));
-        cshake = new cSHAKE128(length, "KMAC", S);
-    }
-
-    @Override
-    public void update(byte[] src, int offset, int length) {
-        cshake.update(src, offset, length);
-    }
-
-    @Override
-    public byte[] doFinal() {
-        cshake.update(SHA3Derived.right_encode(L));
-        return cshake.digest();
-    }
-
-    @Override
-    public int getMacLength() {
-        return cshake.getDigestLength();
+        init(128,key,length,S);
     }
 }

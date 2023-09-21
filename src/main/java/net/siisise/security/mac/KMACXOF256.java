@@ -18,7 +18,7 @@ package net.siisise.security.mac;
 import net.siisise.security.digest.SHA3Derived;
 
 /**
- *
+ * XOF 可変長っぽく.
  */
 public class KMACXOF256 extends KMAC256 {
 

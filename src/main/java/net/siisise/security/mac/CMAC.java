@@ -21,6 +21,7 @@ import net.siisise.lang.Bin;
 import net.siisise.math.GF;
 import net.siisise.security.block.AES;
 import net.siisise.security.block.Block;
+import net.siisise.security.mode.CBC;
 
 /**
  * Cipher-based Message Authentication Code (CMAC).
@@ -44,13 +45,12 @@ import net.siisise.security.block.Block;
 public class CMAC implements MAC {
 
     private final Block block; // E
+    CBC cbc;
 
     byte[] k1; // L・2 最後のブロックがブロック長と等しい場合
     byte[] k2; // k1・2 最後のブロックがブロック長より短い場合
     private long len;
     private Packet m;
-    // Step 5.
-    private byte[] x;
 
     /**
      * AES-CMAC.
@@ -100,7 +100,7 @@ public class CMAC implements MAC {
         m = new PacketA();
         len = 0;
         // Step 5.
-        x = new byte[blen];
+        cbc = new CBC(block);
     }
 
     /**
@@ -112,29 +112,6 @@ public class CMAC implements MAC {
         k1 = gf.x(L);
         k2 = gf.x(k1);
     }
-/*    
-    private void step6a() {
-        // Step 6. A
-        byte[] mi = new byte[x.length];
-        long mlen = m.length();
-        while ( mlen > x.length ) {
-            m.read(mi);
-            enc(mi);
-            mlen -= x.length;
-        }
-    }
-*/
-    /**
-     * CBC 相当
-     * x = Ek(x^a)
-     * @param a データ
-     */
-    private void enc(byte[] a, int offset) {
-        for ( int i = 0; i < x.length; i++ ) {
-            x[i] ^= a[offset + i];
-        }
-        x = block.encrypt(x);
-    }
 
     @Override
     public void update(byte[] src, int offset, int length) {
@@ -142,15 +119,15 @@ public class CMAC implements MAC {
         int ml = m.size();
         int last = offset + length;
         // Strp 6. A
-        if ( ml > 0 && ml + length > x.length ) {
-            int wlen = x.length - ml;
+        if ( ml > 0 && ml + length > k1.length ) {
+            int wlen = k1.length - ml;
             m.write(src,offset,wlen);
             offset += wlen;
-            enc(m.toByteArray(), 0);
+            cbc.encrypt(m.toByteArray(), 0);
         }
-        while ( offset + x.length < last ) {
-            enc(src,offset);
-            offset += x.length;
+        while ( offset + k1.length < last ) {
+            cbc.encrypt(src,offset);
+            offset += k1.length;
         }
         m.write(src, offset, last - offset);
     }
@@ -158,18 +135,20 @@ public class CMAC implements MAC {
     @Override
     public byte[] doFinal() {
         // Step 3. Step 4.
+        byte[] T;
         if ( (len == 0) || ( len % k1.length != 0 ) ) { // padding(M)
             m.write(0x80);
             m.write(new byte[k2.length - m.size()]);
-            Bin.xorl(x, k2);
+            T = m.toByteArray();
+            Bin.xorl(T, k2);
         } else {
-            Bin.xorl(x, k1);
+            T = m.toByteArray();
+            Bin.xorl(T, k1);
         }
-        Bin.xorl(x, m.toByteArray());
+        T = cbc.encrypt(T);
         // Step 6. B Step 7.
-        byte[] T = block.encrypt(x);
         // 次の初期化
-        x = new byte[x.length];
+        cbc = new CBC(block); // Blockのkeyはそのまま、CBCのIVだけ初期化したい
         len = 0;
         return T;
     }

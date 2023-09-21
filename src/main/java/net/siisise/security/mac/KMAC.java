@@ -15,17 +15,39 @@
  */
 package net.siisise.security.mac;
 
+import net.siisise.io.Packet;
+import net.siisise.io.PacketA;
 import net.siisise.security.digest.SHA3Derived;
+import net.siisise.security.digest.cSHAKE;
 
 /**
- * XOF 可変長っぽく.
+ *
  */
-public class KMACXOF128 extends KMAC128 {
+public abstract class KMAC implements MAC {
+    cSHAKE cshake;
+    long L;
     
+    public void init(int c, byte[] key, int length, String S) {
+        Packet newX = new PacketA();
+        L = length;
+        newX.write(SHA3Derived.bytepad(SHA3Derived.encode_string(key),c == 128 ? 168 : 136 ));
+        cshake = new cSHAKE(c,length, "KMAC", S);
+        cshake.update(newX.toByteArray());
+    }
+
+    @Override
+    public void update(byte[] src, int offset, int length) {
+        cshake.update(src, offset, length);
+    }
+
     @Override
     public byte[] doFinal() {
-        cshake.update(SHA3Derived.right_encode(0));
+        cshake.update(SHA3Derived.right_encode(L));
         return cshake.digest();
     }
-    
+
+    @Override
+    public int getMacLength() {
+        return cshake.getDigestLength();
+    }
 }

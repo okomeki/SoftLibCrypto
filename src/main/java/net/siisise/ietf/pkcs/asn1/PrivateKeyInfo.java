@@ -28,6 +28,7 @@ import net.siisise.iso.asn1.tag.SEQUENCE;
  * PKCS #8
  */
 public class PrivateKeyInfo {
+
     public int version;
     public PrivateKeyAlgorithmIdentifier privateKeyAlgorithm;
     public byte[] privateKey;

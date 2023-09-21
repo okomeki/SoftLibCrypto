@@ -89,6 +89,13 @@ public class SHA3Derived {
         return p;
     }
     
+    public static Packet encode_string(byte[] s, int offset, int length) {
+        Packet p = new PacketA();
+        p.write(left_encode(length * 8l));
+        p.write(s, offset, length);
+        return p;
+    }
+
     /**
      * 
      * @param s

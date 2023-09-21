@@ -15,9 +15,30 @@
  */
 package net.siisise.security.digest;
 
-public class cSHAKE128 extends cSHAKE {
+/**
+ * update 1つをX1つとする
+ */
+public class TupleHash128 extends cSHAKE128 {
+    int L;
 
-    public cSHAKE128(int d, String N, String S) {
-        super(128,d,N,S);
+    public TupleHash128(int L, String S) {
+        super(L, "TupleHash", S);
+        this.L = L;
+    }
+
+    public void update(byte[][] src) {
+        for (byte[] s : src) {
+            updateTuple(s, 0, s.length);
+        }
+    }
+
+    public void updateTuple(byte[] src, int offset, int length) {
+        update(SHA3Derived.encode_string(src, offset, length).toByteArray());
+    }
+    
+    @Override
+    protected byte[] engineDigest() {
+        update(SHA3Derived.right_encode(L));
+        return super.engineDigest();
     }
 }

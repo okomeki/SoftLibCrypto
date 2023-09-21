@@ -15,40 +15,9 @@
  */
 package net.siisise.security.digest;
 
-import java.nio.charset.StandardCharsets;
-import net.siisise.io.Packet;
-import net.siisise.io.PacketA;
-
-/**
- *
- */
-public class cSHAKE256 extends Keccak {
-
-    boolean c = false;
+public class cSHAKE256 extends cSHAKE {
 
     public cSHAKE256(int d, String N, String S) {
-        super("cSHAKE256(" + d + ")", 2 * 256, d, (byte) 0x1f);
-        if (N == null) {
-            N = "";
-        }
-        if (S == null) {
-            S = "";
-        }
-        if (!N.isEmpty() || !S.isEmpty()) {
-            c = true;
-            Packet p = new PacketA();
-            p.write(SHA3Derived.encode_string(N.getBytes(StandardCharsets.UTF_8)));
-            p.write(SHA3Derived.encode_string(S.getBytes(StandardCharsets.UTF_8)));
-            update(SHA3Derived.bytepad(p, 136));
-        }
+        super(256,d,N,S);
     }
-
-    @Override
-    protected byte[] engineDigest() {
-        if (c) {
-            engineUpdate(new byte[1], 0, 1);
-        }
-        return super.engineDigest();
-    }
-
 }
