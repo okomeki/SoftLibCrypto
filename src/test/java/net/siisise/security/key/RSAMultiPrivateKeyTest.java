@@ -15,6 +15,7 @@
  */
 package net.siisise.security.key;
 
+import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import net.siisise.iso.asn1.ASN1Object;
@@ -33,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class RSAMultiPrivateKeyTest {
 
     private SecureRandom srnd;
+    int keylen = 1024 * 3;
     
     public RSAMultiPrivateKeyTest() {
     }
@@ -52,6 +54,46 @@ public class RSAMultiPrivateKeyTest {
     
     @AfterEach
     public void tearDown() {
+    }
+
+    /**
+     * Test of rsadp method, of class RSAPrivateCrtKey.
+     */
+    @Test
+    public void testRsadp() {
+        System.out.println("rsadp");
+        BigInteger m = BigInteger.probablePrime(1500, srnd);
+        RSAPrivateCrtKey instance = RSAKeyGen.generatePrivateKey(keylen, srnd, 4);
+        RSAPublicKey pub = instance.getPublicKey();
+        BigInteger c = pub.rsaep(m);
+        BigInteger result = instance.rsadp(c);
+        assertEquals(m, result);
+    }
+
+    /**
+     * Test of rsasp1 method, of class RSAPrivateCrtKey.
+     */
+    @Test
+    public void testRsasp1() {
+        System.out.println("rsasp1");
+        BigInteger m = BigInteger.probablePrime(1500, srnd);
+        RSAPrivateCrtKey instance = RSAKeyGen.generatePrivateKey(keylen, srnd, 2);
+        RSAPublicKey pub = instance.getPublicKey();
+        BigInteger result = instance.rsasp1(m);
+        
+        assertEquals(m, pub.rsavp1(result));
+    }
+
+    /**
+     * Test of getPrivateKey method, of class RSAPrivateCrtKey.
+     */
+    @Test
+    public void testGetPrivateKey() {
+        System.out.println("getPrivateKey");
+        RSAPrivateCrtKey instance = RSAKeyGen.generatePrivateKey(keylen, srnd, 2);
+        RSAMiniPrivateKey result = instance.getPrivateKey();
+        assertEquals(instance.getModulus(), result.getModulus());
+        assertEquals(instance.getPrivateExponent(), result.getPrivateExponent());
     }
 
     /**

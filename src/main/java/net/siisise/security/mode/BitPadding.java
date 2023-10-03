@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Siisise Net.
+ * Copyright 2023 okome.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,36 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.siisise.security.mac;
+package net.siisise.security.mode;
 
-import net.siisise.security.sign.SignVerify;
+import net.siisise.security.block.Block;
 
 /**
- * Message Authentication Code
- * Mac のどこでも使える版
+ * @deprecated まだ
  */
-public interface MAC extends SignVerify {
+public class BitPadding extends BlockMode {
 
-    void init(byte[] key);
-    
-    default byte[] doFinal(byte[] src) {
-        update(src);
-        return sign();
+    public BitPadding(Block b) {
+        super(b);
     }
 
-    /**
-     * バイト単位の出力長
-     *
-     * @return
-     */
-    int getMacLength();
-    
-    /**
-     * 鍵生成用長さ.
-     * @return 鍵バイト長
-     */
     @Override
-    default int getKeyLength() {
-        return getMacLength();
+    public int[] encrypt(int[] src, int offset) {
+        return block.encrypt(src,offset);
     }
+
+    @Override
+    public int[] decrypt(int[] src, int offset) {
+        return block.decrypt(src,offset);
+    }
+    
 }

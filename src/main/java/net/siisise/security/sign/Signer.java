@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Siisise Net.
+ * Copyright 2023 okome.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,36 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.siisise.security.mac;
-
-import net.siisise.security.sign.SignVerify;
+package net.siisise.security.sign;
 
 /**
- * Message Authentication Code
- * Mac のどこでも使える版
+ * 署名用.
  */
-public interface MAC extends SignVerify {
-
-    void init(byte[] key);
-    
-    default byte[] doFinal(byte[] src) {
-        update(src);
-        return sign();
+public interface Signer {
+    /**
+     * メッセージ本文の追加.
+     * @param src 
+     */
+    default void update(byte[] src) {
+        update(src,0,src.length);
     }
 
+    void update(byte[] src, int offset, int length);
+
     /**
-     * バイト単位の出力長
+     * sign 署名.
      *
-     * @return
+     * @return signature
      */
-    int getMacLength();
-    
-    /**
-     * 鍵生成用長さ.
-     * @return 鍵バイト長
-     */
-    @Override
-    default int getKeyLength() {
-        return getMacLength();
-    }
+    byte[] sign();
 }

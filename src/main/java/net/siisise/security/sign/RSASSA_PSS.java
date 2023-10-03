@@ -59,7 +59,7 @@ public class RSASSA_PSS extends RSASSA {
      * 署名を検証する.
      * 本文はupdateで先に渡す.
      * @param pub 公開鍵
-     * @param S RSASSA-PSS 署名
+     * @param S RSASSA-PSS 署名 signature
      * @return true:有効 / false:無効な署名
      */
     @Override

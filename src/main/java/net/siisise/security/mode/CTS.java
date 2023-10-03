@@ -13,17 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.siisise.security.mac;
+package net.siisise.security.mode;
 
 /**
- * XOF 可変長っぽく.
+ * RFC 2040
+ * @deprecated まだ
  */
-public class KMACXOF128 extends KMAC128 {
+public class CTS {
     
-    @Override
-    public void init(byte[] key, int length, String S) {
-        super.init(key, length, S);
-        L = 0;
-    }
-
 }

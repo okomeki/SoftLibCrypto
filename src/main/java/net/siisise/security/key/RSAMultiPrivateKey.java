@@ -23,17 +23,21 @@ import net.siisise.bind.format.TypeFormat;
 import net.siisise.iso.asn1.tag.SEQUENCE;
 
 /**
+ * RFC 8017 PKCS #1 3.2. RSA Private Key.
+ * 全要素使うパターン.
+ * 公開鍵も作れる.
+ * 証明書等は持っていない.
  *
+ * 作り方は RSAKeyGen
+ * 
+ * ToDo: まだ全部public
  */
 public class RSAMultiPrivateKey extends RSAPrivateCrtKey {
-
-    private static final long serialVersionUID = 1L;
 
     /**
      * A.1.2.
      */
     public static class OtherPrimeInfo implements Serializable {
-        private static final long serialVersionUID = 1L;
         public BigInteger prime;        // r
         public BigInteger exponent;     // d
         public BigInteger coefficient;  // t
@@ -68,8 +72,9 @@ public class RSAMultiPrivateKey extends RSAPrivateCrtKey {
     }
 
     /**
-     * 仮名.
+     * 中国余剰定理.
      * エラー判定を省略して計算するだけ
+     * s.modPow(privateExponent, modulus) s.modPow(e, n)と同等 
      * c to m
      * m to s
      * @param s c または m
@@ -159,5 +164,10 @@ public class RSAMultiPrivateKey extends RSAPrivateCrtKey {
             prv.put("otherPrimeInfos", otherPrimeInfos);
         }
         return format.mapFormat(prv);
+    }
+
+    @Override
+    public String toString() {
+        return "Siisise RSA private CRT key, " + modulus.bitLength() + " bits";
     }
 }

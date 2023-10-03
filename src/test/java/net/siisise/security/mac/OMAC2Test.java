@@ -70,7 +70,7 @@ public class OMAC2Test {
         assertArrayEquals(Lu,omac.k1);
         System.out.println(Bin.toHex(omac.k2));
         assertArrayEquals(Lum,omac.k2);
-        byte[] T = omac.doFinal();
+        byte[] T = omac.sign();
         System.out.println(Bin.toHex(T));
         assertArrayEquals(exTag, T);
         System.out.println(" 16-byte string");
@@ -91,7 +91,7 @@ public class OMAC2Test {
         Key = Bin.toByteArray("8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b");
         omac.init(Key);
         exTag = Bin.toByteArray("149f579df2129d45a69266898f55aeb2");
-        T = omac.doFinal();
+        T = omac.sign();
         assertArrayEquals(exTag, T);
         Msg = Bin.toByteArray("6bc1bee22e409f96e93d7e117393172a");
         exTag = Bin.toByteArray("9e99a7bf31e710900662f65e617c5184");

@@ -23,6 +23,7 @@ import net.siisise.security.key.RSAPublicKey;
 
 /**
  * 互換性のためにあるらしい.
+ * MessageDigest が1つ必要
  * PKCS #7 RFC 2315
  */
 public class RSASSA_PKCS1_v1_5 extends RSASSA {
@@ -42,12 +43,12 @@ public class RSASSA_PKCS1_v1_5 extends RSASSA {
     }
     
     @Override
-    public byte[] sign(RSAMiniPrivateKey key) {
-        int k = (key.getModulus().bitLength() + 7) / 8;
+    public byte[] sign(RSAMiniPrivateKey skey) {
+        int k = (skey.getModulus().bitLength() + 7) / 8;
         byte[] EM = emsa.encode(k);
-        return key.rsasp1(EM, k);
+        return skey.rsasp1(EM, k);
     }
-
+    
     @Override
     public boolean verify(RSAPublicKey pub, byte[] S) {
         int k = (pub.getModulus().bitLength() * + 7) / 8;

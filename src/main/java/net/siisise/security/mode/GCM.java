@@ -33,11 +33,16 @@ import net.siisise.security.mac.GHASH;
  * Galois/Counter Mode(GCMx) and GMAC NIST SP 800- 38D, November 2007
  * https://nvlpubs.nist.gov/nistpubs/legacy/sp/nistspecialpublication800-38d.pdf
  * Counter は IV(96bit) + 1(32bit) または GHASH らしい
- * P の長さ 2^39 -256 32bit counter の限界か
- * Aの長さ 2^64 -1
+ * P (plaintext)の長さ 2^39 -256 32bit counter の限界か
+ * A (AAD: additional authenticated data)の長さ 2^64 -1
  * IVの長さ 2^64 -1
  * 
- *  RFC 5288 RFC 5289
+ * NIST SP 800-38D
+ * RFC 5116
+ * RFC 5288 AES Galois Counter Mode (GCM) Cipher Suite for TLS
+ * GCMでのAESの使用について
+ * RFC 5289 TLS Elliptic Curve Cipher Suites with SHA-256/384 and AES Galois Counter Mode (GCM)
+ * @deprecated まだ使えない
  */
 public class GCM extends CTR {
     
@@ -47,6 +52,8 @@ public class GCM extends CTR {
     int count;
     GHASH gh;
     byte[] tag;
+    
+    byte[] key;
     
     public GCM() {
         super(new AES());
@@ -69,11 +76,13 @@ public class GCM extends CTR {
      * 
      * iv 96bit または ?
      * iv は使い捨て( 再利用禁止、衝突するRNDよりCountがいい )
-     * @param params key, iv, a
+     * @param params key, Y0用iv, aad
      */
     @Override
     public void init(byte[]... params) {
-        block.init(in(1,params)); // CTRのinitは使わない
+        // iv 生成用AES?
+        block.init(in(1,params)); // Y0内で呼ぶので不要 CTRのinitは使わない
+        key = params[params.length - 2];
         iv = Y0(params[params.length - 1]); // block が状態遷移しないAES前提
         iiv = btoi(iv);
 //        iiv[3] = 1;
@@ -103,7 +112,7 @@ public class GCM extends CTR {
             return m;
         }
         GHASH ivgh = new GHASH(block);
-        ivgh.init(null);// key, aなし
+        ivgh.init(key);// key, aなし
         return ivgh.doFinal(iv);
     }
 
@@ -260,7 +269,7 @@ public class GCM extends CTR {
 
     public byte[] tag() {
         if ( tag == null ) {
-            tag = gh.doFinal();
+            tag = gh.sign();
         }
         byte[] r = new byte[tag.length];
         System.arraycopy(tag, 0, r, 0, tag.length);

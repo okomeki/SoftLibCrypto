@@ -10,24 +10,35 @@ JCAは準備中かな。
 現状 SoftLib に依存しないように分けていますが、依存関係になる日も近いかもしれません。
 PKI系のものは別途パッケージにする予定です。
 
+## 共通鍵暗号
+PKCS #1 ぜんぶ RSA系
+RSAES-PKCS1-v1.5,RSAES-OAEP,RSASSA-PSSなど
+
 ## Block 暗号
-AES,DES,TripleDES など
+AES,DES(DEA),TripleDES(TDEA) など
 
 ## 暗号モード
-CBC,ECB,CTRなどまだ少ない
+CBC,ECB,CTRなど
+組み合わせ自由
 
 GCM 仮
 
 # padding
+PKCS7Padding
 まだ少ない
+
+# パスワード系
+HKDF
+PKCS #5
+PBKDF1,2,PBES1,2
 
 ## Stream 暗号
 
-## Message Dugest
-MD2,MD4,MD5,SHA-1,SHA-2系,SHA-3系
+## Message Digest
+MD2,MD4,MD5,SHA-1,SHA-2系,SHA-3系,Keccak,SHAKE128,SHAKE256,cSHAKE128,cSHAKE256
 
 ## MAC
-HMAC (HMAC-SHA1など),CMAC (OMAC1, RFC 4493 AES-CMACなど), OMAC2
+HMAC (HMAC-SHA1など),CMAC (OMAC1, RFC 4493 AES-CMACなど), OMAC2, KMAC128, KMAC256
 
 HMAC-MD2
 HMAC-MD4
@@ -47,7 +58,14 @@ HMAC-SHA3-512
 CMAC (128bit,64bit 汎用)
 RFC 4493 AES-CMAC
 RFC 4494 AES-CMAC-96 まだ
-AES-128 AES-192 AES-256 ほか128bit暗号は対応できそう
+AES-128 AES-192 AES-256
+TDEA-CMAC
+ほか64bit, 128bit暗号は対応できそう
+
+## ASN.1
+DER
+XML,JSON変換
+PKCS #8,#9,#12 鍵の符号化などは一部対応
 
 ## 速度
 code | JDK (OpenSSL AES-NI) | SoftLib

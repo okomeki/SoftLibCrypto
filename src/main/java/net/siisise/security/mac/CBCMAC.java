@@ -15,39 +15,45 @@
  */
 package net.siisise.security.mac;
 
-import net.siisise.io.Packet;
-import net.siisise.io.PacketA;
-import net.siisise.security.digest.SHA3Derived;
-import net.siisise.security.digest.cSHAKE;
+import net.siisise.security.block.Block;
+import net.siisise.security.mode.CBC;
 
 /**
- *
+ * CBC-MAC
+ * FIPS PUB 113
+ * ISO/IEC 9797-1
  */
-public abstract class KMAC implements MAC {
-    cSHAKE cshake;
-    long L;
+public class CBCMAC implements MAC {
+    Block block;
+    CBC cbc;
     
-    public void init(int c, byte[] key, int length, String S) {
-        Packet newX = new PacketA();
-        L = length;
-        newX.write(SHA3Derived.bytepad(SHA3Derived.encode_string(key),c == 128 ? 168 : 136 ));
-        cshake = new cSHAKE(c,length, "KMAC", S);
-        cshake.update(newX.toByteArray());
+    public CBCMAC(Block block) {
+        this.block = block;
+    }
+
+    @Override
+    public void init(byte[] key) {
+        block.init(key);
+        cbc = new CBC(block);
+    }
+    
+    public void init(byte[][] params) {
+        cbc.init(params);
     }
 
     @Override
     public void update(byte[] src, int offset, int length) {
-        cshake.update(src, offset, length);
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public byte[] sign() {
-        cshake.update(SHA3Derived.right_encode(L));
-        return cshake.digest();
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public int getMacLength() {
-        return cshake.getDigestLength();
+        throw new UnsupportedOperationException("Not supported yet.");
     }
+    
 }

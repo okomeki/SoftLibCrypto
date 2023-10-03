@@ -199,7 +199,7 @@ public class CMACTest {
         assertArrayEquals(Lu,omac.k1);
         System.out.println(Bin.toHex(omac.k2));
         assertArrayEquals(Lu2,omac.k2);
-        byte[] T = omac.doFinal();
+        byte[] T = omac.sign();
         assertArrayEquals(exTag, T);
         System.out.println(" 16-byte string");
         //Key = Bin.toByteArray("2b7e151628aed2a6abf7158809cf4f3c");

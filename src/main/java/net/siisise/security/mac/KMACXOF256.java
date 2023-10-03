@@ -15,16 +15,14 @@
  */
 package net.siisise.security.mac;
 
-import net.siisise.security.digest.SHA3Derived;
-
 /**
  * XOF 可変長っぽく.
  */
 public class KMACXOF256 extends KMAC256 {
-
+    
     @Override
-    public byte[] doFinal() {
-        cshake.update(SHA3Derived.right_encode(0));
-        return cshake.digest();
+    public void init(byte[] key, int length, String S) {
+        super.init(key, length, S);
+        L = 0;
     }
 }

@@ -44,7 +44,7 @@ public abstract class BlockMAC implements MAC,BlockIOListener {
     }
 
     @Override
-    public byte[] doFinal() {
+    public byte[] sign() {
         try {
             pac.close();
         } catch (IOException ex) {

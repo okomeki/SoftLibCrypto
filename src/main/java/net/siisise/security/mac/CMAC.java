@@ -133,7 +133,7 @@ public class CMAC implements MAC {
     }
 
     @Override
-    public byte[] doFinal() {
+    public byte[] sign() {
         // Step 3. Step 4.
         byte[] T;
         if ( (len == 0) || ( len % k1.length != 0 ) ) { // padding(M)

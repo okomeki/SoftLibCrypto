@@ -224,7 +224,7 @@ public class HMAC implements MAC {
     }
 
     @Override
-    public byte[] doFinal() {
+    public byte[] sign() {
         byte[] m = md.digest();
 
         md.update(k_opad);

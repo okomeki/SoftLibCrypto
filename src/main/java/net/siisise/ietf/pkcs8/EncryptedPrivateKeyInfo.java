@@ -13,17 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.siisise.security.mac;
+package net.siisise.ietf.pkcs8;
+
+import net.siisise.iso.asn1.tag.OCTETSTRING;
 
 /**
- * XOF 可変長っぽく.
+ * RFC 5208
  */
-public class KMACXOF128 extends KMAC128 {
+public class EncryptedPrivateKeyInfo {
+    public EncryptionAlgorithmIdentifier encryptionAlgorithm;
+    public OCTETSTRING encryptedData;
     
-    @Override
-    public void init(byte[] key, int length, String S) {
-        super.init(key, length, S);
-        L = 0;
-    }
-
 }

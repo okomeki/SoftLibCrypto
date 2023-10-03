@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.siisise.security;
+package net.siisise.security.key;
 
 import java.security.MessageDigest;
-import net.siisise.security.key.KDF;
+import net.siisise.security.PacketS;
 import net.siisise.security.mac.HMAC;
 import net.siisise.security.mac.MAC;
 

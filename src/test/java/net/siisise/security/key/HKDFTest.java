@@ -1,4 +1,4 @@
-package net.siisise.security;
+package net.siisise.security.key;
 
 import java.security.MessageDigest;
 import net.siisise.lang.Bin;

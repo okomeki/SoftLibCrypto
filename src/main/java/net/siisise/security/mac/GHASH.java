@@ -152,7 +152,7 @@ public class GHASH implements MAC {
      * @return tag
      */
     @Override
-    public byte[] doFinal() {
+    public byte[] sign() {
         long n = (blen + 15) / 16;
         pool.dwrite(new byte[16 - pool.size()]);
         xorMul(pool.toByteArray());

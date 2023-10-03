@@ -73,23 +73,14 @@ public class PBMAC1 implements MAC {
     }
 
     @Override
-    public void init(byte[] key) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    /**
-     * PBMAC1の本体.
-     * たぶんこんなかんじ? 
-     * @param src メッセージ M
-     * @param mac HMAC-XXXX
-     * @param password パスワード P
-     * @return メッセージ認証コード T
-     */
-    public byte[] mac(byte[] src, MAC mac, byte[] password) {
-        int dkLen = mac.getMacLength(); // 長さ(オクテット)
+    public void init(byte[] password) {
+        if (mac != null) {
+            kdf.init(mac);
+        }
+        int dkLen = mac.getMacLength();
+        // 3.
         byte[] dk = kdf.pbkdf(password, salt, c, dkLen);
         mac.init(dk);
-        return mac.doFinal(src);
     }
 
     @Override
@@ -98,8 +89,8 @@ public class PBMAC1 implements MAC {
     }
 
     @Override
-    public byte[] doFinal() {
-        return mac.doFinal();
+    public byte[] sign() {
+        return mac.sign();
     }
 
     @Override

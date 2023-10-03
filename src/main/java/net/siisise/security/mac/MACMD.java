@@ -39,7 +39,7 @@ public class MACMD extends BlockMessageDigest {
 
     @Override
     protected byte[] engineDigest() {
-        return mac.doFinal();
+        return mac.sign();
     }
 
     /**
@@ -48,7 +48,7 @@ public class MACMD extends BlockMessageDigest {
      */
     @Override
     protected void engineReset() {
-        mac.doFinal();
+        mac.sign();
     }
 
     @Override

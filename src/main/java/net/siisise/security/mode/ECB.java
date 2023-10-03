@@ -21,7 +21,7 @@ import net.siisise.security.block.Block;
  * Electoric Codebook (ECB).
  * 特に指定しない
  * 暗号にかぶせても何の変化もない.
- * 実用面での使用は非推奨.
+ * @deprecated 実用面での使用は非推奨.
  */
 public class ECB extends BlockMode {
 

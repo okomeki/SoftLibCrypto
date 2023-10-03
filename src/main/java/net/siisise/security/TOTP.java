@@ -13,17 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.siisise.security.mac;
+package net.siisise.security;
 
 /**
- * XOF 可変長っぽく.
+ *
  */
-public class KMACXOF128 extends KMAC128 {
+public class TOTP implements OTP {
     
-    @Override
-    public void init(byte[] key, int length, String S) {
-        super.init(key, length, S);
-        L = 0;
-    }
-
 }
