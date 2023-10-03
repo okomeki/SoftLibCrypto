@@ -26,7 +26,6 @@ import net.siisise.security.mode.CBC;
  * RFC 3566 AES-XCBC-MAC-96 MAC
  * XCBC-MAC-1
  * RFC 3664,4434 AES-XCBC-PRF-128 疑似乱数
- * @deprecated まだ
  */
 public class XCBC implements MAC {
 
@@ -40,13 +39,22 @@ public class XCBC implements MAC {
     private Packet m;
     int len;
     
+    /**
+     * 
+     * @param block AESなど暗号ブロック CBCは含まない
+     * @param len 出力バイト長
+     */
     public XCBC(Block block, int len) {
         this.block = block;
         this.len = len;
     }
-    
+
+    /**
+     * 
+     * @param block AES または出力サイズが決まっているBlock CBCは含まない
+     */
     public XCBC(Block block) {
-        this(block,16);
+        this(block,(block.getBlockLength() + 7) / 8);
     }
 
     /**
@@ -93,16 +101,18 @@ public class XCBC implements MAC {
     @Override
     public byte[] sign() {
         byte[] t = new byte[16];
-        if ( m.size() < 16 ) {
+        if ( m.size() < 16 ) { // 10* Padding
             m.write(0x80);
             m.write(new byte[16 - m.size()]);
             m.read(t);
-            Bin.xorl(t, k2);
+            Bin.xorl(t, k3);
         } else {
             m.read(t);
-            Bin.xorl(t, k3);
+            Bin.xorl(t, k2);
         }
-        return Arrays.copyOf(cbc.encrypt(t), len);
+        t = cbc.encrypt(t);
+        cbc = new CBC(block); // 次の初期化
+        return Arrays.copyOf(t, len);
     }
 
     @Override
