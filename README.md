@@ -10,12 +10,12 @@ JCAは準備中かな。
 現状 SoftLib に依存しないように分けていますが、依存関係になる日も近いかもしれません。
 PKI系のものは別途パッケージにする予定です。
 
-## 共通鍵暗号
+## 公開鍵暗号,署名
 PKCS #1 ぜんぶ RSA系
 RSAES-PKCS1-v1.5,RSAES-OAEP,RSASSA-PSSなど
 
-## Block 暗号
-AES,DES(DEA),TripleDES(TDEA) など
+## 共通鍵 Block 暗号
+AES,DES(DEA),TripleDES(TDEA),RC2 など
 
 ## 暗号モード
 CBC,ECB,CTRなど
@@ -38,7 +38,7 @@ PBKDF1,2,PBES1,2
 MD2,MD4,MD5,SHA-1,SHA-2系,SHA-3系,Keccak,SHAKE128,SHAKE256,cSHAKE128,cSHAKE256
 
 ## MAC
-HMAC (HMAC-SHA1など),CMAC (OMAC1, RFC 4493 AES-CMACなど), OMAC2, KMAC128, KMAC256
+HMAC (HMAC-SHA1など),CMAC (OMAC1, RFC 4493 AES-CMACなど), OMAC2, KMAC, XCBC
 
 HMAC-MD2
 HMAC-MD4
@@ -72,6 +72,8 @@ code | JDK (OpenSSL AES-NI) | SoftLib
 -----|----|------
 AES-CBC encode | 2608 | 1510 
 AES-CBC decode | 2716 | 1144
+
+AMD Ryzen 2600X か 5800Xの値
 
 JDKのCBCが遅いのでAES-NIの半分くらいは出てる
 

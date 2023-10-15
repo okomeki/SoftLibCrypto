@@ -17,26 +17,25 @@ package net.siisise.security.block;
 
 /**
  * RFC 2268 A Description of the RC2(r) Encryption Algorithm
+ * 64bit Feistel構造 Block暗号
  * 16bit CPU
- * 鍵長 128バイト(1024bit)まで?
+ * 鍵長 40bit 128バイト(1024bit)まで?
+ * @deprecated 仕様は廃止,実装はまだ不安定
  */
 public class RC2 extends OneBlock {
     
+    int t1 = 64;
     // 鍵拡張
-    // 鍵のバイト列表記
-    byte[] L = new byte[128];
-    
+    // 鍵のword列表記
+    short[] K = new short[64];
+
     public RC2() {
         
     }
 
-    private int getK(int i) {
-        int s;
-        s = ((L[i*2+1] & 0xff) << 8);
-        s |= L[i*2] & 0xff;
-        return s;
-    }
-    
+    /**
+     * 円周率を元にした乱数
+     */
     static byte[] PITABLE = {
     (byte)0xd9, (byte)0x78, (byte)0xf9, (byte)0xc4, (byte)0x19, (byte)0xdd, (byte)0xb5, (byte)0xed,
     (byte)0x28, (byte)0xe9, (byte)0xfd, (byte)0x79, (byte)0x4a, (byte)0xa0, (byte)0xd8, (byte)0x9d,
@@ -73,54 +72,71 @@ public class RC2 extends OneBlock {
     };
     
     /**
+     * initより前に鍵長を決める.
+     * @param l 鍵長 ビット単位
+     */
+    public void setKeyBitLength(int l) {
+        t1 = l;
+    }
+
+    /**
      * Tバイト 1 &lt;= T &lt;= 128
      * T1 = 有効鍵長 (128ぐらい)
      * T = 
      * T8 = key.length 
-     * @param keys 鍵1つ
+     * @param keys 鍵1つ 1024bitまで
      */
     @Override
     public void init(byte[]... keys) {
-        // ToDo: 長さエラーチェック
+        // ToDo: 長さエラーチェック 128byteまで
         int t = keys[0].length;
+        byte[] L = new byte[128];
         System.arraycopy(keys[0],0,L,0,t);
-        int t1 = t*8;
+        //t = 8; // 固定
+//        int t1 = t*8; // 鍵の有効ビット長 t*8より短くなることもある
+        if ( keys.length > 1) {
+            t1 = keys[1][0] & 0xff;
+        }
         int t8 = (t1+7)/8; // 実質t
         // 最後ビットのマスク?
-        int tm = 0xff % (1 << (8 + t1 - 8*t8)); // 0xff;
+        int tm = 0xff % (1 << (8 + t1 - 8*t8)); // 0xff; // オリジナル?
+//        int tm = 0xff >> (8*t8 - t1); // 改変
      
         // 鍵拡張
         for (int i = t; i <= 127; i++ ) {
-            L[i] = (byte)(PITABLE[(L[i-1] + L[i-t]) & 0xff]);
+            L[i] = PITABLE[(L[i-1] + L[i-t]) & 0xff];
         }
         L[128-t8] = PITABLE[L[128-t8] & tm];
         
         for ( int i = 127-t8; i >= 0; i-- ) {
             L[i] = PITABLE[(L[i+1] ^ L[i+t8]) & 0xff];
         }
+        for (int i = 0; i < 64; i++) { // Little Endian
+            K[i] = (short) ((L[i*2] & 0xff) + (L[i*2+1] << 8));
+        }
     }
-
+    
     @Override
     public int getBlockLength() {
         return 64;
     }
-    
+
     static final int[] s = {1,2,3,5};
-    
+
     private void mix(short[] r, int j) {
         // 3.2 みきしんぐ
         for (int i = 0; i < 4; i++) {
             // 3.1 みっくす
             int i1 = (i + 3) & 0x3;
-            int rff = (r[i] + getK(j+i) + (r[i1] & r[i^2]) + ((~r[i1]) & r[i1^2])) & 0xffff;
+            int rff = (r[i] + K[j+i] + (r[i1] & r[i^2]) + ((~r[i1]) & r[i1^2])) & 0xffff;
             r[i] = (short) ((rff << s[i]) | (rff >>> (16 - s[i])));
         }
     }
-    
+
     private void mash(short[] r) {
         for (int i = 0; i < 4; i++) {
             int i1 = (i+3) & 0x3;
-            r[i] = (short) (r[i] + getK(r[i1] & 63));
+            r[i] = (short) (r[i] + K[r[i1] & 63]);
         }
     }
 
@@ -128,9 +144,10 @@ public class RC2 extends OneBlock {
     public byte[] encrypt(byte[] src, int offset) {
         //int ss = ;
         short[] R = new short[4];
-        for ( int i = 0; i < 4; i++ ) {
+        for ( int i = 0; i < 4; i++ ) { // Little Endian
             R[i] = (short) ((src[offset + i*2] & 0xff) | (src[offset + i*2+1] << 8));
         }
+        // Kはinitで初期設定する
         for ( int i = 0; i < 5; i++) {
             mix(R,i*4);
         }
@@ -150,20 +167,20 @@ public class RC2 extends OneBlock {
         }
         return ret;
     }
-    
+
     private void rmix(short[] r, int j) {
         for (int i = 3; i >= 0; i--) {
             int i1 = (i-1) & 3;
             int rff = r[i] & 0xffff;
             rff = (rff >>> s[i]) | (rff << (16 - s[i]));
-            r[i] = (short) (rff - getK(j+i) - (r[i1] & r[i^2]) - ((~r[i1]) & r[i1^2]));
+            r[i] = (short) (rff - K[j+i] - (r[i1] & r[i^2]) - ((~r[i1]) & r[i1^2]));
         }
     }
-    
+
     private void rmash(short[] r) {
         for (int i = 3; i >= 0; i--) {
             int i1 = (i-1) & 0x3;
-            r[i] = (short) (r[i] - getK(r[i1] & 63));
+            r[i] = (short) (r[i] - K[r[i1] & 63]);
         }
     }
 

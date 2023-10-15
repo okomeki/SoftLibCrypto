@@ -24,7 +24,7 @@ package net.siisise.security.block;
  * 56bit暗号 上位1 下位64
  * 内部処理を0ベースにしたりいろいろ最適化済み.
  *
- * @deprecated AES
+ * @deprecated 仕様廃止,AESへ
  */
 public class DES extends OneBlock {
 
