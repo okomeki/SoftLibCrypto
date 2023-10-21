@@ -15,10 +15,12 @@
  */
 package net.siisise.security.key;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import net.siisise.iso.asn1.ASN1Object;
+import net.siisise.iso.asn1.ASN1Util;
 import net.siisise.iso.asn1.tag.ASN1Convert;
 import net.siisise.iso.asn1.tag.SEQUENCE;
 import org.junit.jupiter.api.AfterEach;
@@ -97,6 +99,19 @@ public class RSAMultiPrivateKeyTest {
     }
 
     /**
+     * Test of getPublicKey method, of class RSAPrivateCrtKey.
+     */
+    @Test
+    public void testGetPublicKey() {
+        System.out.println("getPublicKey");
+        RSAPrivateCrtKey instance = RSAKeyGen.generatePrivateKey(keylen, srnd, 2);
+        RSAPublicKey result = instance.getPublicKey();
+        
+        assertEquals(instance.publicExponent, result.getPublicExponent());
+        assertEquals(instance.getModulus(), result.getModulus());
+    }
+
+    /**
      * Test of modPow method, of class RSAMultiPrivateKey.
      */
 /*
@@ -126,5 +141,75 @@ public class RSAMultiPrivateKeyTest {
         assertEquals(expResult, result);
         // TODO review the generated test code and remove the default call to fail.
 //        fail("The test case is a prototype.");
+    }
+
+    /**
+     * Test of getFormat method, of class RSAPrivateCrtKey.
+     * @throws java.security.NoSuchAlgorithmException
+     */
+    @Test
+    public void testGetFormat() throws NoSuchAlgorithmException {
+        System.out.println("getFormat");
+        RSAPrivateCrtKey instance = RSAKeyGen.generatePrivateKey(keylen, srnd, 2);
+        String expResult = "PKCS#8";
+        String result = instance.getFormat();
+        assertEquals(expResult, result);
+    }
+
+    /**
+     * Test of getEncoded method, of class RSAPrivateCrtKey.
+     * @throws java.security.NoSuchAlgorithmException
+     * @throws java.io.IOException
+     */
+    @Test
+    public void testGetEncoded() throws NoSuchAlgorithmException, IOException {
+        System.out.println("getEncoded");
+        RSAPrivateCrtKey instance = RSAKeyGen.generatePrivateKey(keylen, srnd, 2);
+//        KeyPairGenerator gen = KeyPairGenerator.getInstance("RSA");
+//        KeyPair pair = gen.genKeyPair();
+//        PrivateKey examplePrivateKey = pair.getPrivate();
+//        byte[] k = examplePrivateKey.getEncoded();
+//        FileIO.dump(k);
+//        ASN1Object asn = ASN1Util.toASN1(k);
+//        System.out.println(asn);
+        byte[] expResult = null;
+        byte[] result = instance.getEncoded();
+        System.out.println(ASN1Util.toASN1(result));
+//        assertArrayEquals(expResult, result);
+        // TODO review the generated test code and remove the default call to fail.
+//        fail("The test case is a prototype.");
+    }
+
+    /**
+     * Test of toString method, of class RSAPrivateCrtKey.
+     */
+    @Test
+    public void testToString() {
+        System.out.println("toString");
+        RSAPrivateCrtKey instance = RSAKeyGen.generatePrivateKey(keylen, srnd, 2);
+        String expResult = "Siisise RSA private CRT key, " + keylen + " bits";
+        String result = instance.toString();
+        assertEquals(expResult, result);
+    }
+
+    @Test
+    public void testCreatePrivateKey() throws Exception {
+        System.out.println("createPrivateKey");
+        int len = 2049;
+        RSAPrivateCrtKey expResult = null;
+        RSAPrivateCrtKey key = RSAKeyGen.generatePrivateKey(len);
+//        assertEquals(expResult, key);
+        // TODO review the generated test code and remove the default call to fail.
+        BigInteger p1e = key.prime1.subtract(BigInteger.ONE);
+        BigInteger p2e = key.prime2.subtract(BigInteger.ONE);
+//        assertEquals(key.publicExponent.modInverse(key.modulus), );
+        assertEquals(key.modulus, key.prime1.multiply(key.prime2));
+        assertEquals(key.exponent1, key.publicExponent.modInverse(p1e));
+        assertEquals(key.exponent2, key.publicExponent.modInverse(p2e));
+        assertEquals(key.exponent1, key.privateExponent.mod(p1e));
+        assertEquals(key.exponent2, key.privateExponent.mod(p2e));
+        assertEquals(key.publicExponent, key.privateExponent.modInverse(RSAKeyGen.lcm(p1e,p2e)));
+        assertEquals(key.coefficient, key.prime2.modInverse(key.prime1));
+//        assertEquals(key.privateExponent, key.exponent1.multiply(key.exponent2).mod(RSA.lcm(p1e, p2e)));
     }
 }

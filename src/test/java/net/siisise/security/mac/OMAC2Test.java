@@ -25,7 +25,6 @@ import org.junit.jupiter.api.Test;
 
 /**
  *
- * @author okome
  */
 public class OMAC2Test {
     
@@ -50,7 +49,6 @@ public class OMAC2Test {
 
     /*
      * Test of initk method, of class OMAC2.
-     * いろいろOMAC1用なので使えない
      * http://www.nuee.nagoya-u.ac.jp/labs/tiwata/omac/tv/omac2-tv.txt
      */
 

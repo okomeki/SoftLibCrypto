@@ -37,7 +37,7 @@ public class XCBC implements MAC {
     private byte[] k3;
     
     private Packet m;
-    int len;
+    int outlen;
     
     /**
      * 
@@ -46,7 +46,7 @@ public class XCBC implements MAC {
      */
     public XCBC(Block block, int len) {
         this.block = block;
-        this.len = len;
+        this.outlen = len;
     }
 
     /**
@@ -64,46 +64,51 @@ public class XCBC implements MAC {
     @Override
     public void init(byte[] key) {
         block.init(key);
-        int len = getMacLength();
-        k1 = new byte[len];
-        k2 = new byte[len];
-        k3 = new byte[len];
+        int maclen = (block.getBlockLength() + 7) / 8;
+        k1 = new byte[maclen];
+        k2 = new byte[maclen];
+        k3 = new byte[maclen];
         Arrays.fill(k1, (byte)0x01);
         Arrays.fill(k2, (byte)0x02);
         Arrays.fill(k3, (byte)0x03);
-        k1 = block.encrypt(k1);
-        k2 = block.encrypt(k2);
-        k3 = block.encrypt(k3);
-        init(k1,k2,k3);
+        init(block.encrypt(k1),block.encrypt(k2),block.encrypt(k3));
     }
     
     public void init(byte[]... keys) {
         k1 = keys[0];
         block.init(k1);
-        cbc = new CBC(block);
         k2 = keys[1];
         k3 = keys[2];
         m = new PacketA();
+        cbc = new CBC(block);
     }
 
     @Override
     public void update(byte[] src, int offset, int length) {
-        m.write(src, offset, length);
-        if ( m.size() > len ) {
-            byte[] t = new byte[len];
-            do {
-                m.read(t);
-                cbc.encrypt(t);
-            } while ( m.size() > len );
+        int mlen = m.size();
+        if ( mlen > 0 && mlen + length > k2.length ) {
+            byte[] t = new byte[k2.length];
+            m.read(t);
+            int blen = k2.length - mlen;
+            System.arraycopy(src, offset, t, mlen, blen);
+            offset += blen;
+            length -= blen;
+            cbc.encrypt(t);
         }
-    }
+        if ( length > k2.length ) {
+            int blen = (length - 1) / k2.length * k2.length;
+            cbc.encrypt(src, offset, blen);
+            offset += blen;
+            length -= blen;
+        }
+        m.write(src, offset, length);
+}
 
     @Override
     public byte[] sign() {
-        byte[] t = new byte[16];
-        if ( m.size() < 16 ) { // 10* Padding
+        byte[] t = new byte[k2.length];
+        if ( m.size() < k2.length ) { // 10* Padding
             m.write(0x80);
-            m.write(new byte[16 - m.size()]);
             m.read(t);
             Bin.xorl(t, k3);
         } else {
@@ -112,12 +117,12 @@ public class XCBC implements MAC {
         }
         t = cbc.encrypt(t);
         cbc = new CBC(block); // 次の初期化
-        return Arrays.copyOf(t, len);
+        return Arrays.copyOf(t, outlen);
     }
 
     @Override
     public int getMacLength() {
-        return (block.getBlockLength() + 7) / 8;
+        return outlen;
     }
     
 }

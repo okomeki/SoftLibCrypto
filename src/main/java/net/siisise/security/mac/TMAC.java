@@ -17,6 +17,7 @@ package net.siisise.security.mac;
 
 /**
  * Kaoru Kurosawa, Tetsu Iwata、TMAC: Two-Key CBC MAC、2004年、IEICE Trans. Fundamentals, Vol. E87-A (1), pp. 46-52. 
+ * @deprecated まだ未実装、古いので使わない方がよさそ
  */
 public class TMAC {
     

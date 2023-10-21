@@ -20,7 +20,7 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 
 /**
- * 署名・検証 をまとめる
+ * デジタル署名 署名・検証 をまとめる
  * MAC,RSASSA
  * 鍵生成も必要?
  */
