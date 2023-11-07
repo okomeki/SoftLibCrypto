@@ -16,7 +16,7 @@
 package net.siisise.security.block;
 
 /**
- *
+ * long[]型で処理する
  */
 public abstract class LongBlock extends BaseBlock {
 

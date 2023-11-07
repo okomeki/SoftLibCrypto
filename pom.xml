@@ -92,7 +92,7 @@
         <dependency>
             <groupId>net.siisise</groupId>
             <artifactId>softlib</artifactId>
-            <version>1.1.12-SNAPSHOT</version>
+            <version>[1.1.13,)</version>
             <type>jar</type>
         </dependency>
         <dependency>

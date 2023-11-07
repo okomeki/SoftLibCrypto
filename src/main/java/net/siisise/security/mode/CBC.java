@@ -95,7 +95,6 @@ public class CBC extends LongBlockMode {
         byte[] ret = new byte[length];
         int o4 = 0;
         
-//        int ol = 0;
         while (o4 < length) {
             xor(vectorl, src, offset + o4, vl);
 
@@ -103,24 +102,6 @@ public class CBC extends LongBlockMode {
             
             ltob(vectorl,ret,o4);
             o4 += vl*8;
-            /*
-            for (int i = 0; i < vl; i++, o4+= 8) {
-                long l = vectorl[i];
-//                byte[] a = java.nio.ByteBuffer.allocate(8).putLong(l).array();
-//                System.arraycopy(a, 0, ret, o4, 8);
-//                for (int j = 0; j < 8; j++) {
-//                    ret[o4+j] = (byte) (l >> (56-j*8));
-//                }
-/*
-                ret[o4+1] = (byte) (l >> 48);
-                ret[o4+2] = (byte) (l >> 40);
-                ret[o4+3] = (byte) (l >> 32);
-                ret[o4+4] = (byte) (l >> 24);
-                ret[o4+5] = (byte) (l >> 16);
-                ret[o4+6] = (byte) (l >>  8);
-                ret[o4+7] = (byte)  l       ;
-                *
-            }*/
         }
         return ret;
     }
@@ -146,7 +127,7 @@ public class CBC extends LongBlockMode {
     }
 
     /**
-     * 
+     * 復号
      * @param src
      * @param offset
      * @return 
@@ -163,15 +144,18 @@ public class CBC extends LongBlockMode {
 
     /**
      * byte to int decrypt
-     * @param src
-     * @param offset
-     * @param length
-     * @return 
+     * ToDo: 並列化が可能
+     * @param src 暗号文
+     * @param offset 位置
+     * @param length 長さ
+     * @return 平文
      */
     @Override
     public byte[] decrypt(byte[] src, int offset, int length) {
         byte[] ret = new byte[length];
 //        int bl = ;
+
+//        Blocks.subBlocks(src,128).stream();
 
         for (int toffset = 0; toffset < length; ) {
             long[] ls = btol(src, offset + toffset, vectorl.length);

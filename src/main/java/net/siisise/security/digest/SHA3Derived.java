@@ -89,6 +89,13 @@ public class SHA3Derived {
         return p;
     }
     
+    /**
+     * バイト単位.
+     * @param s メッセージを含む列
+     * @param offset 位置
+     * @param length サイズ
+     * @return left_encode(length) | s
+     */
     public static Packet encode_string(byte[] s, int offset, int length) {
         Packet p = new PacketA();
         p.write(left_encode(length * 8l));
@@ -97,9 +104,9 @@ public class SHA3Derived {
     }
 
     /**
-     * 
-     * @param s
-     * @return 
+     * ビット単位のencode_string.
+     * @param s ビット列
+     * @return 長さ付加
      */
     public static BitPacket encode_string(BitPacket s) {
         BitPacket p = new BigBitPacket();
@@ -143,6 +150,12 @@ public class SHA3Derived {
         return z.toByteArray();
     }
 
+    /**
+     * wバイト単位でパディングする.
+     * @param X 元データ
+     * @param w ブロックっぽいサイズ
+     * @return 
+     */
     public static byte[] bytepad(Packet X, int w) {
         Packet z = new PacketA();
         z.write(left_encode(w));

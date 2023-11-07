@@ -119,8 +119,8 @@ public class EME_OAEP implements EME {
         // i.
         Packet em = new PacketA();
         em.write(0x00);
-        em.write(seed); // maskedSeed
-        em.write(DB); // maskedDB
+        em.dwrite(seed); // maskedSeed
+        em.dwrite(DB); // maskedDB
         return em.toByteArray();
     }
 

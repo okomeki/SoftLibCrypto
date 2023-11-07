@@ -18,27 +18,14 @@ package net.siisise.security.digest;
 /**
  * update 1つをX1つとする
  */
-public class TupleHash256 extends cSHAKE256 {
-    long L;
+public class TupleHash256 extends TupleHash {
 
+    /**
+     * TupleHash.
+     * @param L 出力長
+     * @param S 
+     */
     public TupleHash256(int L, String S) {
-        super(L, "TupleHash", S);
-        this.L = L;
-    }
-
-    public void update(byte[][] src) {
-        for (byte[] s : src) {
-            updateTuple(s, 0, s.length);
-        }
-    }
-
-    public void updateTuple(byte[] src, int offset, int length) {
-        update(SHA3Derived.encode_string(src, offset, length).toByteArray());
-    }
-
-    @Override
-    protected byte[] engineDigest() {
-        update(SHA3Derived.right_encode(L));
-        return super.engineDigest();
+        super(256, L, S);
     }
 }

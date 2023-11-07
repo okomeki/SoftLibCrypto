@@ -20,12 +20,22 @@ import net.siisise.io.Packet;
 import net.siisise.io.PacketA;
 
 /**
- *
+ * NIST SP 800-185 cSHAKE.
+ * ビット列用だがバイト列で使う.
+ * 
  */
 public class cSHAKE extends Keccak {
     
     boolean c = false;
     
+    /**
+     * cSHAKE.
+     * N, Sが空の場合はSHAKEと同じ
+     * @param c セキュリティ強度 128 または 256
+     * @param d 出力長
+     * @param N 関数名のビット文字列
+     * @param S 
+     */
     public cSHAKE(int c, int d, String N, String S) {
         super("cSHAKE"+c+"(" + d + ")", 2 * c, d, (byte) 0x1f);
         if (N == null) {

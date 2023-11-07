@@ -17,6 +17,12 @@ package net.siisise.security.digest;
 
 public class cSHAKE128 extends cSHAKE {
 
+    /**
+     * cSHAKE128.
+     * @param d 出力長
+     * @param N 関数名
+     * @param S カスタマイズ名
+     */
     public cSHAKE128(int d, String N, String S) {
         super(128,d,N,S);
     }

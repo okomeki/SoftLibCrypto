@@ -1,7 +1,23 @@
+/*
+ * Copyright 2023 Siisise Net.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package net.siisise.security.digest;
 
 import java.io.IOException;
 import java.security.Provider;
+import net.siisise.lang.Bin;
 import net.siisise.security.SiisiseJCA;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
@@ -37,16 +53,6 @@ public class SHA3Test {
     static String Keccak384 = "2c23146a63a29acf99e73b88f8c24eaa7dc60aa771780ccc006afbfa8fe2479b2dd2b21362337441ac12b515911957ff";
     static String Keccak512 = "0eab42de4c3ceb9235fc91acffe746b29c29a8c366b7c60e4e67c466f36a4304c00fa9caf9d87976ba469bcbe06713b435f091ef2769fb160cdab33d3670680e";
 
-    private byte[] toHex(String src) {
-        String b;
-        byte[] data = new byte[src.length() / 2];
-        for ( int i = 0; i < src.length(); i+= 2) {
-            b = src.substring(i,i+2);
-            data[i/2] = (byte) Integer.parseInt(b, 16);
-        }
-        return data;
-    }
-    
     @Test
     public void testSomeMethod() throws IOException {
         Keccak md;
@@ -55,80 +61,80 @@ public class SHA3Test {
         
         md = new SHA3(224);
         r = md.digest(src);
-        assertArrayEquals(r,toHex(SHA3224abc));
+        assertArrayEquals(r,Bin.toByteArray(SHA3224abc));
 
         md = new SHA3(256);
         r = md.digest(src);
-        assertArrayEquals(r,toHex(SHA3256abc));
+        assertArrayEquals(r,Bin.toByteArray(SHA3256abc));
         
         md = new SHA3(384);
         r = md.digest(src);
-        assertArrayEquals(r,toHex(SHA3384abc));
+        assertArrayEquals(r,Bin.toByteArray(SHA3384abc));
         
         md = new SHA3(512);
         r = md.digest(src);
-        assertArrayEquals(r,toHex(SHA3512abc));
+        assertArrayEquals(r,Bin.toByteArray(SHA3512abc));
 
         md = new SHAKE128(256);
         r = md.digest(src);
-        assertArrayEquals(r,toHex(SHAKE128256abc));
+        assertArrayEquals(r,Bin.toByteArray(SHAKE128256abc));
 
         md = new SHAKE256(512);
         r = md.digest(src);
-        assertArrayEquals(r,toHex(SHAKE256512abc));
+        assertArrayEquals(r,Bin.toByteArray(SHAKE256512abc));
 
         md = new Keccak(224);
         r = md.digest(src);
-        assertArrayEquals(r,toHex(Keccak224abc));
+        assertArrayEquals(r,Bin.toByteArray(Keccak224abc));
 
         md = new Keccak(256);
         r = md.digest(src);
-        assertArrayEquals(r,toHex(Keccak256abc));
+        assertArrayEquals(r,Bin.toByteArray(Keccak256abc));
 
         md = new Keccak(384);
         r = md.digest(src);
-        assertArrayEquals(r,toHex(Keccak384abc));
+        assertArrayEquals(r,Bin.toByteArray(Keccak384abc));
 
         md = new Keccak(512);
         r = md.digest(src);
-        assertArrayEquals(r,toHex(Keccak512abc));
+        assertArrayEquals(r,Bin.toByteArray(Keccak512abc));
 
         src = "".getBytes();
         md = new SHA3(224);
         r = md.digest(src);
-        assertArrayEquals(r,toHex(SHA3224));
+        assertArrayEquals(r,Bin.toByteArray(SHA3224));
 
         md = new SHA3(256);
         r = md.digest(src);
-        assertArrayEquals(r,toHex(SHA3256));
+        assertArrayEquals(r,Bin.toByteArray(SHA3256));
         
         md = new SHA3(384);
         r = md.digest(src);
-        assertArrayEquals(r,toHex(SHA3384));
+        assertArrayEquals(r,Bin.toByteArray(SHA3384));
         
         md = new SHA3(512);
         r = md.digest(src);
-        assertArrayEquals(r,toHex(SHA3512));
+        assertArrayEquals(r,Bin.toByteArray(SHA3512));
 
         md = new SHAKE256(256);
         r = md.digest(src);
-        assertArrayEquals(r,toHex(SHAKE25632));
+        assertArrayEquals(r,Bin.toByteArray(SHAKE25632));
 
         md = new Keccak(448,224);
         r = md.digest(src);
-        assertArrayEquals(r,toHex(Keccak224));
+        assertArrayEquals(r,Bin.toByteArray(Keccak224));
 
         md = new Keccak(512,256);
         r = md.digest(src);
-        assertArrayEquals(r,toHex(Keccak256));
+        assertArrayEquals(r,Bin.toByteArray(Keccak256));
 
         md = new Keccak(768,384);
         r = md.digest(src);
-        assertArrayEquals(r,toHex(Keccak384));
+        assertArrayEquals(r,Bin.toByteArray(Keccak384));
 
         md = new Keccak(1024,512);
         r = md.digest(src);
-        assertArrayEquals(r,toHex(Keccak512));
+        assertArrayEquals(r,Bin.toByteArray(Keccak512));
 
         Provider p = new SiisiseJCA();
     }

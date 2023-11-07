@@ -1,3 +1,18 @@
+/*
+ * Copyright 2023 Siisise Net.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package net.siisise.security.digest;
 
 import java.io.UnsupportedEncodingException;
@@ -6,6 +21,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.Security;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import net.siisise.lang.Bin;
 import net.siisise.security.SiisiseJCA;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
@@ -31,16 +47,6 @@ public class SHA256Test {
     static String SHA512224e = "6ed0dd02806fa89e25de060c19d3ac86cabb87d6a0ddd05c333b84f4";
     static String SHA512256e = "c672b8d1ef56ed28ab87c3622c5114069bdd3ad7b8f9737498d0c01ecef0967a";
 
-    private byte[] toHex(String src) {
-        String b;
-        byte[] data = new byte[src.length() / 2];
-        for ( int i = 0; i < src.length(); i+= 2) {
-            b = src.substring(i,i+2);
-            data[i/2] = (byte) Integer.parseInt(b, 16);
-        }
-        return data;
-    }
-    
     @Test
     public void testSomeMethod() throws UnsupportedEncodingException {
         MessageDigest md;
@@ -48,48 +54,48 @@ public class SHA256Test {
 
         md = new SHA224();
         r = md.digest("".getBytes("utf-8"));
-        assertArrayEquals(r,toHex(SHA224e));
+        assertArrayEquals(r,Bin.toByteArray(SHA224e));
 
         r = md.digest("abc".getBytes("utf-8"));
-        assertArrayEquals(r,toHex(SHA224abc));
+        assertArrayEquals(r,Bin.toByteArray(SHA224abc));
 
         r = md.digest("The quick brown fox jumps over the lazy dog".getBytes("utf-8"));
-        assertArrayEquals(r,toHex(SHA224m),"SHA-224");
+        assertArrayEquals(r,Bin.toByteArray(SHA224m),"SHA-224");
 
         md.update("The quick brown fox ".getBytes());
         r = md.digest("jumps over the lazy dog".getBytes("utf-8"));
-        assertArrayEquals(r,toHex(SHA224m),"SHA-224");
+        assertArrayEquals(r,Bin.toByteArray(SHA224m),"SHA-224");
 //        r = md.digest("abc".getBytes("utf-8"));
-//        assertArrayEquals(r,toHex(SHA224e));
+//        assertArrayEquals(r,toByteArray(SHA224e));
         
         md = new SHA256();
         r = md.digest("".getBytes("utf-8"));
-        assertArrayEquals(r,toHex(SHA256e),"SHA-256");
+        assertArrayEquals(r,Bin.toByteArray(SHA256e),"SHA-256");
 
         r = md.digest("abc".getBytes("utf-8"));
-        assertArrayEquals(r,toHex(SHA256abc),"SHA-256");
+        assertArrayEquals(r,Bin.toByteArray(SHA256abc),"SHA-256");
         
         md = new SHA384();
         r = md.digest("".getBytes("utf-8"));
-        assertArrayEquals(r,toHex(SHA384e),"SHA-384");
+        assertArrayEquals(r,Bin.toByteArray(SHA384e),"SHA-384");
 
         r = md.digest("abc".getBytes("utf-8"));
-        assertArrayEquals(r,toHex(SHA384abc),"SHA-384");
+        assertArrayEquals(r,Bin.toByteArray(SHA384abc),"SHA-384");
         
         md = new SHA512();
         r = md.digest("".getBytes("utf-8"));
-        assertArrayEquals(r,toHex(SHA512e),"SHA-512");
+        assertArrayEquals(r,Bin.toByteArray(SHA512e),"SHA-512");
 
         r = md.digest("abc".getBytes("utf-8"));
-        assertArrayEquals(r,toHex(SHA512abc),"SHA-512");
+        assertArrayEquals(r,Bin.toByteArray(SHA512abc),"SHA-512");
 
         md = new SHA512(224);
         r = md.digest("".getBytes("utf-8"));
-        assertArrayEquals(r,toHex(SHA512224e),"SHA-512/224");
+        assertArrayEquals(r,Bin.toByteArray(SHA512224e),"SHA-512/224");
 
         md = new SHA512256();
         r = md.digest("".getBytes("utf-8"));
-        assertArrayEquals(r,toHex(SHA512256e),"SHA-512/256");
+        assertArrayEquals(r,Bin.toByteArray(SHA512256e),"SHA-512/256");
         
         SiisiseJCA jca = new SiisiseJCA();
         Security.addProvider(jca);
@@ -97,11 +103,11 @@ public class SHA256Test {
         try {
             md = MessageDigest.getInstance("SHA-512/224",jca);
             r = md.digest("".getBytes("utf-8"));
-            assertArrayEquals(r,toHex(SHA512224e),"SHA-512/224");
+            assertArrayEquals(r,Bin.toByteArray(SHA512224e),"SHA-512/224");
 
             md = MessageDigest.getInstance("SHA-512/256",jca);
             r = md.digest("".getBytes("utf-8"));
-            assertArrayEquals(r,toHex(SHA512256e),"SHA-512/256");
+            assertArrayEquals(r,Bin.toByteArray(SHA512256e),"SHA-512/256");
         } catch (NoSuchAlgorithmException ex) {
             Logger.getLogger(SHA256Test.class.getName()).log(Level.SEVERE, null, ex);
         }
