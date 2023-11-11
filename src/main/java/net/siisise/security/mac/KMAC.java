@@ -15,24 +15,30 @@
  */
 package net.siisise.security.mac;
 
-import net.siisise.io.Packet;
-import net.siisise.io.PacketA;
 import net.siisise.security.digest.SHA3Derived;
 import net.siisise.security.digest.cSHAKE;
 
 /**
- *
+ * Keccak MAC.
+ * NIST SP 800-185
+ * MACかXOF
  */
 public abstract class KMAC implements MAC {
     cSHAKE cshake;
     long L;
-    
+
+    /**
+     * 初期化要素.
+     * @param c 暗号強度 128,256
+     * @param key 鍵
+     * @param length XOF出力サイズ
+     * @param S 
+     */
     public void init(int c, byte[] key, int length, String S) {
-        Packet newX = new PacketA();
         L = length;
-        newX.write(SHA3Derived.bytepad(SHA3Derived.encode_string(key),c == 128 ? 168 : 136 ));
+        byte[] newX = SHA3Derived.bytepad(SHA3Derived.encode_string(key),c == 128 ? 168 : 136 );
         cshake = new cSHAKE(c,length, "KMAC", S);
-        cshake.update(newX.toByteArray());
+        cshake.update(newX);
     }
 
     @Override

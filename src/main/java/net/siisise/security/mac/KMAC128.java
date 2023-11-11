@@ -30,6 +30,12 @@ public class KMAC128 extends KMAC implements MAC {
         init(key, 128, "");
     }
     
+    /**
+     * 初期化要素.
+     * @param key 鍵
+     * @param length XOF出力サイズ
+     * @param S 
+     */
     public void init(byte[] key, int length, String S) {
         init(128,key,length,S);
     }

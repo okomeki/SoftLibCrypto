@@ -21,7 +21,6 @@ import net.siisise.lang.Bin;
 import net.siisise.math.GF;
 import net.siisise.security.block.AES;
 import net.siisise.security.block.Block;
-import net.siisise.security.mode.CBC;
 
 /**
  * Cipher-based Message Authentication Code (CMAC).
@@ -45,7 +44,7 @@ import net.siisise.security.mode.CBC;
 public class CMAC implements MAC {
 
     private final Block block; // E
-    CBC cbc;
+    private MacCBC cbc;
 
     byte[] k1; // L・2 最後のブロックがブロック長と等しい場合
     byte[] k2; // k1・2 最後のブロックがブロック長より短い場合
@@ -100,7 +99,7 @@ public class CMAC implements MAC {
         m = new PacketA();
         len = 0;
         // Step 5.
-        cbc = new CBC(block);
+        cbc = new MacCBC(block);
     }
 
     /**
@@ -123,10 +122,10 @@ public class CMAC implements MAC {
             int wlen = k1.length - ml;
             m.write(src,offset,wlen);
             offset += wlen;
-            cbc.encrypt(m.toByteArray(), 0);
+            cbc.update(m.toByteArray(), 0, k1.length);
         }
         while ( offset + k1.length < last ) {
-            cbc.encrypt(src,offset);
+            cbc.update(src,offset,k1.length);
             offset += k1.length;
         }
         m.write(src, offset, last - offset);
@@ -145,10 +144,11 @@ public class CMAC implements MAC {
             T = m.toByteArray();
             Bin.xorl(T, k1);
         }
-        T = cbc.encrypt(T);
+        cbc.update(T,0,T.length);
+        T = cbc.vector();
         // Step 6. B Step 7.
         // 次の初期化
-        cbc = new CBC(block); // Blockのkeyはそのまま、CBCのIVだけ初期化したい
+        cbc = new MacCBC(block); // Blockのkeyはそのまま、CBCのIVだけ初期化したい
         len = 0;
         return T;
     }

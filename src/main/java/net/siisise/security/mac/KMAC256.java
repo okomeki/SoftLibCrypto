@@ -30,6 +30,12 @@ public class KMAC256 extends KMAC implements MAC {
         init(key, 256, "");
     }
 
+    /**
+     * 初期化要素.
+     * @param key 鍵
+     * @param length XOF出力サイズ
+     * @param S 
+     */
     public void init(byte[] key, int length, String S) {
         init(256,key,length,S);
     }

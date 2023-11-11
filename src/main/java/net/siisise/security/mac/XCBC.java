@@ -20,7 +20,6 @@ import net.siisise.io.Packet;
 import net.siisise.io.PacketA;
 import net.siisise.lang.Bin;
 import net.siisise.security.block.Block;
-import net.siisise.security.mode.CBC;
 
 /**
  * RFC 3566 AES-XCBC-MAC-96 MAC
@@ -30,7 +29,7 @@ import net.siisise.security.mode.CBC;
 public class XCBC implements MAC {
 
     private final Block block;
-    private Block cbc;
+    private MacCBC cbc;
     
     private byte[] k1;
     private byte[] k2;
@@ -80,7 +79,7 @@ public class XCBC implements MAC {
         k2 = keys[1];
         k3 = keys[2];
         m = new PacketA();
-        cbc = new CBC(block);
+        cbc = new MacCBC(block);
     }
 
     @Override
@@ -93,11 +92,11 @@ public class XCBC implements MAC {
             System.arraycopy(src, offset, t, mlen, blen);
             offset += blen;
             length -= blen;
-            cbc.encrypt(t);
+            cbc.update(t,0,k2.length);
         }
         if ( length > k2.length ) {
             int blen = (length - 1) / k2.length * k2.length;
-            cbc.encrypt(src, offset, blen);
+            cbc.update(src, offset, blen);
             offset += blen;
             length -= blen;
         }
@@ -115,8 +114,9 @@ public class XCBC implements MAC {
             m.read(t);
             Bin.xorl(t, k2);
         }
-        t = cbc.encrypt(t);
-        cbc = new CBC(block); // 次の初期化
+        cbc.update(t,0,t.length);
+        t = cbc.vector();
+        cbc = new MacCBC(block); // 次の初期化
         return Arrays.copyOf(t, outlen);
     }
 

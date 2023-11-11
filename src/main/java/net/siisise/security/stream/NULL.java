@@ -15,18 +15,20 @@
  */
 package net.siisise.security.stream;
 
+import java.util.Arrays;
+
 /**
  * NULL 暗号
  */
-public class NULL {
+public class NULL implements Stream {
 
     int length;
 
-    NULL() {
+    public NULL() {
         length = 8;
     }
 
-    NULL(int length) {
+    public NULL(int length) {
         this.length = length;
     }
 
@@ -38,15 +40,25 @@ public class NULL {
     }
 
     public byte[] encrypt(byte[] src, int offset) {
-        byte[] d = new byte[1];
-        d[0] = src[0];
+        byte[] d = new byte[length / 8];
+        System.arraycopy(src, offset, d, 0, d.length);
         return d;
     }
 
     public byte[] decrypt(byte[] src, int offset) {
-        byte[] d = new byte[1];
-        d[0] = src[0];
+        byte[] d = new byte[length / 8];
+        System.arraycopy(src, offset, d, 0, d.length);
         return d;
+    }
+
+    @Override
+    public byte[] encrypt(byte[] src, int offset, int length) {
+        return Arrays.copyOfRange(src, offset, length);
+    }
+
+    @Override
+    public byte[] decrypt(byte[] src, int offset, int length) {
+        return Arrays.copyOfRange(src, offset, length);
     }
 
 }

@@ -16,17 +16,20 @@
 package net.siisise.security.mac;
 
 import net.siisise.security.block.Block;
-import net.siisise.security.mode.CBC;
 
 /**
  * CBC-MAC
+ * 
  * FIPS PUB 113
  * ISO/IEC 9797-1
+ *
+ * @deprecated まだ未実装、古いので使わない方がよさそ
  */
 public class CBCMAC implements MAC {
+
     Block block;
-    CBC cbc;
-    
+    MacCBC cbc;
+
     public CBCMAC(Block block) {
         this.block = block;
     }
@@ -34,16 +37,17 @@ public class CBCMAC implements MAC {
     @Override
     public void init(byte[] key) {
         block.init(key);
-        cbc = new CBC(block);
+        cbc = new MacCBC(block);
     }
-    
+
     public void init(byte[][] params) {
-        cbc.init(params);
+        block.init(params);
+//        cbc.init(params);
     }
 
     @Override
     public void update(byte[] src, int offset, int length) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        cbc.update(src, offset, length);
     }
 
     @Override
@@ -55,5 +59,5 @@ public class CBCMAC implements MAC {
     public int getMacLength() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-    
+
 }
