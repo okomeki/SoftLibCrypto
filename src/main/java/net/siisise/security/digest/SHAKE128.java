@@ -18,10 +18,11 @@ package net.siisise.security.digest;
 /**
  * FIPS PUB 202
  * Secure Hash Algorithm KECCAK 128
+ * 6.2 SHA-3 Extendable-Output Functions
  * 拡張出力関数 XOF
  * SHAKE128
  */
-public class SHAKE128 extends Keccak {
+public class SHAKE128 extends Keccak implements XOF {
     
     static final String OID = SHA3.hashAlgs + ".11";
     static final String OIDlen = SHA3.hashAlgs + ".17";
@@ -31,6 +32,7 @@ public class SHAKE128 extends Keccak {
      * @param d ビット数
      */
     public SHAKE128(int d) {
+        // M || 1111
         super("SHAKE128(M,"+d+")", 2 * 128, d, (byte) 0x1f);
     }
 

@@ -16,16 +16,31 @@
 package net.siisise.security.digest;
 
 /**
- * update 1つをX1つとする
+ * SHA-3 SHAKE系 XOF型.
+ * MessageDigestに追加する
+ * interface にするか class か未定.
  */
-public class TupleHash256 extends TupleHash {
+public interface XOF {
 
     /**
-     * 出力サイズとオプションの文字列指定.
-     * @param L 出力長
-     * @param S オプションで設定可能な空文字列を含む可変長文字列. optional customization bit string of any length, including zero.
+     * ハッシュ出力長.
+     *
+     * @return バイト単位出力長
      */
-    public TupleHash256(int L, String S) {
-        super(256, L, S);
-    }
+    int getDigestLength();
+
+    /**
+     * XOFの出力サイズをあとから変更する.
+     * 後から変更できないものはException出したい.
+     *
+     * @param length 出力バイト長
+     */
+    void setDigestLength(int length);
+
+    void update(byte[] src);
+    void update(byte[] src, int offset, int length);
+
+    byte[] digest();
+    byte[] digest(byte[] src);
+
 }

@@ -33,6 +33,8 @@ public class SHA3 extends Keccak {
      * @param n 出力長 224,256,384,512
      */
     public SHA3(int n) {
+        // M || 01
+        // 110
         super("SHA3-", 2 * n, n, (byte) 0x06);
     }
 

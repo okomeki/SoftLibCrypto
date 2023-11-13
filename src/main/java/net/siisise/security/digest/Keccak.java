@@ -106,6 +106,16 @@ public class Keccak extends BlockMessageDigest {
         return d / 8;
     }
 
+    /**
+     * 出力長をあとで調整する.
+     * 変更できないものもあるので注意.
+     * getDigestLength にあわせたのでバイト単位.
+     * @param length 出力バイト長
+     */
+    public void setDigestLength(int length) {
+        d = length * 8;
+    }
+
     @Override
     public int getBitBlockLength() {
         return r;
@@ -118,8 +128,11 @@ public class Keccak extends BlockMessageDigest {
         Arrays.fill(a, 0l);
     }
 
-    // little endian
-    private static long ROTL(final long x, final long n) {
+    /**
+     * 左ローテート
+     * little endian
+     */
+    private static long ROTL(final long x, final int n) {
         // d = d % w;
         return (x >>> (w - n)) | (x << n);
     }
@@ -188,7 +201,6 @@ public class Keccak extends BlockMessageDigest {
      * Algorithm 8
      *
      * @param b input / output
-     * @return
      */
     private void keccak(byte[] b, int offset) {
         int wb = w / 8;

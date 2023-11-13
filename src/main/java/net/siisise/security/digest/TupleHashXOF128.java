@@ -16,10 +16,16 @@
 package net.siisise.security.digest;
 
 /**
- *
+ * XOFな設定のTupleHash128.
+ * 長さタグは0になる.
  */
 public class TupleHashXOF128 extends TupleHash128 {
     
+    /**
+     * 出力サイズとオプションの文字列指定.
+     * @param L 実出力長 (200byte ぐらいまで? 仮)
+     * @param S オプションで設定可能な空文字列を含む可変長文字列. optional customization bit string of any length, including zero.
+     */
     public TupleHashXOF128(int L, String S) {
         super(L,S);
         this.L = 0;

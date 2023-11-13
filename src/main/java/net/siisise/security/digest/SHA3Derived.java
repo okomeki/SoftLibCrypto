@@ -202,4 +202,5 @@ public class SHA3Derived {
         return n;
     }
 
+//    bits_to_integer()
 }

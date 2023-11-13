@@ -34,7 +34,7 @@ public class KMAC256 extends KMAC implements MAC {
      * 初期化要素.
      * @param key 鍵
      * @param length XOF出力サイズ
-     * @param S 
+     * @param S オプションで設定可能な空文字列を含む可変長文字列. optional customization bit string of any length, including zero.
      */
     public void init(byte[] key, int length, String S) {
         init(256,key,length,S);

@@ -24,7 +24,7 @@ import net.siisise.io.PacketA;
  * ビット列用だがバイト列で使う.
  * 
  */
-public class cSHAKE extends Keccak {
+public class cSHAKE extends Keccak implements XOF {
     
     boolean c = false;
     
@@ -37,7 +37,7 @@ public class cSHAKE extends Keccak {
      * @param S 
      */
     public cSHAKE(int c, int d, String N, String S) {
-        super("cSHAKE"+c+"(" + d + ")", 2 * c, d, (byte) 0x1f);
+        super("cSHAKE"+c+"(" + d + ")", 2 * c, d, (byte)(((N != null && !N.isEmpty()) || (S != null && !S.isEmpty())) ? 0x04 : 0x1f) );
         if (N == null) {
             N = "";
         }

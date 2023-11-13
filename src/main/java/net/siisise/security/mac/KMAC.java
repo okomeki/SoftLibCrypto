@@ -32,7 +32,7 @@ public abstract class KMAC implements MAC {
      * @param c 暗号強度 128,256
      * @param key 鍵
      * @param length XOF出力サイズ
-     * @param S 
+     * @param S オプションで設定可能な空文字列を含む可変長文字列. optional customization bit string of any length, including zero.
      */
     public void init(int c, byte[] key, int length, String S) {
         L = length;

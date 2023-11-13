@@ -18,10 +18,11 @@ package net.siisise.security.digest;
 /**
  * FIPS PUB 202
  * Secure Hash Algorithm KECCAK 256
+ * 6.2 SHA-3 Extendable-Output Functions
  * 拡張出力関数 XOF
  * NIST SP 800-185
  */
-public class SHAKE256 extends Keccak {
+public class SHAKE256 extends Keccak implements XOF {
 
     static final String OID = SHA3.hashAlgs + ".12";
     static final String OIDlen = SHA3.hashAlgs + ".18";

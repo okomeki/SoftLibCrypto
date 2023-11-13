@@ -16,9 +16,11 @@
 package net.siisise.security.sign;
 
 import java.security.MessageDigest;
+import net.siisise.security.digest.XOF;
 import net.siisise.security.key.RSAMiniPrivateKey;
 import net.siisise.security.key.RSAPublicKey;
 import net.siisise.security.padding.MGF;
+import net.siisise.security.padding.MGFXOF;
 
 /**
  * PKCS #1 Section 8.1.
@@ -35,6 +37,26 @@ public class RSASSA_PSS extends RSASSA {
      */
     public RSASSA_PSS(MessageDigest hash, MGF mgf, int sLen) {
         super(new EMSA_PSS(hash, mgf, sLen));
+    }
+
+    /**
+     * XOF対応版.
+     * XOF1と2は同じ型のもの
+     * @param xof1 ハッシュ用XOF 出力サイズ固定
+     * @param xof2 MGF用XOF サイズ可変
+     * @param sLen salt(乱数生成)の長さ
+     */
+    public RSASSA_PSS(XOF xof1, XOF xof2, int sLen) {
+        this((MessageDigest)xof1, new MGFXOF(xof2), sLen);
+    }
+
+    /**
+     * XOF対応 (仮)
+     * @param xof
+     * @param sLen 
+     */
+    public RSASSA_PSS(XOF xof, int sLen) {
+        this((MessageDigest)xof, new MGFXOF(xof), sLen);
     }
     
     /**

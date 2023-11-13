@@ -22,6 +22,12 @@ import net.siisise.lang.Bin;
  * MGF1 の仮
  */
 public interface MGF {
+    /**
+     * マスクの乱数を拡張するっぽい機能.
+     * @param seed 種
+     * @param maskLen 必要な長さ octet
+     * @return マスク
+     */
     byte[] generate(byte[] seed, long maskLen);
     default void xorl(byte[] src, byte[] seed) {
         Bin.xorl(src, generate(seed, src.length));
