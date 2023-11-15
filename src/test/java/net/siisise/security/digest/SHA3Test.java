@@ -120,6 +120,10 @@ public class SHA3Test {
         r = md.digest(src);
         assertArrayEquals(r,Bin.toByteArray(SHAKE25632));
 
+        md = new cSHAKE256(256,"","");
+        r = md.digest(src);
+        assertArrayEquals(r,Bin.toByteArray(SHAKE25632));
+
         md = new Keccak(448,224);
         r = md.digest(src);
         assertArrayEquals(r,Bin.toByteArray(Keccak224));
