@@ -25,7 +25,17 @@ import net.siisise.io.PacketA;
  * NIST Special Publication 800-185
  */
 public class SHA3Derived {
-    
+
+/*    
+    public static byte[] right_encode(BigInteger x) {
+        byte[] is = x.toByteArray();
+        int st = ( is.length > 1 && is[0] == 0) ? 1 : 0;
+        byte[] r = new byte[is.length - st + 1];
+        System.arraycopy(is, st, r, 0, is.length - st);
+        r[r.length - 1] = (byte)(is.length - st);
+        return r;
+    }
+*/
     /**
      * 正の整数.
      * 末尾に長さ情報が付く?
@@ -34,21 +44,29 @@ public class SHA3Derived {
      * @param x 0 &lt;= x &lt; 2^2040
      * @return 
      */
-    public static byte[] right_encode(BigInteger x) {
-        byte[] is = x.toByteArray();
-        byte[] r = new byte[is.length + 1];
-        System.arraycopy(is, 0, r, 0, is.length);
-        r[is.length] = (byte)is.length;
+    public static byte[] right_encode(long x) {
+        byte[] is = BigInteger.valueOf(x).toByteArray();
+        int st = ( is.length > 1 && is[0] == 0) ? 1 : 0;
+        byte[] r = new byte[is.length - st + 1];
+        System.arraycopy(is, st, r, 0, is.length - st);
+        r[r.length - 1] = (byte)(is.length - st);
         return r;
     }
 
-    public static byte[] right_encode(long x) {
-        byte[] is = BigInteger.valueOf(x).toByteArray();
-        byte[] r = new byte[is.length + 1];
-        System.arraycopy(is, 0, r, 0, is.length);
-        r[is.length] = (byte)is.length;
+    /*
+    public static byte[] left_encode(BigInteger x) {
+        byte[] is = x.toByteArray();
+        byte[] r;
+        if (is[0] == 0 && is.length > 1) {
+            r = is;
+        } else {
+            r = new byte[is.length + 1];
+            System.arraycopy(is, 0, r, 1, is.length);
+        }
+        r[0] = (byte)(r.length - 1);
         return r;
     }
+    */
 
     /**
      * 正の整数.
@@ -56,24 +74,16 @@ public class SHA3Derived {
      * @param x 0 &lt;= x &lt; 2^2040
      * @return 
      */
-    public static byte[] left_encode(BigInteger x) {
-        byte[] is = x.toByteArray();
-        byte[] r = new byte[is.length + 1];
-        System.arraycopy(is, 0, r, 1, is.length);
-        r[0] = (byte)is.length;
-        return r;
-    }
-
-    /**
-     * 正の整数.
-     * @param x
-     * @return 
-     */
     public static byte[] left_encode(long x) {
         byte[] is = BigInteger.valueOf(x).toByteArray();
-        byte[] r = new byte[is.length + 1];
-        System.arraycopy(is, 0, r, 1, is.length);
-        r[0] = (byte)is.length;
+        byte[] r;
+        if (is[0] == 0 && is.length > 1) {
+            r = is;
+        } else {
+            r = new byte[is.length + 1];
+            System.arraycopy(is, 0, r, 1, is.length);
+        }
+        r[0] = (byte)(r.length - 1);
         return r;
     }
     
@@ -153,7 +163,7 @@ public class SHA3Derived {
     /**
      * wバイト単位でパディングする.
      * @param X 元データ
-     * @param w ブロックっぽいサイズ
+     * @param w ブロックっぽいサイズ (bit?)
      * @return 
      */
     public static byte[] bytepad(Packet X, int w) {

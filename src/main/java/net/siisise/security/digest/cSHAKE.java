@@ -22,22 +22,21 @@ import net.siisise.io.PacketA;
 /**
  * NIST SP 800-185 cSHAKE.
  * ビット列用だがバイト列で使う.
- * 
+ *
  */
 public class cSHAKE extends Keccak implements XOF {
-    
-    boolean c = false;
-    
+
     /**
      * cSHAKE.
      * N, Sが空の場合はSHAKEと同じ
+     *
      * @param c セキュリティ強度 128 または 256
      * @param d 出力長
      * @param N 関数名のビット文字列
-     * @param S 
+     * @param S
      */
     public cSHAKE(int c, int d, String N, String S) {
-        super("cSHAKE"+c+"(" + d + ")", 2 * c, d, (byte)(((N != null && !N.isEmpty()) || (S != null && !S.isEmpty())) ? 0x04 : 0x1f) );
+        super("cSHAKE" + c + "(" + d + ")", 2 * c, d, (((N != null && !N.isEmpty()) || (S != null && !S.isEmpty())) ? (byte) 0x04 : (byte) 0x1f));
         if (N == null) {
             N = "";
         }
@@ -45,20 +44,11 @@ public class cSHAKE extends Keccak implements XOF {
             S = "";
         }
         if (!N.isEmpty() || !S.isEmpty()) {
-            this.c = true;
             Packet p = new PacketA();
             p.write(SHA3Derived.encode_string(N.getBytes(StandardCharsets.UTF_8)));
             p.write(SHA3Derived.encode_string(S.getBytes(StandardCharsets.UTF_8)));
             byte[] x = SHA3Derived.bytepad(p, c == 128 ? 168 : 136);
             engineUpdate(x, 0, x.length);
         }
-    }
-
-    @Override
-    protected byte[] engineDigest() {
-        if (c) {
-            engineUpdate(new byte[1], 0, 1);
-        }
-        return super.engineDigest();
     }
 }
