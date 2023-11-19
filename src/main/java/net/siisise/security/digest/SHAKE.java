@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Siisise Net.
+ * Copyright 2023 okome.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,17 @@
 package net.siisise.security.digest;
 
 /**
- * RawSHAKE256(J,d) = KECCAK[512](J||11,d)
+ *
  */
-public class RawSHAKE256 extends Keccak {
+public class SHAKE extends Keccak implements XOF {
     
-    public RawSHAKE256(int d) {
-        super("RawSHAKE256(J,"+d+")",512,d,(byte)0x07);
+    /**
+     * 
+     * @param c 128 または 256
+     * @param d 出力長
+     */
+    public SHAKE(int c, int d) {
+        super("SHAKE" + c, c*2, d, (byte)0x1f);
     }
+    
 }

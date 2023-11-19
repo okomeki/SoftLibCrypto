@@ -44,18 +44,24 @@ public class TupleHash extends cSHAKE {
         }
     }
 
+    /**
+     * 一回分.
+     * @param src ソース
+     * @param offset 位置
+     * @param length 長さ
+     */
     @Override
-    public void engineUpdate(byte[] src, int offset, int length) {
+    public void update(byte[] src, int offset, int length) {
         // SHA3Derived.encode_stringの分解
         byte[] l = SHA3Derived.left_encode(length * 8l);
-        super.engineUpdate(l,0,l.length);
-        super.engineUpdate(src, offset, length);
+        engineUpdate(l,0,l.length);
+        engineUpdate(src, offset, length);
     }
 
     @Override
     protected byte[] engineDigest() {
         byte[] encLen = SHA3Derived.right_encode(L);
-        super.engineUpdate(encLen,0,encLen.length);
+        engineUpdate(encLen,0,encLen.length);
         return super.engineDigest();
     }
 }

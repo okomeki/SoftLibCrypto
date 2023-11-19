@@ -22,7 +22,7 @@ package net.siisise.security.digest;
  * 拡張出力関数 XOF
  * SHAKE128
  */
-public class SHAKE128 extends Keccak implements XOF {
+public class SHAKE128 extends SHAKE implements XOF {
     
     static final String OID = SHA3.hashAlgs + ".11";
     static final String OIDlen = SHA3.hashAlgs + ".17";
@@ -33,7 +33,7 @@ public class SHAKE128 extends Keccak implements XOF {
      */
     public SHAKE128(int d) {
         // M || 1111
-        super("SHAKE128(M,"+d+")", 2 * 128, d, (byte) 0x1f);
+        super(128,d);
     }
 
 }

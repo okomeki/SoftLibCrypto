@@ -22,13 +22,13 @@ package net.siisise.security.digest;
  * 拡張出力関数 XOF
  * NIST SP 800-185
  */
-public class SHAKE256 extends Keccak implements XOF {
+public class SHAKE256 extends SHAKE implements XOF {
 
     static final String OID = SHA3.hashAlgs + ".12";
     static final String OIDlen = SHA3.hashAlgs + ".18";
 
     public SHAKE256(int d) {
-        super("SHAKE256(M,"+d+")", 2 * 256, d, (byte) 0x1f);
+        super(256, d);
     }
 
 }

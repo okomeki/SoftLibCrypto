@@ -79,7 +79,15 @@ public class SHA3Test {
         r = md.digest(src);
         assertArrayEquals(r,Bin.toByteArray(SHAKE128256abc));
 
+        md = new cSHAKE128(256, "", "");
+        r = md.digest(src);
+        assertArrayEquals(r,Bin.toByteArray(SHAKE128256abc));
+
         md = new SHAKE256(512);
+        r = md.digest(src);
+        assertArrayEquals(r,Bin.toByteArray(SHAKE256512abc));
+
+        md = new cSHAKE256(512, "", "");
         r = md.digest(src);
         assertArrayEquals(r,Bin.toByteArray(SHAKE256512abc));
 
