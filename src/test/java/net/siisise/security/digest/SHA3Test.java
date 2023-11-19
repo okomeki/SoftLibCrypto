@@ -17,6 +17,7 @@ package net.siisise.security.digest;
 
 import java.io.IOException;
 import java.security.Provider;
+import java.util.Arrays;
 import net.siisise.lang.Bin;
 import net.siisise.security.SiisiseJCA;
 import static org.junit.jupiter.api.Assertions.*;
@@ -149,6 +150,51 @@ public class SHA3Test {
         assertArrayEquals(r,Bin.toByteArray(Keccak512));
 
         Provider p = new SiisiseJCA();
+    }
+    
+    @Test
+    public void test1600() {
+        System.out.println("SHAKE128 1600bit");
+        byte[] input = new byte[200];
+        Arrays.fill(input, (byte)0xa3);
+        SHAKE shake128 = new SHAKE128(512*8);
+        shake128.update(input);
+        byte[] result = shake128.digest();
+        byte[] example = Bin.toByteArray(
+                    "131ab8d2b594946b9c81333f9bb6e0ce"
+                  + "75c3b93104fa3469d3917457385da037"
+                  + "cf232ef7164a6d1eb448c8908186ad85"
+                  + "2d3f85a5cf28da1ab6fe343817197846"
+                  + "7f1c05d58c7ef38c284c41f6c2221a76"
+                  + "f12ab1c04082660250802294fb871802"
+                  + "13fdef5b0ecb7df50ca1f8555be14d32"
+                  + "e10f6edcde892c09424b29f597afc270"
+                  + "c904556bfcb47a7d40778d390923642b"
+                  + "3cbd0579e60908d5a000c1d08b98ef93"
+                  + "3f806445bf87f8b009ba9e94f7266122"
+                  + "ed7ac24e5e266c42a82fa1bbefb7b8db"
+                  + "0066e16a85e0493f07df4809aec084a5"
+                  + "93748ac3dde5a6d7aae1e8b6e5352b2d"
+                  + "71efbb47d4caeed5e6d633805d2d323e"
+                  + "6fd81b4684b93a2677d45e7421c2c6ae"
+                  + "a259b855a698fd7d13477a1fe53e5a4a"
+                  + "6197dbec5ce95f505b520bcd9570c4a8"
+                  + "265a7e01f89c0c002c59bfec6cd4a5c1"
+                  + "09258953ee5ee70cd577ee217af21fa7"
+                  + "0178f0946c9bf6ca8751793479f6b537"
+                  + "737e40b6ed28511d8a2d7e73eb75f8da"
+                  + "ac912ff906e0ab955b083bac45a8e5e9"
+                  + "b744c8506f37e9b4e749a184b30f43eb"
+                  + "188d855f1b70d71ff3e50c537ac1b0f8"
+                  + "974f0fe1a6ad295ba42f6aec74d123a7"
+                  + "abedde6e2c0711cab36be5acb1a5a11a"
+                  + "4b1db08ba6982efccd716929a7741cfc"
+                  + "63aa4435e0b69a9063e880795c3dc5ef"
+                  + "3272e11c497a91acf699fefee206227a"
+                  + "44c9fb359fd56ac0a9a75a743cff6862"
+                  + "f17d7259ab075216c0699511643b6439"
+                );
+        assertArrayEquals(example, result);
     }
     
 }

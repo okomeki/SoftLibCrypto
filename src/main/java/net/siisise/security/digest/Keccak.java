@@ -128,7 +128,6 @@ public class Keccak extends BlockMessageDigest {
     @Override
     protected void engineReset() {
         pac = new BlockOutputStream(this);
-        length = 0;
         Arrays.fill(a, 0l);
     }
 
@@ -245,7 +244,6 @@ public class Keccak extends BlockMessageDigest {
     @Override
     protected void engineUpdate(byte[] input, int offset, int len) {
         pac.write(input, offset, len);
-        length += len;
     }
     
     /**
@@ -259,12 +257,12 @@ public class Keccak extends BlockMessageDigest {
         
         byte[] ret = new byte[(d + 7) / 8];
         int offset = 0;
-        while ( d - offset > 1600 ) {
-            toB(a, ret, offset, 1600);
-            offset += 1600;
+        while ( d - offset*8 > r ) {
+            toB(a, ret, offset, r);
+            offset += r/8;
             keccak_f(a);
         }
-        toB(a, ret, offset, d - offset);
+        toB(a, ret, offset, d - offset*8);
         return ret;
     }
 
@@ -275,7 +273,7 @@ public class Keccak extends BlockMessageDigest {
      */
     byte[] pad10x1() {
         int rblen = R * 8;
-        int padlen = rblen - (int) ((length + 1) % rblen) + 1;
+        int padlen = rblen - (int) ((pac.size() + 1) % rblen) + 1;
         byte[] pad = new byte[padlen];
         pad[0] |= padstart; // 種類判定用おまけbitが付く
         pad[padlen - 1] |= 0x80;
