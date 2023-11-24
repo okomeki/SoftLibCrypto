@@ -1,5 +1,6 @@
 # SoftLibCrypto
 Javaのハッシュ、暗号系ライブラリです
+Java hashing and cryptographic library
 
 ブロック、ハッシュ、など基本的なところをJava標準と同じくらいまで充実させたいところです。
 速度的にはCPUのあれを使っていない分標準よりは遅いのですが、AESなどはソフト実装の中では高速な部類です。
@@ -7,12 +8,21 @@ JCAは準備中かな。
 
 モジュール別なので、HMAC と SHA-3 など組み合わせの自由度は高めです。
 
-現状 SoftLib に依存しないように分けていますが、依存関係になる日も近いかもしれません。
 PKI系のものは別途パッケージにする予定です。
 
 ## 公開鍵暗号,署名
 PKCS #1 ぜんぶ RSA系
-RSAES-PKCS1-v1.5,RSAES-OAEP,RSASSA-PSSなど
+- RSAEP
+- RSADP
+- RSASP1
+- RSAVP1
+- RSAES-OAEP
+  - EME-OAEP
+- RSAES-PKCS1-v1.5
+  - EME-PKCS1_v1_5
+- RSASSA-PSS
+- RSASSA-PKCS1_v1_5
+など
 
 ## 共通鍵 Block 暗号
 AES,DES(DEA),TripleDES(TDEA),RC2 など
@@ -35,25 +45,45 @@ PBKDF1,2,PBES1,2
 ## Stream 暗号
 
 ## Message Digest
-MD2,MD4,MD5,SHA-1,SHA-2系,SHA-3系,Keccak,SHAKE128,SHAKE256,cSHAKE128,cSHAKE256
+- MD2
+- MD4
+- MD5
+- SHA-1
+- SHA-2系
+- Keccak
+  - SHA-3系
+  - SHAKE128
+  - SHAKE256
+  - cSHAKE128
+  - cSHAKE256
 
 ## MAC
-HMAC (HMAC-SHA1など),CMAC (OMAC1, RFC 4493 AES-CMACなど), OMAC2, KMAC, XCBC
+鍵つきハッシュみたいなの
 
-HMAC-MD2
-HMAC-MD4
-HMAC-MD5
-HMAC-SHA-224
-HMAC-SHA-256
-HMAC-SHA-384
-HMAC-SHA-512
-HMAC-SHA-512/224
-HMAC-SHA-512/256
-HMAC-SHA3-224
-HMAC-SHA3-256
-HMAC-SHA3-384
-HMAC-SHA3-512
-などSoftLibCrypto で対応しているHashはすべてHMACも対応
+- HMAC (HMAC-SHA1など)
+- CMAC (OMAC1, RFC 4493 AES-CMACなど)
+- OMAC2
+- KMAC
+- XCBC
+
+などブロック暗号,ハッシュとの組み合わせは自由
+
+例
+
+- HMAC-MD2
+- HMAC-MD4
+- HMAC-MD5
+- HMAC-SHA-224
+- HMAC-SHA-256
+- HMAC-SHA-384
+- HMAC-SHA-512
+- HMAC-SHA-512/224
+- HMAC-SHA-512/256
+- HMAC-SHA3-224
+- HMAC-SHA3-256
+- HMAC-SHA3-384
+- HMAC-SHA3-512
+- AES-CMAC
 
 CMAC (128bit,64bit 汎用)
 RFC 4493 AES-CMAC
