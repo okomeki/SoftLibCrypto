@@ -22,7 +22,7 @@ package net.siisise.security.digest;
  * 拡張出力関数 XOF
  * NIST SP 800-185
  */
-public class SHAKE256 extends SHAKE implements XOF {
+public class SHAKE256 extends SHAKE {
 
     static final String OID = SHA3.hashAlgs + ".12";
     static final String OIDlen = SHA3.hashAlgs + ".18";

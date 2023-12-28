@@ -10,6 +10,7 @@ import net.siisise.iso.asn1.tag.SEQUENCE;
 /**
  * PKCS #1 にあるのかもしれない
  * RFC 8017 Appendix C. ASN.1 Module
+ * RFC 5280 X.509v3 Certificate 4.1.1.2
  */
 public class AlgorithmIdentifier {
     public OBJECTIDENTIFIER algorithm;

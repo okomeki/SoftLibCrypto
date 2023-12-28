@@ -17,7 +17,6 @@ package net.siisise.security.digest;
 
 import java.nio.charset.StandardCharsets;
 import net.siisise.io.Packet;
-import net.siisise.io.PacketA;
 
 /**
  * NIST SP 800-185 cSHAKE.
@@ -33,7 +32,7 @@ public class cSHAKE extends Keccak implements XOF {
      * @param c セキュリティ強度 128 または 256
      * @param d 出力長
      * @param N 関数名のビット文字列
-     * @param S
+     * @param S 任意の文字列
      */
     public cSHAKE(int c, int d, String N, String S) {
         super("cSHAKE" + c + "(" + d + ")", 2 * c, d, (((N != null && !N.isEmpty()) || (S != null && !S.isEmpty())) ? (byte) 0x04 : (byte) 0x1f));
@@ -44,10 +43,10 @@ public class cSHAKE extends Keccak implements XOF {
             S = "";
         }
         if (!N.isEmpty() || !S.isEmpty()) {
-            Packet p = new PacketA();
-            p.write(SHA3Derived.encode_string(N.getBytes(StandardCharsets.UTF_8)));
+            Packet p;
+            p = SHA3Derived.encode_string(N.getBytes(StandardCharsets.UTF_8));
             p.write(SHA3Derived.encode_string(S.getBytes(StandardCharsets.UTF_8)));
-            byte[] x = SHA3Derived.bytepad(p, c == 128 ? 168 : 136);
+            byte[] x = SHA3Derived.bytepad(p, getBitBlockLength() / 8);
             engineUpdate(x, 0, x.length);
         }
     }

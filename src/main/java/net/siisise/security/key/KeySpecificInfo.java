@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Siisise Net.
+ * Copyright 2023 okome.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,27 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.siisise.security.digest;
+package net.siisise.security.key;
+
+import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
+import net.siisise.iso.asn1.tag.OCTETSTRING;
 
 /**
- * FIPS PUB 202
- * Secure Hash Algorithm KECCAK 128
- * 6.2 SHA-3 Extendable-Output Functions
- * 拡張出力関数 XOF
- * SHAKE128
+ * RFC 2631 DH
+ * Section 2.1.2.
+ * 
  */
-public class SHAKE128 extends SHAKE {
-    
-    static final String OID = SHA3.hashAlgs + ".11";
-    static final String OIDlen = SHA3.hashAlgs + ".17";
-
-    /**
-     * 
-     * @param d ビット数
-     */
-    public SHAKE128(int d) {
-        // M || 1111
-        super(128,d);
-    }
-
+public class KeySpecificInfo {
+    OBJECTIDENTIFIER algorithm;
+    OCTETSTRING counter; // (4..4)
 }

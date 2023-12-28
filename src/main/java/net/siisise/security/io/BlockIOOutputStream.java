@@ -32,6 +32,10 @@ public class BlockIOOutputStream extends OutputStream {
     
     boolean bbmode;
     
+    /**
+     * 固定サイズで受け取る.
+     * @param lis 受取側
+     */
     public BlockIOOutputStream(BlockIOListener lis) {
         this.max = lis.getBitBlockLength() / 8;
         sleepBlock = new byte[max];
@@ -39,6 +43,11 @@ public class BlockIOOutputStream extends OutputStream {
         bbmode = false;
     }
     
+    /**
+     * bbmode == true の場合、固定サイズの倍数で受け取れる.
+     * @param lis 受け取り側
+     * @param bbmode 複数ブロックをまとめて受け取ることができる場合
+     */
     public BlockIOOutputStream(BlockIOListener lis, boolean bbmode) {
         this(lis);
         this.bbmode = bbmode;
@@ -56,6 +65,7 @@ public class BlockIOOutputStream extends OutputStream {
                 out.write(src, offset, length);
             }
             
+            @Override
             public void flush() throws IOException {
                 out.flush();
             }

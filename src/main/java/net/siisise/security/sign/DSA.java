@@ -33,7 +33,7 @@ import java.security.spec.DSAPrivateKeySpec;
  *  k 乱数値 毎回必要
  * 
  */
-public class DSA {
+public class DSA implements SignVerify {
     
     private final SecureRandom rnd;
     private final MessageDigest H;
@@ -45,7 +45,7 @@ public class DSA {
      * FIPS 186-3 (L, N) (1024, 160) (2048, 224) (2048, 256) (3072, 256) の4つ
      * @param H SHA-1, SHA-2
      * @param L 鍵長 512 から 1024 の 64 の倍数 から 2048, 3072
-     * @param N FIPS 186-3 (L, N) (1024, 160) (2048, 224) (2048, 256) (3072, 256) の4つ
+     * @param N FIPS 186-3 (L, N) (1024, 160) (2048, 224) (2048, 256) (3072, 256) の4つ ハッシュより短い?
      * 
      */
     public DSA(MessageDigest H, int L, int N) {
@@ -101,5 +101,20 @@ public class DSA {
         // 公開鍵
 //        BigInteger pub = g.modPow(prv, p);
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int getKeyLength() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void update(byte[] src, int offset, int length) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public byte[] sign() {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

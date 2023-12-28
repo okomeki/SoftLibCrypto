@@ -179,7 +179,7 @@ public class RSAPublicKeyTest {
 //        byte[] rebindASN1 = instance.rebind(asncnv).encodeAll();
         byte[] rebind2ASN1 = Rebind.valueOf(instance, asncnv).encodeAll();
         try {
-            ASN1Object ex1 = ASN1Decoder.toASN1(new ByteArrayInputStream(rebind2ASN1));
+            ASN1Object ex1 = ASN1Util.toASN1(rebind2ASN1);
             
             System.out.println(ASN1Util.toString(ASN1Util.toXML(ex1)));
         } catch (IOException ex) {

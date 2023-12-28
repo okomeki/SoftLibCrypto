@@ -104,4 +104,12 @@ public class cSHAKETest {
         byte[] hash = cSHAKE.digest();
         assertArrayEquals(example, hash);
     }
+    
+    @Test
+    public void testLength() {
+        cSHAKE s = new cSHAKE128(128,"","");
+        assertEquals(168 * 8, s.getBitBlockLength());
+        s = new cSHAKE256(128,"","");
+        assertEquals(136 * 8, s.getBitBlockLength());
+    }
 }

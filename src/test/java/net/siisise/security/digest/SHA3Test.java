@@ -153,6 +153,23 @@ public class SHA3Test {
     }
     
     @Test
+    public void testBitLength() {
+        System.out.println("SHA-3 Block Length");
+        SHA3 sha = new SHA3224();
+        int len = sha.getBitBlockLength();
+        assertEquals(144 * 8, len);
+        sha = new SHA3256();
+        len = sha.getBitBlockLength();
+        assertEquals(136 * 8, len);
+        sha = new SHA3384();
+        len = sha.getBitBlockLength();
+        assertEquals(104 * 8, len);
+        sha = new SHA3512();
+        len = sha.getBitBlockLength();
+        assertEquals(72 * 8, len);
+    }
+    
+    @Test
     public void test1600() {
         System.out.println("SHAKE128 1600bit");
         byte[] input = new byte[200];

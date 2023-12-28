@@ -23,6 +23,7 @@ import net.siisise.io.Packet;
 import net.siisise.io.PacketA;
 import net.siisise.lang.Bin;
 import net.siisise.security.digest.SHA1;
+import net.siisise.security.digest.XOF;
 
 /**
  * EME の md と MGF1 の MessageDigest を別々に指定する必要あり?
@@ -65,6 +66,15 @@ public class EME_OAEP implements EME {
      */
     public EME_OAEP(MessageDigest mgfMd, MessageDigest md) {
         this(new MGF1(mgfMd), md);
+    }
+
+    /**
+     * 
+     * @param mgfXof MGF用 XOF
+     * @param md L用
+     */
+    public EME_OAEP(XOF mgfXof, MessageDigest md) {
+        this(new MGFXOF(mgfXof), md);
     }
 
     /**

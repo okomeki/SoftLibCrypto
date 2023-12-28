@@ -19,39 +19,38 @@ import java.math.BigInteger;
 import java.security.interfaces.DSAParams;
 
 /**
- *
+ * DSA ドメインパラメータ
  */
-public class DSAPrivateKey implements java.security.interfaces.DSAPrivateKey {
-    private BigInteger x;
+public class DSADomain implements DSAParams {
 
-    DSAPrivateKey(BigInteger x) {
-        this.x = x;
-    }
-    
-    @Override
-    public BigInteger getX() {
-        return x;
-    }
+    BigInteger p;
+    BigInteger q;
+    BigInteger g;
 
-    @Override
-    public DSAParams getParams() {
-//        return new DSADomain(null,null,null);
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public String getAlgorithm() {
-        throw new UnsupportedOperationException("Not supported yet.");
+    /**
+     *
+     * @param p
+     * @param q
+     * @param g
+     */
+    public DSADomain(BigInteger p, BigInteger q, BigInteger g) {
+        this.p = p;
+        this.q = q;
+        this.g = g;
     }
 
     @Override
-    public String getFormat() {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public BigInteger getP() {
+        return p;
     }
 
     @Override
-    public byte[] getEncoded() {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public BigInteger getQ() {
+        return q;
     }
-    
+
+    @Override
+    public BigInteger getG() {
+        return g;
+    }
 }

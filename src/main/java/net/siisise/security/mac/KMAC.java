@@ -36,8 +36,8 @@ public abstract class KMAC implements MAC {
      */
     public void init(int c, byte[] key, int length, String S) {
         L = length;
-        byte[] newX = SHA3Derived.bytepad(SHA3Derived.encode_string(key),c == 128 ? 168 : 136 );
         cshake = new cSHAKE(c,length, "KMAC", S);
+        byte[] newX = SHA3Derived.bytepad(SHA3Derived.encode_string(key), cshake.getBitBlockLength() / 8 );
         cshake.update(newX);
     }
 

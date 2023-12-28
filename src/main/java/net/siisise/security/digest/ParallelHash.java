@@ -27,7 +27,7 @@ public class ParallelHash extends cSHAKE implements XOF {
     int L;
     Packet z;
     int size;
-    cSHAKE shake;
+    SHAKE shake;
     int n;
 
     /**
@@ -42,9 +42,9 @@ public class ParallelHash extends cSHAKE implements XOF {
         this.b = b;
         this.L = l;
         z = new PacketA();
-        z.write(SHA3Derived.left_encode(b));
+        z.dwrite(SHA3Derived.left_encode(b));
         size = b;
-        shake = new cSHAKE(c,c*2,"","");
+        shake = new SHAKE(c,c*2);
         byte[] zb = z.toByteArray();
         super.engineUpdate(zb, 0, zb.length);
         n = 0;
@@ -53,13 +53,13 @@ public class ParallelHash extends cSHAKE implements XOF {
     @Override
     public void engineUpdate(byte[] src, int offset, int length) {
         while ( size <= length ) {
-                shake.update(src, offset, size);
-                length -= size;
-                offset += size;
-                byte[] dj = shake.digest();
-                super.engineUpdate(dj, 0, dj.length);
-                size = b;
-                n++;
+            shake.update(src, offset, size);
+            length -= size;
+            offset += size;
+            byte[] dj = shake.digest();
+            super.engineUpdate(dj, 0, dj.length);
+            size = b;
+            n++;
         }
         if ( length > 0 ) {
             shake.update(src,offset,length);

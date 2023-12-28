@@ -26,16 +26,6 @@ import net.siisise.io.PacketA;
  */
 public class SHA3Derived {
 
-/*    
-    public static byte[] right_encode(BigInteger x) {
-        byte[] is = x.toByteArray();
-        int st = ( is.length > 1 && is[0] == 0) ? 1 : 0;
-        byte[] r = new byte[is.length - st + 1];
-        System.arraycopy(is, st, r, 0, is.length - st);
-        r[r.length - 1] = (byte)(is.length - st);
-        return r;
-    }
-*/
     /**
      * 正の整数.
      * 末尾に長さ情報が付く?
@@ -52,21 +42,6 @@ public class SHA3Derived {
         r[r.length - 1] = (byte)(is.length - st);
         return r;
     }
-
-    /*
-    public static byte[] left_encode(BigInteger x) {
-        byte[] is = x.toByteArray();
-        byte[] r;
-        if (is[0] == 0 && is.length > 1) {
-            r = is;
-        } else {
-            r = new byte[is.length + 1];
-            System.arraycopy(is, 0, r, 1, is.length);
-        }
-        r[0] = (byte)(r.length - 1);
-        return r;
-    }
-    */
 
     /**
      * 正の整数.
@@ -94,25 +69,11 @@ public class SHA3Derived {
      */
     public static Packet encode_string(byte[] s) {
         Packet p = new PacketA();
-        p.write(left_encode(len(s)));
+        p.dwrite(left_encode(len(s)));
         p.write(s);
         return p;
     }
     
-    /**
-     * バイト単位.
-     * @param s メッセージを含む列
-     * @param offset 位置
-     * @param length サイズ
-     * @return left_encode(length) | s
-     */
-    public static Packet encode_string(byte[] s, int offset, int length) {
-        Packet p = new PacketA();
-        p.write(left_encode(length * 8l));
-        p.write(s, offset, length);
-        return p;
-    }
-
     /**
      * ビット単位のencode_string.
      * @param s ビット列
@@ -120,7 +81,7 @@ public class SHA3Derived {
      */
     public static BitPacket encode_string(BitPacket s) {
         BitPacket p = new BigBitPacket();
-        p.write(left_encode(len(s)));
+        p.dwrite(left_encode(len(s)));
         p.writeBit(s);
         return p;
     }
@@ -138,14 +99,14 @@ public class SHA3Derived {
         return s.bitLength();
     }
 
-    /**
+    /*
      * ビット列に長さを付加してwバイト単位でパディングする
      * 2.3.3 Padding
      * @param X ビット列
      * @param w &gt; 0
      * @return 
      */
-    static byte[] bytepad(BitPacket X, int w) {
+/*    static byte[] bytepad(BitPacket X, int w) {
         BitPacket z = new BigBitPacket();
         z.write(left_encode(w));
         z.writeBit(X);
@@ -159,24 +120,22 @@ public class SHA3Derived {
         }
         return z.toByteArray();
     }
-
+*/
     /**
      * wバイト単位でパディングする.
-     * @param X 元データ
-     * @param w ブロックっぽいサイズ (bit?)
+     * @param X 元データ Packet を利用する
+     * @param w ブロックっぽいサイズ (byte)
      * @return 
      */
     public static byte[] bytepad(Packet X, int w) {
-        Packet z = new PacketA();
-        z.write(left_encode(w));
-        z.write(X);
-        long zl = z.length() % w;
+        X.dbackWrite(left_encode(w));
+        long zl = X.length() % w;
         if ( zl != 0) {
-            z.write(new byte[(int)(w - zl)]);
+            X.dwrite(new byte[(int)(w - zl)]);
         }
-        return z.toByteArray();
+        return X.toByteArray();
     }
-
+/*
     public static byte[] bytepad(byte[] X, int w) {
         Packet z = new PacketA();
         z.write(left_encode(w));
@@ -187,7 +146,7 @@ public class SHA3Derived {
         }
         return z.toByteArray();
     }
-    
+*/
     /**
      * 2.3.4 Substrings
      * @param X

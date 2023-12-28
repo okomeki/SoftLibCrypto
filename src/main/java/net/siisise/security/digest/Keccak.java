@@ -74,7 +74,7 @@ public class Keccak extends BlockMessageDigest {
      * N 入力
      *
      * @param c キャパシティ b まで
-     * @param d 出力ビット長 b まで
+     * @param d 出力ビット長
      */
     public Keccak(int c, int d) {
         this("Keccak[" + c + "](N," + d + ")", c, d, (byte) 0x01);
@@ -215,8 +215,9 @@ public class Keccak extends BlockMessageDigest {
      * S = Plane(0) || Plane(1) || ...
      * 
      * Algorithm 8
+     * 入力は 64*R bit
      *
-     * @param b input / output
+     * @param b input
      */
     private void keccak(byte[] b, int offset) {
         // A[x,y,z] = S[w(5y+x)+z)
@@ -267,12 +268,12 @@ public class Keccak extends BlockMessageDigest {
     }
 
     /**
-     * 5.1.
+     * 5.1. Specification of pad10*1
      * Algorithm 9:
      * padding バイト長で計算
      */
     byte[] pad10x1() {
-        int rblen = R * 8;
+        int rblen = r / 8; // R * 8;
         int padlen = rblen - (int) ((pac.size() + 1) % rblen) + 1;
         byte[] pad = new byte[padlen];
         pad[0] |= padstart; // 種類判定用おまけbitが付く
