@@ -15,6 +15,7 @@ import net.siisise.security.sign.RSASSA_PKCS1_v1_5;
 /**
  * RFC 8017 PKCS #1 v2.2
  * https://datatracker.ietf.org/doc/html/rfc8017#appendix-A
+ * FIPS PUB 186-5
  * RSA から汎用のものをこっちにまとめ直し
  */
 public class PKCS1 {

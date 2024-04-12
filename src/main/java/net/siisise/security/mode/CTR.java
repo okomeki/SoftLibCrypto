@@ -17,6 +17,7 @@ package net.siisise.security.mode;
 
 import net.siisise.io.Packet;
 import net.siisise.io.PacketA;
+import net.siisise.lang.Bin;
 import net.siisise.security.block.Block;
 
 /**
@@ -60,7 +61,7 @@ public class CTR extends StreamMode {
         // iv
         byte[] v = new byte[vlen];
         System.arraycopy(vecsrc, 0, v, 0, Math.min(vecsrc.length, v.length));
-        vectori = btoi(v);
+        vectori = Bin.btoi(v);
 
         xp = new PacketA();
         next();
@@ -77,7 +78,7 @@ public class CTR extends StreamMode {
 
     @Override
     public byte[] encrypt(byte[] src, int offset) {
-        byte[] ret = itob(block.encrypt(vectori, 0));
+        byte[] ret = Bin.itob(block.encrypt(vectori, 0));
         for (int i = 0; i < ret.length; i++) {
             ret[i] ^= src[offset + i];
         }
@@ -94,7 +95,7 @@ public class CTR extends StreamMode {
     public byte[] encrypt(byte[] src, int offset, int length) {
         int rl = length - xp.size();
         for ( int i = 0; i < rl; i+= 16 ) { // 並列化すると速いかも
-            xp.write(itob(block.encrypt(vectori,0)));
+            xp.write(Bin.itob(block.encrypt(vectori,0)));
             next();
         }
         byte[] ret = new byte[src.length];

@@ -15,6 +15,7 @@
  */
 package net.siisise.security.mode;
 
+import net.siisise.lang.Bin;
 import net.siisise.security.block.Block;
 
 /**
@@ -47,7 +48,7 @@ public class CBC extends LongBlockMode {
             System.arraycopy(iv, 0, vector, 0, iv.length);
         }
         block.init(params2);
-        vectorl = btol(vector);
+        vectorl = Bin.btol(vector);
     }
 
     @Override
@@ -59,22 +60,20 @@ public class CBC extends LongBlockMode {
     @Override
     public byte[] encrypt(byte[] src, int offset) {
         int vl = vectorl.length;
-        xor(vectorl, src, offset, vl);
-        return ltob(vectorl = block.encrypt(vectorl,0));
+        Bin.xorl(vectorl, src, offset, vl);
+        return Bin.ltob(vectorl = block.encrypt(vectorl,0));
     }
 
     @Override
     public int[] encrypt(int[] src, int offset) {
         int vl = vectorl.length;
-        long[] lsrc = new long[vl];
-        itol(src, offset, lsrc, vl);
-        xor(vectorl, lsrc, 0, vl);
-        return ltoi(vectorl = block.encrypt(vectorl,0));
+        Bin.xorl(vectorl, src, offset, vl);
+        return Bin.ltoi(vectorl = block.encrypt(vectorl,0));
     }
 
     @Override
     public long[] encrypt(long[] src, int offset) {
-        xor(vectorl, src, offset, vectorl.length);
+        Bin.xorl(vectorl, src, offset, vectorl.length);
         long[] ret = block.encrypt(vectorl,0);
         // 複製が必要かもしれない
         System.arraycopy(ret, 0, vectorl, 0, ret.length);
@@ -96,11 +95,11 @@ public class CBC extends LongBlockMode {
         int o4 = 0;
         
         while (o4 < length) {
-            xor(vectorl, src, offset + o4, vl);
+            Bin.xorl(vectorl, src, offset + o4, vl);
 
             vectorl = block.encrypt(vectorl, 0);
             
-            ltob(vectorl,ret,o4);
+            Bin.ltob(vectorl,ret,o4);
             o4 += vl*8;
         }
         return ret;
@@ -134,12 +133,12 @@ public class CBC extends LongBlockMode {
      */
     @Override
     public byte[] decrypt(byte[] src, int offset) {
-        long[] n = btol(src, offset, vectorl.length);
+        long[] n = Bin.btol(src, offset, vectorl.length);
         long[] ret = block.decrypt(n, 0);
         // 複製が必要かもしれない
-        xor(ret,vectorl,0,vectorl.length);
+        Bin.xorl(ret,vectorl,0,vectorl.length);
         vectorl = n;
-        return ltob(ret);
+        return Bin.ltob(ret);
     }
 
     /**
@@ -158,7 +157,7 @@ public class CBC extends LongBlockMode {
 //        Blocks.subBlocks(src,128).stream();
 
         for (int toffset = 0; toffset < length; ) {
-            long[] ls = btol(src, offset + toffset, vectorl.length);
+            long[] ls = Bin.btol(src, offset + toffset, vectorl.length);
             long[] re = block.decrypt(ls, 0);
             
             for (int i = 0; i < vectorl.length; i++, toffset+=8) {

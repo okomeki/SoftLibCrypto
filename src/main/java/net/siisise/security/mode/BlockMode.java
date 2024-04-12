@@ -81,22 +81,4 @@ public abstract class BlockMode extends IntBlock {
     public int[] getParamLength() {
         return new int[] {block.getBlockLength(), getBlockLength() };
     }
-/*
-    static final void xor(byte[] a, byte[] b, int offset, int length) {
-        for (int i = 0; i < length; i++) {
-            a[i] ^= b[offset + i];
-        }
-    }
-*/
-    static final void xor(int[] a, int[] b, int offset, int length) {
-        for (int i = 0; i < length; i++) {
-            a[i] ^= b[offset + i];
-        }
-    }
-
-    static final void xor(long[] a, long[] b, int offset, int length) {
-        for (int i = 0; i < length; i++) {
-            a[i] ^= b[offset + i];
-        }
-    }
 }

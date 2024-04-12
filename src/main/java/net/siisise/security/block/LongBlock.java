@@ -15,6 +15,8 @@
  */
 package net.siisise.security.block;
 
+import net.siisise.lang.Bin;
+
 /**
  * long[]型で処理する
  */
@@ -22,6 +24,7 @@ public abstract class LongBlock extends BaseBlock {
 
     /**
      * 1ブロック暗号化.
+     *
      * @param src 平文ブロック
      * @param offset 位置
      * @return 暗号ブロック
@@ -30,12 +33,13 @@ public abstract class LongBlock extends BaseBlock {
     public byte[] encrypt(byte[] src, int offset) {
         int bl = getBlockLength() / 64;
         long[] block = new long[bl];
-        btol(src, offset, block, bl);
-        return ltob(encrypt(block, 0));
+        Bin.btol(src, offset, block, bl);
+        return Bin.ltob(encrypt(block, 0));
     }
 
     /**
      * 1ブロック暗号化.
+     *
      * @param src 平文ブロック
      * @param offset 位置
      * @return 暗号ブロック
@@ -44,12 +48,13 @@ public abstract class LongBlock extends BaseBlock {
     public int[] encrypt(int[] src, int offset) {
         int bl = getBlockLength() / 64;
         long[] block = new long[bl];
-        itol(src, offset, block, bl);
-        return ltoi(encrypt(block, 0));
+        Bin.itol(src, offset, block, bl);
+        return Bin.ltoi(encrypt(block, 0));
     }
 
     /**
      * 1ブロック復号.
+     *
      * @param src 暗号ブロック
      * @param offset 位置
      * @return 平文ブロック
@@ -58,12 +63,13 @@ public abstract class LongBlock extends BaseBlock {
     public byte[] decrypt(byte[] src, int offset) {
         int bl = getBlockLength() / 64;
         long[] block = new long[bl];
-        btol(src, offset, block, bl);
-        return ltob(decrypt(block, 0));
+        Bin.btol(src, offset, block, bl);
+        return Bin.ltob(decrypt(block, 0));
     }
 
     /**
      * 1ブロック復号.
+     *
      * @param src 暗号ブロック
      * @param offset 位置
      * @return 平文ブロック
@@ -72,8 +78,8 @@ public abstract class LongBlock extends BaseBlock {
     public int[] decrypt(int[] src, int offset) {
         int bl = getBlockLength() / 64;
         long[] block = new long[bl];
-        itol(src, offset, block, bl);
-        return ltoi(decrypt(block, 0));
+        Bin.itol(src, offset, block, bl);
+        return Bin.ltoi(decrypt(block, 0));
     }
 
     @Override
@@ -81,9 +87,9 @@ public abstract class LongBlock extends BaseBlock {
         int l = length / 8;
         long[] srcLong = new long[l];
 
-        btol(src, offset, srcLong, l);
+        Bin.btol(src, offset, srcLong, l);
         long[] ret = encrypt(srcLong, 0, l);
-        return ltob(ret);
+        return Bin.ltob(ret);
     }
 
     @Override
@@ -91,9 +97,9 @@ public abstract class LongBlock extends BaseBlock {
         int l = length / 2;
         long[] srcLong = new long[l];
 
-        itol(src, offset, srcLong, l);
+        Bin.itol(src, offset, srcLong, l);
         long[] ret = encrypt(srcLong, 0, l);
-        return ltoi(ret);
+        return Bin.ltoi(ret);
     }
 
     @Override
@@ -114,9 +120,9 @@ public abstract class LongBlock extends BaseBlock {
         int l = length / 8;
         long[] srcLong = new long[l];
 
-        btol(src, offset, srcLong, l);
+        Bin.btol(src, offset, srcLong, l);
         long[] ret = decrypt(srcLong, 0, l);
-        return ltob(ret);
+        return Bin.ltob(ret);
     }
 
     @Override
@@ -124,9 +130,9 @@ public abstract class LongBlock extends BaseBlock {
         int l = length / 2;
         long[] srcLong = new long[l];
 
-        itol(src, offset, srcLong, l);
+        Bin.itol(src, offset, srcLong, l);
         long[] ret = decrypt(srcLong, 0, l);
-        return ltoi(ret);
+        return Bin.ltoi(ret);
     }
 
     @Override
@@ -145,18 +151,18 @@ public abstract class LongBlock extends BaseBlock {
     @Override
     public void encrypt(byte[] src, int offset, byte[] dst, int doffset, int length) {
         long[] srcInt = new long[length / 8];
-        
-        btol(src,offset,srcInt,length/8);
-        long[] ret = encrypt(srcInt, 0, length/8);
-        ltob(ret, dst, doffset);
+
+        Bin.btol(src, offset, srcInt, length / 8);
+        long[] ret = encrypt(srcInt, 0, length / 8);
+        Bin.ltob(ret, dst, doffset);
     }
 
     @Override
     public void decrypt(byte[] src, int offset, byte[] dst, int doffset, int length) {
         long[] srcInt = new long[length / 8];
-        
-        btol(src,offset,srcInt,length/8);
-        long[] ret = decrypt(srcInt, 0, length/8);
-        ltob(ret, dst, doffset);
+
+        Bin.btol(src, offset, srcInt, length / 8);
+        long[] ret = decrypt(srcInt, 0, length / 8);
+        Bin.ltob(ret, dst, doffset);
     }
 }

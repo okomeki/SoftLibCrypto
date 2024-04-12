@@ -19,9 +19,9 @@ package net.siisise.security.rng;
  *
  */
 public class LinearCongruentalMethod implements PRNG {
-    final long a;
-    final long c;
-    final long m;
+//    final long a;
+//    final long c;
+//    final long m;
     long r;
     
     /**
@@ -30,12 +30,12 @@ public class LinearCongruentalMethod implements PRNG {
      */
     public LinearCongruentalMethod(long r) {
         
-        
+//        this.a = ;
         this.r = r;
     }
     
     public long next() {
-        r = (a * r + c) % m;
+//        r = (a * r + c) % m;
         return r;
     }
     

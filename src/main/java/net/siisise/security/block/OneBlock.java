@@ -15,6 +15,8 @@
  */
 package net.siisise.security.block;
 
+import net.siisise.lang.Bin;
+
 /**
  * バイト列で処理する
  */
@@ -23,25 +25,25 @@ public abstract class OneBlock extends BaseBlock {
     @Override
     public int[] encrypt(int[] src, int offset) {
         int bl = getBlockLength() / 32;
-        return btoi(encrypt(itob(src, offset, bl),0));
+        return Bin.btoi(encrypt(Bin.itob(src, offset, bl),0));
     }
 
     @Override
     public long[] encrypt(long[] src, int offset) {
         int bl = getBlockLength() / 64;
-        return btol(encrypt(ltob(src, offset, bl),0));
+        return Bin.btol(encrypt(Bin.ltob(src, offset, bl),0));
     }
 
     @Override
     public int[] decrypt(int[] src, int offset) {
         int bl = getBlockLength() / 32;
-        return btoi(decrypt(itob(src, offset, bl),0));
+        return Bin.btoi(decrypt(Bin.itob(src, offset, bl),0));
     }
 
     @Override
     public long[] decrypt(long[] src, int offset) {
         int bl = getBlockLength() / 64;
-        return btol(decrypt(ltob(src, offset, bl),0));
+        return Bin.btol(decrypt(Bin.ltob(src, offset, bl),0));
     }
 
     /**

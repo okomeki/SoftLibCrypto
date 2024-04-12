@@ -15,6 +15,7 @@
  */
 package net.siisise.security.mode;
 
+import net.siisise.lang.Bin;
 import net.siisise.security.block.Block;
 import net.siisise.security.stream.Stream;
 
@@ -84,11 +85,11 @@ public abstract class StreamMode extends BlockMode implements Stream {
 
     @Override
     public int[] encrypt(int[] src, int offset) {
-        return btoi(encrypt(itob(src, offset, getBlockLength() / 32), 0, getBlockLength() / 8));
+        return Bin.btoi(encrypt(Bin.itob(src, offset, getBlockLength() / 32), 0, getBlockLength() / 8));
     }
 
     @Override
     public int[] decrypt(int[] src, int offset) {
-        return btoi(decrypt(itob(src, offset, getBlockLength() / 32), 0, getBlockLength() / 8));
+        return Bin.btoi(decrypt(Bin.itob(src, offset, getBlockLength() / 32), 0, getBlockLength() / 8));
     }
 }

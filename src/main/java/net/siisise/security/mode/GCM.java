@@ -22,6 +22,7 @@ import java.util.stream.Collector.Characteristics;
 import net.siisise.io.Packet;
 import net.siisise.io.PacketA;
 import net.siisise.lang.Bin;
+import net.siisise.math.GF;
 import net.siisise.security.block.AES;
 import net.siisise.security.block.Block;
 import net.siisise.security.mac.GHASH;
@@ -29,9 +30,9 @@ import net.siisise.security.mac.GHASH;
 /**
  * TLS 1.2のモードなど.
  * CTR の微修正.
- * 
+ * https://scrapbox.io/standard/GCM
  * Galois/Counter Mode(GCMx) and GMAC NIST SP 800- 38D, November 2007
- * https://nvlpubs.nist.gov/nistpubs/legacy/sp/nistspecialpublication800-38d.pdf
+ * https://doi.org/10.6028/NIST.SP.800-38D
  * Counter は IV(96bit) + 1(32bit) または GHASH らしい
  * P (plaintext)の長さ 2^39 -256 32bit counter の限界か
  * A (AAD: additional authenticated data)の長さ 2^64 -1
@@ -46,14 +47,24 @@ import net.siisise.security.mac.GHASH;
  */
 public class GCM extends CTR {
     
-    byte[] iv;
     int[] iiv;
     long[] liv;
+
+    // GCTR
+    CTR ctr;
     int count;
+    long[] ct;
+    
+    // GHASH
     GHASH gh;
+    GF gf;
+    
     byte[] tag;
     
     byte[] key;
+    
+    
+    
     
     public GCM() {
         super(new AES());
@@ -82,16 +93,17 @@ public class GCM extends CTR {
     public void init(byte[]... params) {
         // iv 生成用AES?
         block.init(in(1,params)); // Y0内で呼ぶので不要 CTRのinitは使わない
-        key = params[params.length - 2];
-        iv = Y0(params[params.length - 1]); // block が状態遷移しないAES前提
-        iiv = btoi(iv);
+        key = params[0];
+        byte[] iv = Y0(params[1]); // block が状態遷移しないAES前提
+        iiv = Bin.btoi(iv);
 //        iiv[3] = 1;
 //        iv = itob(iiv);
-        liv = btol(iv);
+        liv = Bin.btol(iv);
         count = 1;
         // GHASH
         tag = null;
         gh = new GHASH();
+        gf = new GF(128,GF.FF128);
         if ( params.length > 2) {
             gh.init(params[0], params[2]);
         } else {
@@ -115,33 +127,16 @@ public class GCM extends CTR {
         ivgh.init(key);// key, aなし
         return ivgh.doFinal(iv);
     }
-
-    /**
-     * Section 6.2
-     * @param x IV + カウンター
-     * @param s カウンタービット数
-     * @return 
-     */
-    private byte[] incs8() {
-        byte[] cb = new byte[16];
-        System.arraycopy(iv, 0, cb, 0, 12);
-        
-        cb[12] = (byte) (count >>> 24);
-        cb[13] = (byte) (count >>> 16);
-        cb[14] = (byte) (count >>> 8);
-        cb[15] = (byte) count;
-        count++;
-        return cb;
-    }
-
-    private int[] incs32() {
-        int[] cb = new int[4];
-        System.arraycopy(iiv, 0, cb, 0, 3);
-        
-        cb[3] = count++;
-        return cb;
-    }
     
+    void next() {
+        int x = ct.length;
+        do {
+            x--;
+            ct[x]++;
+        } while ( ct[x] == 0 && x >= 0);
+        count++;
+    }
+
     private int[] c32(int c) {
         int[] cb = new int[4];
         System.arraycopy(iiv, 0, cb, 0, 3);
@@ -150,16 +145,6 @@ public class GCM extends CTR {
         return cb;
     }
 
-    private long[] incs64() {
-        long[] cb = new long[2];
-        System.arraycopy(liv, 0, cb, 0, 2);
-        
-        cb[1] &= 0xffffffff00000000l;
-        cb[1] |= count & 0xffffffffl;
-        count++;
-        return cb;
-    }
-    
     private long[] c64(long c) {
         long[] cb = new long[2];
         System.arraycopy(liv, 0, cb, 0, 2);
@@ -186,7 +171,7 @@ public class GCM extends CTR {
             nl.add(i);
         }
         count += nlen;
-        return nl.parallelStream().map(x -> ltob(block.encrypt(c64(x)))).collect(toPac);
+        return nl.parallelStream().map(x -> Bin.ltob(block.encrypt(c64(x)))).collect(toPac);
     }
 
     private int[][] xor32(int len) {
@@ -213,24 +198,26 @@ public class GCM extends CTR {
      */
     @Override
     public int[] encrypt(int[] src, int offset) {
-        int[] ret = block.encrypt(incs32());
+        next();
+        int[] ret = Bin.ltoi(block.encrypt(ct));
         
         for ( int i = 0; i < ret.length; i++ ) {
             ret[i] ^= src[offset + i];
         }
-        gh.update(itob(ret));
+        gh.update(Bin.itob(ret));
         
         return ret;
     }
 
     @Override
     public long[] encrypt(long[] src, int offset) {
-        long[] ret = block.encrypt(incs64());
+        next();
+        long[] ret = block.encrypt(ct);
         
         for ( int i = 0; i < ret.length; i++ ) {
             ret[i] ^= src[offset + i];
         }
-        gh.update(ltob(ret));
+        gh.update(Bin.ltob(ret));
         
         return ret;
     }

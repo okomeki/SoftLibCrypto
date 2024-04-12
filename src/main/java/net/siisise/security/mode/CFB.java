@@ -15,6 +15,7 @@
  */
 package net.siisise.security.mode;
 
+import net.siisise.lang.Bin;
 import net.siisise.security.block.Block;
 
 /**
@@ -40,7 +41,7 @@ public final class CFB extends StreamMode {
         vector = new byte[block.getBlockLength() / 8];
 
         System.arraycopy(cfbkey, 0, vector, 0, vector.length > cfbkey.length ? cfbkey.length : vector.length);
-        vectori = btoi(vector);
+        vectori = Bin.btoi(vector);
         vectori = block.encrypt(vectori, 0);
     }
 
@@ -61,7 +62,7 @@ public final class CFB extends StreamMode {
 */
     @Override
     public int[] encrypt(int[] src, int offset) {
-        xor(vectori, src, offset, vector.length);
+        Bin.xorl(vectori, src, offset, vector.length);
         int[] ret = vectori;
         vectori = block.encrypt(ret, 0);
         return ret;
@@ -70,7 +71,7 @@ public final class CFB extends StreamMode {
     @Override
     public int[] decrypt(int[] src, int offset) {
         int[] ret = vectori;
-        xor(ret, src, offset, ret.length);
+        Bin.xorl(ret, src, offset, ret.length);
         vectori = block.encrypt(src, offset);
         return ret;
     }

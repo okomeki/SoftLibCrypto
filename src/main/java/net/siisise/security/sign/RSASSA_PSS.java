@@ -51,6 +51,8 @@ public class RSASSA_PSS extends RSASSA {
     /**
      * XOF対応版.
      * XOF1と2は同じ型のもの
+     * RFC 8702 耐性 最小 SHAKE128 min(d/2,128), SHAKE256 min(d/2,256)
+     * SHAKE128( d = 256 ), SHAKE256( d = 512, 
      * @param xof1 ハッシュ用XOF 出力サイズ固定
      * @param xof2 MGF用XOF サイズ可変
      * @param sLen salt(乱数生成)の長さ

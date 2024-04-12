@@ -15,6 +15,8 @@
  */
 package net.siisise.security.block;
 
+import net.siisise.lang.Bin;
+
 /**
  * Adbanced Encryption Standard.
  * FIPS 197
@@ -173,7 +175,7 @@ public class AESLong extends OneBlock {
 
         // ラウンドキーの初期化 ワード列版 128*11?
         w = new int[Nb * (Nr + 1)];
-        btoi(key, 0, w, Nk);
+        Bin.btoi(key, 0, w, Nk);
         int temp;
         for (int i = Nk; i < Nb * (Nr + 1); i++) {
             temp = w[i - 1];
@@ -352,7 +354,7 @@ public class AESLong extends OneBlock {
           |   sbox[ c         & 0xff];
 
         // AddRoundKey
-        return itob( new int[] {
+        return Bin.itob( new int[] {
             e ^ w[Nr4] ,
             f ^ w[Nr4 + 1],
             g ^ w[Nr4 + 2],
@@ -373,6 +375,6 @@ public class AESLong extends OneBlock {
         }
         addRoundKey(s, 0);
 
-        return itob(s);
+        return Bin.itob(s);
     }
 }

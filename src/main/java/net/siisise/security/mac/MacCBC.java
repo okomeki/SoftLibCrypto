@@ -15,9 +15,8 @@
  */
 package net.siisise.security.mac;
 
-import net.siisise.security.block.BaseBlock;
+import net.siisise.lang.Bin;
 import net.siisise.security.block.Block;
-import net.siisise.security.mode.LongBlockMode;
 
 /**
  * ハッシュ用に出力を外したCBC
@@ -26,7 +25,6 @@ public class MacCBC {
 
     private final Block block;
     private long[] vector;
-//    private Packet m;
     int blen;
     int vl;
 
@@ -38,38 +36,6 @@ public class MacCBC {
 //        m = new PacketA();
     }
 
-    /*
-     * 自由CBC
-     *
-     * @param src
-     * @param offset
-     * @param length 自由サイズ
-     * @deprecated まだmは使わない
-     */
-/*
-    public void updated(byte[] src, int offset, int length) {
-        int ms = m.size();
-        if (ms > 0 && ms + length >= blen) {
-            byte[] tmp = new byte[blen];
-            m.read(tmp);
-            int pl = blen - ms;
-            System.arraycopy(src, offset, tmp, ms, pl);
-            offset += pl;
-            length -= pl;
-            LongBlockMode.xor(vector, tmp, 0, vl);
-            vector = block.encrypt(vector, 0);
-        }
-        int last = offset + length;
-        while (offset + blen <= last) {
-            LongBlockMode.xor(vector, src, offset, vl);
-            vector = block.encrypt(vector, 0);
-            offset += blen;
-        }
-        if ( offset < last ) {
-            m.write(src, offset, last - offset);
-        }
-    }
-*/
     /**
      * ブロック単位
      * @param src メッセージ
@@ -79,7 +45,7 @@ public class MacCBC {
     void update(byte[] src, int offset, int length) {
         int last = offset + length;
         while (offset + blen <= last) {
-            LongBlockMode.xor(vector, src, offset, vl);
+            Bin.xorl(vector, src, offset, vl);
             vector = block.encrypt(vector, 0);
             offset += blen;
         }
@@ -90,6 +56,6 @@ public class MacCBC {
      * @return vector
      */
     public byte[] vector() {
-        return BaseBlock.ltob(vector);
+        return Bin.ltob(vector);
     }
 }

@@ -16,6 +16,7 @@
 package net.siisise.security.digest;
 
 /**
+ * extendable-output function.
  * SHA-3 SHAKE系 XOF型.
  * MessageDigestに追加する
  * interface にするか class か未定.
@@ -36,6 +37,12 @@ public interface XOF {
      * @param length 出力バイト長
      */
     void setDigestLength(int length);
+    
+    /**
+     * ハッシュ偽装用.
+     * @return ブロックのビット長
+     */
+    int getBitBlockLength();
 
     void update(byte[] src);
     void update(byte[] src, int offset, int length);

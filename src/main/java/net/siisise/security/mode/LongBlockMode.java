@@ -62,44 +62,4 @@ public abstract class LongBlockMode extends LongBlock {
     public int[] getParamLength() {
         return new int[] {block.getBlockLength(), getBlockLength() };
     }
-/*
-    static final void xor(byte[] a, byte[] b, int offset, int length) {
-        for (int i = 0; i < length; i++) {
-            a[i] ^= b[offset + i];
-        }
-    }
-
-    static final void xor(int[] a, int[] b, int offset, int length) {
-        for (int i = 0; i < length; i++) {
-            a[i] ^= b[offset + i];
-        }
-    }
-*/
-    static final void xor(long[] a, long[] b, int offset, int length) {
-        for (int i = 0; i < length; i++) {
-            a[i] ^= b[offset + i];
-        }
-    }
-
-    /**
-     * long[] XOR byte[]
-     * a = x ^ b
-     * @param a CBCのvector 的なもの 
-     * @param b データ列
-     * @param offset データ列位置
-     * @param length aの長さ
-     */
-    public static final void xor(long[] a, byte[] b, int offset, int length) {
-        for (int i = 0; i < length; i++) {
-            for ( int j = 0, k = 56; j < 8; j++, k -= 8) {
-                a[i] ^= ((((long)b[offset + i*8 + j]) & 0xff) << k);
-            }
-        }
-    }
-
-    static final void xor(long[] a, int[] b, int offset, int length) {
-        for (int i = 0; i < length; i++) {
-            a[i] ^= (((long)b[offset + i*2]) << 32) ^ (b[offset + i*2 + 1] & 0xffffffffl);
-        }
-    }
 }

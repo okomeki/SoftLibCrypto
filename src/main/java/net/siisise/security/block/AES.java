@@ -15,6 +15,8 @@
  */
 package net.siisise.security.block;
 
+import net.siisise.lang.Bin;
+
 /**
  * Adbanced Encryption Standard.
  * FIPS 197
@@ -188,7 +190,7 @@ public class AES extends IntBlock {
 
         // ラウンド鍵の初期化 ワード列版 128*11?
         w = new int[Nb * (Nr + 1)];
-        btoi(key, 0, w, Nk);
+        Bin.btoi(key, 0, w, Nk);
         int temp;
         for (int i = Nk; i < Nb * (Nr + 1); i++) {
             temp = w[i - 1];
@@ -201,7 +203,7 @@ public class AES extends IntBlock {
         }
 
         lw = new long[(Nr+1)*2];
-        itol(w,0,lw,lw.length);
+        Bin.itol(w,0,lw,lw.length);
 
         // デコード用ラウンド鍵 + MixColumns
         ldw = new long[(w.length - 4)/2];
@@ -313,7 +315,7 @@ public class AES extends IntBlock {
           |   SBOX[(int)(b >> 32) & 0xff]);
 
         // AddRoundKey
-        return itob(new int[] {
+        return Bin.itob(new int[] {
             e ^ w[Nr4] ,
             f ^ w[Nr4 + 1],
             g ^ w[Nr4 + 2],
