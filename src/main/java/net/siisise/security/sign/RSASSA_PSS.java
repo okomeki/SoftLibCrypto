@@ -26,14 +26,23 @@ import net.siisise.security.padding.MGFXOF;
  * PKCS #1 Section 8.1.
  * MessageDigest、MGF, salt length を初期設定
  * update で本体を渡してから sign または verify をするといい
+ * RFC 3447 PKCS #1 v2.1
+ * RFC 4055
+ * RFC 8702
  */
 public class RSASSA_PSS extends RSASSA {
+    
+    // RFC 8692 8702
+    static final String SHAKE128 = "1.3.6.1.5.5.7.6.30";
+    static final String SHAKE256 = "1.3.6.1.5.5.7.6.31";
+    static final String ecdsaWithShake128 = "1.3.6.1.5.5.7.6.32";
+    static final String ecdsaWithShake256 = "1.3.6.1.5.5.7.6.33";
     
     /**
      * とりあえずinitの代わり
      * @param hash hash function
      * @param mgf ちょっと拡張する関数
-     * @param sLen salt(乱数生成)の長さ
+     * @param sLen salt(乱数生成)のオクテット長
      */
     public RSASSA_PSS(MessageDigest hash, MGF mgf, int sLen) {
         super(new EMSA_PSS(hash, mgf, sLen));

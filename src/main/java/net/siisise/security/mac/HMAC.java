@@ -71,6 +71,7 @@ public class HMAC implements MAC {
 
     public static final String RSADSI = "1.2.840.113549";
     public static final String DIGESTALGORITHM = RSADSI + ".2";
+//    public static final String idHmacWithMD5 = DIGESTALGORITHM + ".6";
     public static final String idhmacWithSHA1 = DIGESTALGORITHM + ".7";
     public static final String idhmacWithSHA224 = DIGESTALGORITHM + ".8";
     public static final String idhmacWithSHA256 = DIGESTALGORITHM + ".9";

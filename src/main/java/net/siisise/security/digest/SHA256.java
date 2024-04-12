@@ -15,6 +15,7 @@
  */
 package net.siisise.security.digest;
 
+import net.siisise.lang.Bin;
 import net.siisise.security.io.BlockOutputStream;
 
 /**
@@ -25,7 +26,8 @@ import net.siisise.security.io.BlockOutputStream;
  */
 public class SHA256 extends BlockMessageDigest {
 
-    public static final String OBJECTIDENTIFIER = "2.16.840.1.101.3.4.2.1";
+    public static final String nistAlgorithm = "2.16.840.1.101.3.4";
+    public static final String OBJECTIDENTIFIER = nistAlgorithm + ".2.1";
 
     static final int[] IV256 = {
         0x6a09e667,
@@ -130,7 +132,7 @@ public class SHA256 extends BlockMessageDigest {
         g = H[6];
         h = H[7];
 
-        BlockOutputStream.writeBig(w, 0, in, offset, 16);
+        Bin.btoi(in, offset, w, 16);
         for (int t = 16; t < 64; t++) {
             w[t] = σ1(w[t - 2]) + w[t - 7] + σ0(w[t - 15]) + w[t - 16];
         }

@@ -15,6 +15,7 @@
  */
 package net.siisise.security.digest;
 
+import net.siisise.lang.Bin;
 import net.siisise.security.io.BlockOutputStream;
 
 /**
@@ -94,7 +95,7 @@ public final class SHA1 extends BlockMessageDigest {
         d = h[3];
         e = h[4];
         // a.
-        pac.writeBig(w,0,src,offset,16);
+        Bin.btoi(src, offset, w, 16);
         // b.
         for (int t = 16; t < 80; t++) {
             int n = w[t - 3] ^ w[t - 8] ^ w[t - 14] ^ w[t - 16];

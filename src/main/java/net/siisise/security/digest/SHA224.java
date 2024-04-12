@@ -22,7 +22,7 @@ package net.siisise.security.digest;
  */
 public class SHA224 extends SHA256 {
 
-    public static final String OBJECTIDENTIFIER = "2.16.840.1.101.3.4.2.4";
+    public static final String OBJECTIDENTIFIER = SHA256.nistAlgorithm + ".2.4";
 
     static int[] IV224 = {
         0xc1059ed8,

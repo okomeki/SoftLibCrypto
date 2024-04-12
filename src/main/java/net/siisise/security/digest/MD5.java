@@ -15,6 +15,7 @@
  */
 package net.siisise.security.digest;
 
+import net.siisise.lang.Bin;
 import net.siisise.security.io.BlockOutputStream;
 
 /**
@@ -155,7 +156,8 @@ public class MD5 extends BlockMessageDigest {
         cc = ad[2];
         dd = ad[3];
 
-        BlockOutputStream.writeLittle(x,0, input,offset,16);
+        Bin.btoli(input, offset, x, 16);
+
         /* Round 1. */
         for (int i = 0; i < 16; i++) {
             abcdf(x[i], i);

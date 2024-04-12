@@ -19,6 +19,7 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
+import net.siisise.lang.Bin;
 import net.siisise.security.io.BlockOutputStream;
 
 /**
@@ -198,7 +199,7 @@ public class SHA512 extends BlockMessageDigest {
         g = H[6];
         h = H[7];
 
-        BlockOutputStream.writeBig(w, 0, in, offset, 16);
+        Bin.btol(in, offset, w,16);
         for (int t = 16; t < 80; t++) {
             w[t] = σ1(w[t - 2]) + w[t - 7] + σ0(w[t - 15]) + w[t - 16];
         }

@@ -24,8 +24,7 @@ package net.siisise.security.digest;
  */
 public class SHA3 extends Keccak {
 
-    static final String nistAlgorithms = ".4";
-    static final String hashAlgs = nistAlgorithms + ".2";
+    static final String hashAlgs = SHA256.nistAlgorithm + ".2";
 
     /**
      * r は 1152,1088,832,576
