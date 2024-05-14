@@ -23,14 +23,14 @@ import net.siisise.io.Packet;
  * ビット列用だがバイト列で使う.
  *
  */
-public class cSHAKE extends Keccak implements XOF {
+public class cSHAKE extends Keccak {
 
     /**
      * cSHAKE.
      * N, Sが空の場合はSHAKEと同じ
      *
      * @param c セキュリティ強度 128 または 256
-     * @param d 出力長
+     * @param d 出力長 bit
      * @param N 関数名のビット文字列
      * @param S 任意の文字列
      */
@@ -47,7 +47,8 @@ public class cSHAKE extends Keccak implements XOF {
             p = SHA3Derived.encode_string(N.getBytes(StandardCharsets.UTF_8));
             p.write(SHA3Derived.encode_string(S.getBytes(StandardCharsets.UTF_8)));
             byte[] x = SHA3Derived.bytepad(p, getBitBlockLength() / 8);
-            engineUpdate(x, 0, x.length);
+            // KeccakのengineUpdate を呼びたいが継承されることもあるのでsuper.をつけておく
+            super.engineUpdate(x, 0, x.length);
         }
     }
 }

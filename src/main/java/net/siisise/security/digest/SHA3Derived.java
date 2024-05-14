@@ -86,7 +86,12 @@ public class SHA3Derived {
         return p;
     }
     
-    static long len(byte[] s) {
+    /**
+     * ビット長を計算するだけ.
+     * @param s
+     * @return ビット長
+     */
+    static final long len(byte[] s) {
         return s.length * 8l;
     }
     

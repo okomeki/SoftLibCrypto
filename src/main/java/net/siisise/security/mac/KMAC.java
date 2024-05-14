@@ -24,14 +24,14 @@ import net.siisise.security.digest.cSHAKE;
  * MACかXOF
  */
 public abstract class KMAC implements MAC {
-    cSHAKE cshake;
-    long L;
+    private cSHAKE cshake;
+    protected long L;
 
     /**
      * 初期化要素.
      * @param c 暗号強度 128,256
      * @param key 鍵
-     * @param length XOF出力サイズ
+     * @param length XOF出力サイズ bit
      * @param S オプションで設定可能な空文字列を含む可変長文字列. optional customization bit string of any length, including zero.
      */
     public void init(int c, byte[] key, int length, String S) {
@@ -40,6 +40,15 @@ public abstract class KMAC implements MAC {
         byte[] newX = SHA3Derived.bytepad(SHA3Derived.encode_string(key), cshake.getBitBlockLength() / 8 );
         cshake.update(newX);
     }
+    
+    /**
+     * 暗号強度はあらかじめ設定済みなので省けるかもしれず.
+     * 
+     * @param K 鍵
+     * @param L 出力bitサイズ
+     * @param S オプション可変長文字列
+     */
+    public abstract void init(byte[] K, int L, String S);
 
     @Override
     public void update(byte[] src, int offset, int length) {

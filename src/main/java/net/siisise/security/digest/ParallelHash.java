@@ -19,10 +19,9 @@ import net.siisise.io.Packet;
 import net.siisise.io.PacketA;
 
 /**
- * NIST SP 800-185 6 ParallelHash
- * @deprecated 未テスト
+ * NIST SP 800-185 6 ParallelHash.
  */
-public class ParallelHash extends cSHAKE implements XOF {
+public class ParallelHash extends cSHAKE {
     int b;
     int L;
     Packet z;

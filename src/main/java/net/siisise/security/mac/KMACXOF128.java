@@ -19,7 +19,13 @@ package net.siisise.security.mac;
  * XOF 可変長っぽく.
  */
 public class KMACXOF128 extends KMAC128 {
-    
+
+    /**
+     * 
+     * @param key
+     * @param length
+     * @param S 
+     */
     @Override
     public void init(byte[] key, int length, String S) {
         super.init(key, length, S);

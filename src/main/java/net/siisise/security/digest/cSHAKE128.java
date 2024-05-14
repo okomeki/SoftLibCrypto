@@ -15,11 +15,11 @@
  */
 package net.siisise.security.digest;
 
-public class cSHAKE128 extends cSHAKE {
+public class cSHAKE128 extends cSHAKE implements XOF {
 
     /**
      * cSHAKE128.
-     * @param d 出力長
+     * @param d 出力長 標準? 256bitぐらい
      * @param N 関数名
      * @param S カスタマイズ名
      */

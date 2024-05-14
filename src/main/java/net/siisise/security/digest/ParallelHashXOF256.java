@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 okome.
+ * Copyright 2024 okome.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,15 +15,14 @@
  */
 package net.siisise.security.digest;
 
-public class cSHAKE256 extends cSHAKE implements XOF {
-
-    /**
-     * cSHAKE256.
-     * @param d 出力長 標準512bitくらい
-     * @param N 関数名
-     * @param S カスタマイズ名
-     */
-    public cSHAKE256(int d, String N, String S) {
-        super(256,d,N,S);
+/**
+ *
+ * @author okome
+ */
+public class ParallelHashXOF256 extends ParallelHash256 implements XOF {
+    
+    public ParallelHashXOF256(int b, int l, String S) {
+        super(b, l, S);
     }
+    
 }
