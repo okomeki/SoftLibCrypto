@@ -19,7 +19,7 @@ package net.siisise.security.digest;
  * XOFな設定のTupleHash256.
  * 長さタグは0になる.
  */
-public class TupleHashXOF256 extends TupleHash256 {
+public class TupleHashXOF256 extends TupleHash256 implements XOF {
     
     /**
      * 出力サイズとオプションの文字列指定.

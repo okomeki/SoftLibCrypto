@@ -51,17 +51,17 @@ public class TupleHash extends cSHAKE {
      * @param length 長さ
      */
     @Override
-    public void update(byte[] src, int offset, int length) {
+    public void engineUpdate(byte[] src, int offset, int length) {
         // SHA3Derived.encode_stringの分解
         byte[] l = SHA3Derived.left_encode(length * 8l);
-        engineUpdate(l,0,l.length);
-        engineUpdate(src, offset, length);
+        super.engineUpdate(l,0,l.length);
+        super.engineUpdate(src, offset, length);
     }
 
     @Override
     protected byte[] engineDigest() {
         byte[] encLen = SHA3Derived.right_encode(L);
-        engineUpdate(encLen,0,encLen.length);
+        super.engineUpdate(encLen,0,encLen.length);
         return super.engineDigest();
     }
 }

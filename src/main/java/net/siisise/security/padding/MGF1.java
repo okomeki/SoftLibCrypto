@@ -65,7 +65,7 @@ public class MGF1 implements MGF {
         for ( long c = 0; c < cn; c++ ) {
             hash.update(mgfSeed);
             hash.update(Bin.toByte((int) c)); // PKCS!.I2OSP(c, 4)
-            T.write(hash.digest());
+            T.dwrite(hash.digest());
         }
         long len = T.length();
         if (len > maskLen) {
