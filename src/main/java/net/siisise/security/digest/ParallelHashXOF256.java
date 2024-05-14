@@ -23,6 +23,7 @@ public class ParallelHashXOF256 extends ParallelHash256 implements XOF {
     
     public ParallelHashXOF256(int b, int l, String S) {
         super(b, l, S);
+        this.L = 0;
     }
     
 }
