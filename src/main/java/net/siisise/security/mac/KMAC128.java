@@ -36,13 +36,13 @@ public class KMAC128 extends KMAC implements MAC {
     }
 
     /**
-     * 出力サイズ128bit固定. HMAC等の代用
+     * 出力サイズ256bit固定. HMAC等の代用
      * 
      * @param key K 鍵
      */
     @Override
     public void init(byte[] key) {
-        init(key, 128, "");
+        init(key, 256, "");
     }
 
     /**

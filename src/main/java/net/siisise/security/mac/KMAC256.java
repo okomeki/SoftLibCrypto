@@ -34,9 +34,13 @@ public class KMAC256 extends KMAC implements MAC {
     public KMAC256() {
     }
 
+    /**
+     * 512bit出力固定で初期化.
+     * @param key 鍵
+     */
     @Override
     public void init(byte[] key) {
-        init(key, 256, "");
+        init(key, 512, "");
     }
 
     /**

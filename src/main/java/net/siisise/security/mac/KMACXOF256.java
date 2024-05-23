@@ -20,6 +20,12 @@ package net.siisise.security.mac;
  */
 public class KMACXOF256 extends KMAC256 {
     
+    /**
+     * 初期値.
+     * @param key 鍵
+     * @param length XOF出力サイズ 0 &lt;= L &lt; 2^2040 bit
+     * @param S オプションで設定可能な空文字列を含む可変長文字列. optional customization bit string of any length, including zero. len(S) &lt; 2^2040
+     */
     @Override
     public void init(byte[] key, int length, String S) {
         super.init(key, length, S);
