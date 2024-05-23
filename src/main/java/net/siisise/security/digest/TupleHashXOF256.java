@@ -17,17 +17,28 @@ package net.siisise.security.digest;
 
 /**
  * XOFな設定のTupleHash256.
- * 長さタグは0になる.
+ * 長さタグは0になるため出力サイズに関わらず内容は変化しない.
  */
 public class TupleHashXOF256 extends TupleHash256 implements XOF {
-    
+
     /**
      * 出力サイズとオプションの文字列指定.
-     * @param L 長さ (200 byte ぐらいまで 仮)
-     * @param S オプションで設定可能な空文字列を含む可変長文字列. optional customization bit string of any length, including zero.
+     *
+     * @param L 長さ bit
+     * @param S オプションで設定可能な空文字列を含む可変長文字列. optional customization bit string of
+     * any length, including zero.
      */
     public TupleHashXOF256(int L, String S) {
-        super(L, S);
-        this.L = 0;
+        super(L, 0, S);
+    }
+
+    /**
+     * 出力サイズ512bitでオプションの文字列指定.
+     *
+     * @param S オプションで設定可能な空文字列を含む可変長文字列. optional customization bit string of
+     * any length, including zero.
+     */
+    public TupleHashXOF256(String S) {
+        super(512, 0, S);
     }
 }

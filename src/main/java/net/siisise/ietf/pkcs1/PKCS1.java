@@ -135,6 +135,7 @@ public class PKCS1 {
      * @param m メッセージ nよりいろいろ短いこと
      * @return 暗号化メッセージ
      */
+    @Deprecated
     public static byte[] RSAES_v1_5_encryption(RSAPublicKey pkey, byte[] m) {
         RSAES rsaes = new RSAES_PKCS1_v1_5();
         return rsaes.encrypt(pkey, m);
@@ -148,6 +149,7 @@ public class PKCS1 {
      * @param c 暗号化メッセージ
      * @return メッセージ m
      */
+    @Deprecated
     public static byte[] RSAES_v1_5_decryption(RSAMiniPrivateKey prv, byte[] c) {
         RSAES rsaes = new RSAES_PKCS1_v1_5();
         return rsaes.decrypt(prv, c);
@@ -163,6 +165,7 @@ public class PKCS1 {
      * @return 署名
      * @deprecated 
      */
+    @Deprecated
     public byte[] pkcs1_v1_5_sign(RSAMiniPrivateKey K, byte[] M) {
         RSASSA ssa = new RSASSA_PKCS1_v1_5();
         ssa.update(M);
@@ -177,6 +180,7 @@ public class PKCS1 {
      * @return 
      * @deprecated 
      */
+    @Deprecated
     public boolean pkcs1_v1_5_verify(RSAPublicKey pub, byte[] M, byte[] S) {
         RSASSA ssa = new RSASSA_PKCS1_v1_5();
         ssa.update(M);

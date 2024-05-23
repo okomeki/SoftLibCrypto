@@ -26,6 +26,7 @@ package net.siisise.security.block;
  *
  * @deprecated 仕様廃止,AESへ
  */
+@Deprecated
 public class DES extends OneBlock {
 
     /**

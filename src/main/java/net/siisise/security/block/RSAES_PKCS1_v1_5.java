@@ -24,6 +24,7 @@ import net.siisise.security.padding.EME_PKCS1_v1_5;
  * 
  * @deprecated 古い方式. RSAES-OAEP が推奨されている
  */
+@Deprecated
 public class RSAES_PKCS1_v1_5 extends RSAES {
 
     public RSAES_PKCS1_v1_5() {

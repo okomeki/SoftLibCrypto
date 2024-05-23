@@ -21,17 +21,29 @@ package net.siisise.security.digest;
  * update1回ごとに長さを付加する.
  */
 public class TupleHash extends cSHAKE {
-    long L;
+    private final long L;
 
     /**
      * TupleHash. 出力サイズと文字列指定.
      * @param c 暗号強度 128 or 256
-     * @param L 出力サイズ
+     * @param L 出力サイズ bit
      * @param S オプションで設定可能な空文字列を含む可変長文字列. optional customization bit string of any length, including zero.
      */
-    public TupleHash(int c, int L, String S) {
+    protected TupleHash(int c, int L, String S) {
         super(c, L, "TupleHash", S);
         this.L = L;
+    }
+
+    /**
+     * XOF用.
+     * @param c 暗号強度 128 or 256
+     * @param L 出力サイズ bit
+     * @param Ltag 0の予定
+     * @param S オプションで設定可能な空文字列を含む可変長文字列. optional customization bit string of any length, including zero.
+     */
+    protected TupleHash(int c, int L, int Ltag, String S) {
+        super(c, L, "TupleHash", S);
+        this.L = Ltag;
     }
 
     /**

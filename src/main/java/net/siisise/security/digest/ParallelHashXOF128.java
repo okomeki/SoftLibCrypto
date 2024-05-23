@@ -16,14 +16,18 @@
 package net.siisise.security.digest;
 
 /**
- *
- * @author okome
+ * ParallelHash XOF 128bit
  */
 public class ParallelHashXOF128 extends ParallelHash128 implements XOF {
     
+    /**
+     * 
+     * @param b ブロック分割byteサイズ
+     * @param l L 出力長 bit
+     * @param S 文字列
+     */
     public ParallelHashXOF128(int b, int l, String S) {
         super(b, l, S);
-        this.L = 0;
     }
     
 }

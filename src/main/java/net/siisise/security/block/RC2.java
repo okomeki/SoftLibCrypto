@@ -22,6 +22,7 @@ package net.siisise.security.block;
  * 鍵長 40bit 128バイト(1024bit)まで?
  * @deprecated 仕様は廃止,実装はまだ不安定
  */
+@Deprecated
 public class RC2 extends OneBlock {
     
     int t1 = 64;

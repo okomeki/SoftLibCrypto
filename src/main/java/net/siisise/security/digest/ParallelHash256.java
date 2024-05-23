@@ -22,8 +22,8 @@ public class ParallelHash256 extends ParallelHash {
 
     /**
      * 
-     * @param b block size
-     * @param l ハッシュ出力バイト長
+     * @param b block byte size
+     * @param l hash bit length ハッシュ出力bit長
      * @param S 付加文字
      */
     public ParallelHash256(int b, int l, String S) {

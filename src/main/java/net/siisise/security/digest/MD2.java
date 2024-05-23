@@ -22,6 +22,7 @@ import net.siisise.security.io.BlockOutputStream;
  * RFC 1319
  * @deprecated RFC 6149
  */
+@Deprecated
 public class MD2 extends BlockMessageDigest {
 
     static final String OID = "1.2.840.113549.2.2";

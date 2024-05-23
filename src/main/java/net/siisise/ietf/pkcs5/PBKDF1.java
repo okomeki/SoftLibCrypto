@@ -24,6 +24,7 @@ import java.util.Arrays;
  * ハッシュ長までの派生鍵を生成できる.
  * @deprecated 互換用 推奨されていない
  */
+@Deprecated
 public class PBKDF1 implements PBKDF {
 
     private MessageDigest md;
@@ -118,6 +119,7 @@ public class PBKDF1 implements PBKDF {
      * @return DK 派生鍵 長さ dkLen
      * @deprecated 互換用
      */
+    @Deprecated
     public static byte[] pbkdf1(MessageDigest digest, byte[] pass, byte[] salt, int c, int dkLen) {
         // Step 1
         if (digest.getDigestLength() < dkLen) {

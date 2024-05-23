@@ -21,6 +21,7 @@ import net.siisise.security.io.BlockOutputStream;
  * RFC 1320
  * @deprecated RFC 6150
  */
+@Deprecated
 public class MD4 extends BlockMessageDigest {
 
     private int[] ad;

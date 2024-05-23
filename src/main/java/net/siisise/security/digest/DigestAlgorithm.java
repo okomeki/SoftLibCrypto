@@ -32,20 +32,24 @@ public class DigestAlgorithm extends AlgorithmIdentifier {
     /**
      * @deprecated 
      */
+    @Deprecated
     public static final OBJECTIDENTIFIER id_md2 = DIGESTALGORITHM.sub(2);
     /**
      * @deprecated 
      */
+    @Deprecated
     public static final OBJECTIDENTIFIER id_md4 = DIGESTALGORITHM.sub(4);
     /**
      * @deprecated 
      */
+    @Deprecated
     public static final OBJECTIDENTIFIER id_md5 = DIGESTALGORITHM.sub(5);
     // iso(1) identified-organization(3) oiw(14) secsig(3) algorithms(2)
     public static final OBJECTIDENTIFIER algorithms = new OBJECTIDENTIFIER("1.3.14.3.2");
     /**
      * @deprecated 
      */
+    @Deprecated
     public static final OBJECTIDENTIFIER id_sha1 = algorithms.sub(26);
     // joint-iso-itu-t(2) country(16) us(840) organization(1) gov(101) csor(3) nistalgorithm(4) hashAlgs(2)
     public static final OBJECTIDENTIFIER HASHALGS = new OBJECTIDENTIFIER("2.16.840.1.101.3.4.2");

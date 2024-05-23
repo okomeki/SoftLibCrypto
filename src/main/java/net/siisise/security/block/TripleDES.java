@@ -22,6 +22,7 @@ package net.siisise.security.block;
  * ANSI X9.52-1998
  * @deprecated AES
  */
+@Deprecated
 public class TripleDES extends OneBlock {
 
     private DES block1;

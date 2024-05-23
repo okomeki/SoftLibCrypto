@@ -20,6 +20,7 @@ package net.siisise.security.stream;
  * RFC 6229 Test Vectors
  * @deprecated 規格はRFC 7465で廃止,まだない
  */
+@Deprecated
 public class RC4 implements Stream {
     /**
      * 処理bit単位

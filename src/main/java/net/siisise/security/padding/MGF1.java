@@ -43,6 +43,7 @@ public class MGF1 implements MGF {
      * SHA1でMGFを作る.
      * @deprecated default SHA1が非推奨
      */
+    @Deprecated
     public MGF1() {
         hash = new SHA1();
     }

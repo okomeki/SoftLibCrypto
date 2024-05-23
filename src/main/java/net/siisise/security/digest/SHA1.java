@@ -24,6 +24,7 @@ import net.siisise.security.io.BlockOutputStream;
  * FIPS 180-1.
  * @deprecated 
  */
+@Deprecated
 public final class SHA1 extends BlockMessageDigest {
 
     public static final String OBJECTIDENTIFIER = "1.3.14.3.2.26";

@@ -16,16 +16,31 @@
 package net.siisise.security.digest;
 
 /**
+ * TupleHash128.
  * update 1つをX1つとする
  */
 public class TupleHash128 extends TupleHash {
 
     /**
      * 出力サイズとオプションの文字列指定.
-     * @param L 出力長
+     *
+     * @param L 出力長 bit
      * @param S オプションで設定可能な空文字列を含む可変長文字列. optional customization bit string of any length, including zero.
      */
     public TupleHash128(int L, String S) {
         super(128, L, S);
+    }
+
+    protected TupleHash128(int L, int Ltag, String S) {
+        super(128, L, Ltag, S);
+    }
+
+    /**
+     * 出力サイズ256bitとオプションの文字列指定.
+     *
+     * @param S オプションで設定可能な空文字列を含む可変長文字列. optional customization bit string of any length, including zero.
+     */
+    public TupleHash128(String S) {
+        super(128, 256, S);
     }
 }

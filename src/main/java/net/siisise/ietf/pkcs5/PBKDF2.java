@@ -47,6 +47,7 @@ public class PBKDF2 implements PBKDF {
      * デフォルトはSHA-1
      * @deprecated SHA-1 は廃止
      */
+    @Deprecated
     public PBKDF2() {
         prf = new HMAC(new SHA1()); // デフォルト 非推奨?
     }
@@ -101,6 +102,7 @@ public class PBKDF2 implements PBKDF {
      * @param params
      * @throws IOException 
      */
+    @Deprecated
     public void setASN1Params(byte[] params) throws IOException {
         SEQUENCE ps = (SEQUENCE) ASN1Util.toASN1(params);
         setASN1Params(ps);

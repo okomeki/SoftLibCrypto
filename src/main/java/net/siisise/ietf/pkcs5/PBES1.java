@@ -32,6 +32,7 @@ import net.siisise.security.mode.CBC;
  * 費用順的なPADDINGと同じなので暗号の方に
  * @deprecated DES,RC2などを使用するため旧式
  */
+@Deprecated
 public class PBES1 implements PBES {
     
     static final OBJECTIDENTIFIER pbeWithMD2AndDES_CBC = PBKDF2.PKCS5.sub(1);

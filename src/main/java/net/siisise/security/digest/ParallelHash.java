@@ -23,23 +23,26 @@ import net.siisise.io.PacketA;
  */
 public class ParallelHash extends cSHAKE {
     int b;
-    int L;
+    /**
+     * XOFは0にする
+     */
+    protected int L;
     Packet z;
     int size;
-    SHAKE shake;
+    private SHAKE shake;
     int n;
 
     /**
      * 
      * @param c 暗号強度 128 または 256
-     * @param b block size
-     * @param l ハッシュ出力バイト長 200 まで
+     * @param b block byte size
+     * @param l ハッシュ出力 bit長
      * @param S 付加文字
      */
     public ParallelHash(int c, int b, int l, String S) {
         super(c, l, "ParallelHash", S);
         this.b = b;
-        this.L = l;
+        this.L = this instanceof XOF ? 0 : l;
         z = new PacketA();
         z.dwrite(SHA3Derived.left_encode(b));
         size = b;

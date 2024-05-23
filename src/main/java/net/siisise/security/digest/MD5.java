@@ -22,6 +22,7 @@ import net.siisise.security.io.BlockOutputStream;
  * RFC 1321 MD5の実装.
  * @deprecated RFC 6151 署名禁止 RFC 6331 歴史的 RFC 9155 TLS 1.2 DTLS 1.2 脆弱
  */
+@Deprecated
 public class MD5 extends BlockMessageDigest {
 
     public static String OBJECTIDENTIFIER = "1.2.840.113549.2.5";

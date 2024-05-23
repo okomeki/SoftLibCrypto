@@ -127,7 +127,7 @@ public class SHA3Derived {
     }
 */
     /**
-     * wバイト単位でパディングする.
+     * 2.3.3 wバイト単位でパディングする.
      * @param X 元データ Packet を利用する
      * @param w ブロックっぽいサイズ (byte)
      * @return 
