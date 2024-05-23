@@ -27,7 +27,10 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import net.siisise.lang.Bin;
 import net.siisise.security.mode.CBC;
+import net.siisise.security.mode.CTR;
+import net.siisise.security.mode.ECB;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import org.junit.jupiter.api.Test;
 
@@ -210,7 +213,7 @@ public class AESTest {
     @Test
     public void testEncrypt() throws InvalidAlgorithmParameterException {
         System.out.println("encrypt speed test");
-        String alg = "AES/CBC";
+        String alg = "AES/CTR";
         //EncodeOutputStream encout = new EncodeOutputStream(instance,);
 //        byte[] expResult = null;
 //        byte[] key = { 0x2b, 0x7e, 0x15, 0x16, 0x28, (byte)0xae, (byte)0xd2, (byte)0xa6,
@@ -252,7 +255,7 @@ public class AESTest {
         
     //        Block instance = new AES();
             long d = System.nanoTime();
-            Block instance = new CBC(new AES());
+            Block instance = new CTR(new AES());
             instance.init(key,iv);
             //intEncd = instance.encrypt(intSrc, 0, intSrc.length);
             encd = instance.encrypt(src, 0, src.length);
@@ -346,5 +349,97 @@ public class AESTest {
         // TODO review the generated test code and remove the default call to fail.
 //        fail("The test case is a prototype.");
     }
+
+    /**
+     * NIST SP 800-38A Appendix F.
+     * 
+     */
+    @Test
+    public void test800_38A_F1_1() {
+        System.out.println("NIST SP 800-38A F.1.1");
+        byte[] key = Bin.toByteArray("2b7e151628aed2a6abf7158809cf4f3c");
+        byte[] plain = Bin.toByteArray("6bc1bee22e409f96e93d7e117393172a");
+        byte[] cipher = Bin.toByteArray("3ad77bb40d7a3660a89ecaf32466ef97");
+        ECB aes = new ECB(new AES());
+        aes.init(key);
+        byte[] result = aes.encrypt(plain);
+        assertArrayEquals(cipher, result);
+
+        plain = Bin.toByteArray("ae2d8a571e03ac9c9eb76fac45af8e51");
+        cipher = Bin.toByteArray("f5d3d58503b9699de785895a96fdbaaf");
+        result = aes.encrypt(plain);
+        assertArrayEquals(cipher, result);
+
+        plain = Bin.toByteArray("30c81c46a35ce411e5fbc1191a0a52ef");
+        cipher = Bin.toByteArray("43b1cd7f598ece23881b00e3ed030688");
+        result = aes.encrypt(plain);
+        assertArrayEquals(cipher, result);
+
+        plain = Bin.toByteArray("f69f2445df4f9b17ad2b417be66c3710");
+        cipher = Bin.toByteArray("7b0c785e27e8ad3f8223207104725dd4");
+        result = aes.encrypt(plain);
+        assertArrayEquals(cipher, result);
+    }
     
+    /**
+     * NIST SP 800-38A Appendix F.
+     * 
+     */
+    @Test
+    public void test800_38A_F1_2() {
+        System.out.println("NIST SP 800-38A F.1.2");
+        byte[] key = Bin.toByteArray("2b7e151628aed2a6abf7158809cf4f3c");
+        byte[] plain = Bin.toByteArray("6bc1bee22e409f96e93d7e117393172a");
+        byte[] cipher = Bin.toByteArray("3ad77bb40d7a3660a89ecaf32466ef97");
+        ECB aes = new ECB(new AES());
+        aes.init(key);
+        byte[] result = aes.decrypt(cipher);
+        assertArrayEquals(plain, result);
+
+        plain = Bin.toByteArray("ae2d8a571e03ac9c9eb76fac45af8e51");
+        cipher = Bin.toByteArray("f5d3d58503b9699de785895a96fdbaaf");
+        result = aes.decrypt(cipher);
+        assertArrayEquals(plain, result);
+
+        plain = Bin.toByteArray("30c81c46a35ce411e5fbc1191a0a52ef");
+        cipher = Bin.toByteArray("43b1cd7f598ece23881b00e3ed030688");
+        result = aes.decrypt(cipher);
+        assertArrayEquals(plain, result);
+
+        plain = Bin.toByteArray("f69f2445df4f9b17ad2b417be66c3710");
+        cipher = Bin.toByteArray("7b0c785e27e8ad3f8223207104725dd4");
+        result = aes.decrypt(cipher);
+        assertArrayEquals(plain, result);
+    }
+
+    /**
+     * NIST SP 800-38A Appendix F.
+     * 
+     */
+    @Test
+    public void test800_38A_F1_3() {
+        System.out.println("NIST SP 800-38A F.1.3");
+        byte[] key = Bin.toByteArray("8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b");
+        byte[] plain = Bin.toByteArray("6bc1bee22e409f96e93d7e117393172a");
+        byte[] cipher = Bin.toByteArray("bd334f1d6e45f25ff712a214571fa5cc");
+        ECB aes = new ECB(new AES());
+        aes.init(key);
+        byte[] result = aes.encrypt(plain);
+        assertArrayEquals(cipher, result);
+
+        plain = Bin.toByteArray("ae2d8a571e03ac9c9eb76fac45af8e51");
+        cipher = Bin.toByteArray("974104846d0ad3ad7734ecb3ecee4eef");
+        result = aes.encrypt(plain);
+        assertArrayEquals(cipher, result);
+
+        plain = Bin.toByteArray("30c81c46a35ce411e5fbc1191a0a52ef");
+        cipher = Bin.toByteArray("ef7afd2270e2e60adce0ba2face6444e");
+        result = aes.encrypt(plain);
+        assertArrayEquals(cipher, result);
+
+        plain = Bin.toByteArray("f69f2445df4f9b17ad2b417be66c3710");
+        cipher = Bin.toByteArray("9a4b41ba738d6c72fb16691603c18e0e");
+        result = aes.encrypt(plain);
+        assertArrayEquals(cipher, result);
+    }
 }
