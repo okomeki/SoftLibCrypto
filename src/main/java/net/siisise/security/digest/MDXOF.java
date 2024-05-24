@@ -16,8 +16,10 @@
 package net.siisise.security.digest;
 
 /**
+ * XOF を MessageDigest として使える変換.
  * @deprecated 今のところXOFはMD継承しているので必要ないかも.
  */
+@Deprecated
 public class MDXOF extends BlockMessageDigest {
 
     private final XOF xof;
