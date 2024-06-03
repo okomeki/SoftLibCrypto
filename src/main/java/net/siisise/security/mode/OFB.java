@@ -15,52 +15,53 @@
  */
 package net.siisise.security.mode;
 
+import net.siisise.io.Packet;
+import net.siisise.io.PacketA;
+import net.siisise.lang.Bin;
 import net.siisise.security.block.Block;
 
 /**
  * Output Feedback.
  * ストリームにも転用可能. (OFB8とかいうらしい)
+ * CTR とほぼ同じ.
  */
 public final class OFB extends StreamMode {
+
+    Packet xp;
 
     public OFB(Block block, byte[] key, byte[] iv) {
         super(block);
         init(key, iv);
     }
 
+    /**
+     * 
+     * @param params key, iv
+     */
     @Override
-    public void init(byte[]... key) {
-        byte[][] nkey = new byte[key.length - 1][];
-        System.arraycopy(key,0,nkey,0,key.length - 1);
-        super.init(nkey);
-        byte[] iv = key[key.length - 1];
+    public void init(byte[]... params) {
+        super.init(in(1,params));
+        byte[] iv = params[params.length - 1];
         vector = new byte[getBlockLength() / 8];
         System.arraycopy(iv, 0, vector, 0, vector.length > iv.length ? iv.length : vector.length);
-        next();
+        xp = new PacketA();
     }
 
     void next() {
         vector = block.encrypt(vector, 0);
+        xp.write(vector);
     }
 
     @Override
     public byte[] encrypt(byte[] src, int offset, int length) {
-        int l = vector.length - this.offset;
+        int size = xp.size();
+        for (int i = size; i < length; i+= vector.length) {
+            next();
+        }
         byte[] ret = new byte[length];
-        int ro = 0;
-        while (length > 0) {
-            if (l > length) {
-                l = length;
-            }
-            for (int i = 0; i < l; i++) {
-                ret[ro++] = (byte) (vector[this.offset++] ^ src[offset++]);
-                length--;
-            }
-            if (this.offset >= vector.length) {
-                this.offset = 0;
-                l = vector.length;
-                next();
-            }
+        xp.read(ret);
+        for (int i = 0; i < length; i++ ) {
+            ret[i] ^= src[offset + i];
         }
         return ret;
     }
@@ -75,8 +76,8 @@ public final class OFB extends StreamMode {
         byte[] nv = block.encrypt(vector, 0);
         byte[] ret = vector; // 配列の使い回し
 
-        for (int i = 0; i < vector.length; i++) {
-            ret[i] ^= src[offset + i];
+        for (int i = 0; i < ret.length; i++) {
+            ret[i] ^= src[offset++];
         }
 
         vector = nv;
@@ -90,12 +91,35 @@ public final class OFB extends StreamMode {
 
     @Override
     public int[] encrypt(int[] src, int offset) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        int[] ret = Bin.btoi(vector);
+
+        for (int i = 0; i < ret.length; i++) {
+            ret[i] ^= src[offset + i];
+        }
+
+        vector = block.encrypt(vector, 0);
+        return ret;
     }
 
     @Override
     public int[] decrypt(int[] src, int offset) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        return encrypt(src,offset);
     }
 
+    @Override
+    public long[] encrypt(long[] src, int offset) {
+        long[] ret = Bin.btol(vector);
+
+        for (int i = 0; i < ret.length; i++) {
+            ret[i] ^= src[offset + i];
+        }
+
+        vector = block.encrypt(vector, 0);
+        return ret;
+    }
+
+    @Override
+    public long[] decrypt(long[] src, int offset) {
+        return encrypt(src,offset);
+    }
 }

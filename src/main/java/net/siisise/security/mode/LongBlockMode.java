@@ -48,6 +48,18 @@ public abstract class LongBlockMode extends LongBlock {
         block.init(params);
     }
 
+    /**
+     * 内側に渡すパラメータを生成する内部処理.
+     * @param c 減らすパラメータ数
+     * @param params パラメータ
+     * @return c個減らされたパラメータ
+     */
+    protected byte[][] in(int c, byte[]... params) {
+        byte[][] np = new byte[params.length - c][];
+        System.arraycopy(params, 0, np, 0, np.length);
+        return np;
+    }
+
     @Override
     public int getBlockLength() {
         return block.getBlockLength();

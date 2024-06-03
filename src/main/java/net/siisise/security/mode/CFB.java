@@ -23,7 +23,10 @@ import net.siisise.security.block.Block;
  * ストリームにも転用可能 (CFB8とかいうらしい)
  * 復号処理の並列化が可能
  */
-public final class CFB extends StreamMode {
+public final class CFB extends LongStreamMode {
+    
+    private byte[] vector;
+    protected int offset;
 
     public CFB(Block block, byte[] key, byte[] iv) {
         super(block);
@@ -41,8 +44,8 @@ public final class CFB extends StreamMode {
         vector = new byte[block.getBlockLength() / 8];
 
         System.arraycopy(cfbkey, 0, vector, 0, vector.length > cfbkey.length ? cfbkey.length : vector.length);
-        vectori = Bin.btoi(vector);
-        vectori = block.encrypt(vectori, 0);
+        vectorl = Bin.btol(vector);
+        vectorl = block.encrypt(vectorl, 0);
     }
 
     /**
@@ -61,18 +64,18 @@ public final class CFB extends StreamMode {
     }
 */
     @Override
-    public int[] encrypt(int[] src, int offset) {
-        Bin.xorl(vectori, src, offset, vector.length);
-        int[] ret = vectori;
-        vectori = block.encrypt(ret, 0);
+    public long[] encrypt(long[] src, int offset) {
+        Bin.xorl(vectorl, src, offset, vector.length);
+        long[] ret = vectorl;
+        vectorl = block.encrypt(ret, 0);
         return ret;
     }
 
     @Override
-    public int[] decrypt(int[] src, int offset) {
-        int[] ret = vectori;
+    public long[] decrypt(long[] src, int offset) {
+        long[] ret = vectorl;
         Bin.xorl(ret, src, offset, ret.length);
-        vectori = block.encrypt(src, offset);
+        vectorl = block.encrypt(src, offset);
         return ret;
     }
 
@@ -84,46 +87,46 @@ public final class CFB extends StreamMode {
      * @return 
      */
     @Override
-    public int[] encrypt(int[] src, int offset, int length) {
-        int l = vectori.length - this.offset;
-        int[] ret = new int[length];
+    public long[] encrypt(long[] src, int offset, int length) {
+        int l = vectorl.length - this.offset;
+        long[] ret = new long[length];
         int ro = 0;
         while (ro < ret.length) {
             if (length < l) {
                 l = length;
             }
             for (int i = 0; i < l; i++) {
-                vectori[this.offset] ^= src[offset++];
-                ret[ro++] = vectori[this.offset++];
+                vectorl[this.offset] ^= src[offset++];
+                ret[ro++] = vectorl[this.offset++];
                 length--;
             }
-            if (this.offset >= vectori.length) {
+            if (this.offset >= vectorl.length) {
                 this.offset = 0;
-                vectori = block.encrypt(vectori, 0);
-                l = vectori.length;
+                vectorl = block.encrypt(vectorl, 0);
+                l = vectorl.length;
             }
         }
         return ret;
     }
 
     @Override
-    public int[] decrypt(int[] src, int offset, int length) {
-        int l = vectori.length - this.offset;
-        int[] ret = new int[length];
+    public long[] decrypt(long[] src, int offset, int length) {
+        int l = vectorl.length - this.offset;
+        long[] ret = new long[length];
         int ro = 0;
         while (ro < ret.length) {
             if (length < l) {
                 l = length;
             }
             for (int i = 0; i < l; i++) {
-                ret[ro++] = vectori[this.offset + i] ^ src[offset + i];
-                vectori[this.offset++] = src[offset++];
+                ret[ro++] = vectorl[this.offset + i] ^ src[offset + i];
+                vectorl[this.offset++] = src[offset++];
                 length--;
             }
-            if (this.offset >= vectori.length) {
+            if (this.offset >= vectorl.length) {
                 this.offset = 0;
-                vectori = block.encrypt(vectori, 0);
-                l = vectori.length;
+                vectorl = block.encrypt(vectorl, 0);
+                l = vectorl.length;
             }
         }
         return ret;
