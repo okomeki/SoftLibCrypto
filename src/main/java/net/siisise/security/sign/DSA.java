@@ -19,11 +19,11 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.security.interfaces.DSAPublicKey;
 import java.security.spec.DSAPrivateKeySpec;
+import java.security.spec.DSAPublicKeySpec;
 
 /**
- * FIPS 186-4
+ * FIPS PUB 186-4
  * DOI https://doi.org/10.6028/NIST.FIPS.186-4
  * Section 4. DSA
  * DSA, ECDSA
@@ -63,12 +63,16 @@ public class DSA implements SignVerify {
      * ( L, N ) = (1024, 160) (2048, 224) (2048, 256) (3072, 256) の4種類 
      * @param pLen L 1024 bit 以上
      * @param qLen N 160 bit 以上
+     * @deprecated まだ
      * @return 
      */
+    @Deprecated
     public DSAPrivateKeySpec genSpec(int pLen, int qLen) {
         BigInteger p = BigInteger.probablePrime(pLen, rnd); // modulus
         BigInteger q = BigInteger.probablePrime(qLen, rnd); // divisor of (p-1)
         BigInteger pnl = p.subtract(BigInteger.ONE);
+        
+        int rLen = ( qLen + 7 ) & (~ 3);
         
         BigInteger g = BigInteger.valueOf(2);  // GF(p) の 1 < g < p
 //        g.gcd(p).equals(BigInteger.ONE)
@@ -83,24 +87,54 @@ public class DSA implements SignVerify {
         xsrc[0] = 0;
         BigInteger x = new BigInteger(xsrc).mod(q); // private key
         
-        BigInteger y = g.modPow(x, p); // public key
-//        BigInteger h = 
-        throw new UnsupportedOperationException();
+//        return new DSAPrivateKeySpec(x, p, q, g);
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    /**
+     * DSA秘密鍵仕様から秘密鍵を構築.
+     * @param spec DSA秘密鍵仕様
+     * @return DSA秘密鍵
+     */
     DSAPrivateKey prvKey(DSAPrivateKeySpec spec) {
         BigInteger x = spec.getX();
-        return new DSAPrivateKey(x);
-    }
-    
-    DSAPublicKey pubKey(DSAPrivateKeySpec spec) {
-        BigInteger g = spec.getG();
         BigInteger p = spec.getP();
         BigInteger q = spec.getQ();
-        BigInteger x = spec.getX();
-        // 公開鍵
-//        BigInteger pub = g.modPow(prv, p);
-        throw new UnsupportedOperationException();
+        BigInteger g = spec.getG();
+        return new DSAPrivateKey(x, p, q, g);
+    }
+
+    /**
+     * 秘密鍵を公開鍵に変換.
+     * @param pkey DSA秘密鍵
+     * @return DSA公開鍵
+     */
+    DSAPublicKey pubKey(DSAPrivateKey pkey) {
+        BigInteger x = pkey.getX();
+        BigInteger p = pkey.getParams().getP(); // the prime
+        BigInteger q = pkey.getParams().getQ(); // ths sub-prime
+        BigInteger g = pkey.getParams().getG(); // the base
+        
+        BigInteger y = g.modPow(x, p); // public key
+        DSAPublicKeySpec pubSpec = new DSAPublicKeySpec(y,p,q,g);
+        return pubKey(pubSpec);
+    }
+
+    /**
+     * 秘密鍵仕様から公開鍵.
+     * @param spec 秘密鍵仕様
+     * @return 
+     */
+    public DSAPublicKey pubKey(DSAPrivateKeySpec spec) {
+        return pubKey(prvKey(spec));
+    }
+    
+    public DSAPublicKey pubKey(DSAPublicKeySpec spec) {
+        BigInteger y = spec.getY();
+        BigInteger p = spec.getP();
+        BigInteger q = spec.getQ();
+        BigInteger g = spec.getG();
+        return new DSAPublicKey(y, p, q, g);
     }
 
     @Override

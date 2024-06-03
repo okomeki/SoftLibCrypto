@@ -20,18 +20,19 @@ import java.security.interfaces.DSAParams;
 
 /**
  * DSA ドメインパラメータ
+ * FIPS PUB 186-4 Section 4
  */
 public class DSADomain implements DSAParams {
 
-    BigInteger p;
-    BigInteger q;
-    BigInteger g;
+    private final BigInteger p;
+    private final BigInteger q;
+    private final BigInteger g;
 
     /**
-     *
-     * @param p
-     * @param q
-     * @param g
+     * 
+     * @param p 付録 A.1
+     * @param q 付録 A.1
+     * @param g ジェネレータ 付録 A.2
      */
     public DSADomain(BigInteger p, BigInteger q, BigInteger g) {
         this.p = p;
@@ -49,6 +50,10 @@ public class DSADomain implements DSAParams {
         return q;
     }
 
+    /**
+     * ジェネレータ
+     * @return 
+     */
     @Override
     public BigInteger getG() {
         return g;

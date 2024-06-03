@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 okome.
+ * Copyright 2024 okome.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,25 +19,39 @@ import java.math.BigInteger;
 import java.security.interfaces.DSAParams;
 
 /**
- *
+ * DSA公開鍵.
+ * 秘密鍵と共通の値 p q g
+ * 固有の値 y
  */
-public class DSAPrivateKey implements java.security.interfaces.DSAPrivateKey {
-    private final BigInteger x;
+public class DSAPublicKey implements java.security.interfaces.DSAPublicKey {
+    private final BigInteger y;
     private final DSAParams params;
 
-    public DSAPrivateKey(BigInteger x, BigInteger p, BigInteger q, BigInteger g) {
-        this.x = x;
-        params = new DSADomain(p,q,g);
-    }
-    
-    public DSAPrivateKey(BigInteger x, DSAParams params) {
-        this.x = x;
+    /**
+     * 
+     * @param y DSA公開鍵成分
+     * @param params DSA秘密鍵公開鍵共通成分 p q g
+     */
+    public DSAPublicKey(BigInteger y, DSAParams params ) {
+        this.y = y;
         this.params = params;
     }
-    
+
+    /**
+     * DSA公開鍵
+     * @param y DSA公開鍵成分
+     * @param p 
+     * @param q
+     * @param g 
+     */
+    public DSAPublicKey(BigInteger y, BigInteger p, BigInteger q, BigInteger g ) {
+        this.y = y;
+        this.params = new DSADomain(p,q,g);
+    }
+
     @Override
-    public BigInteger getX() {
-        return x;
+    public BigInteger getY() {
+        return y;
     }
 
     /**
@@ -51,12 +65,12 @@ public class DSAPrivateKey implements java.security.interfaces.DSAPrivateKey {
 
     @Override
     public String getAlgorithm() {
-//        return "DSA";
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     /**
-     * X.509 または PKCS#8 など
+     * X.509 か PKCS#8 か
+     * getEncoded() で返す形式
      * @return 
      */
     @Override
