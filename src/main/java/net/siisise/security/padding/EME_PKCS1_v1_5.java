@@ -33,6 +33,7 @@ import java.security.SecureRandom;
  * 
  * @deprecated 脆弱
  */
+@Deprecated
 public class EME_PKCS1_v1_5 implements EME {
     
     SecureRandom rnd;

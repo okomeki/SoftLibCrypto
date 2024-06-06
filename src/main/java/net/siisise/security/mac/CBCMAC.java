@@ -25,6 +25,7 @@ import net.siisise.security.block.Block;
  *
  * @deprecated まだ未実装、古いので使わない方がよさそ
  */
+@Deprecated
 public class CBCMAC implements MAC {
 
     Block block;
@@ -52,12 +53,13 @@ public class CBCMAC implements MAC {
 
     @Override
     public byte[] sign() {
+        cbc.vector();
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public int getMacLength() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return block.getBlockLength() / 8;
     }
 
 }

@@ -123,6 +123,7 @@ public class DSAKeyGen {
      * @return true VALID / false INVALID
      * @deprecated 古いものの検証用
      */
+    @Deprecated
     private boolean a111(BigInteger p, BigInteger q, BigInteger domainParameterSeed, int counter) {
         if ( p.bitLength() != 1024 || q.bitLength() != 160 ) return false; // 1
         if ( counter > 4095 ) return false; // 2

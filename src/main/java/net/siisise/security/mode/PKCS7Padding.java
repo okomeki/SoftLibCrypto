@@ -110,6 +110,7 @@ public class PKCS7Padding extends BlockMode {
      * @deprecated 使えない
      */
     @Override
+    @Deprecated
     public byte[] encrypt(byte[] src, int offset) {
         return block.encrypt(src, offset);
     }
@@ -119,6 +120,7 @@ public class PKCS7Padding extends BlockMode {
      * @deprecated 使えない
      */
     @Override
+    @Deprecated
     public int[] encrypt(int[] src, int offset) {
         return block.encrypt(src, offset);
     }
@@ -171,6 +173,7 @@ public class PKCS7Padding extends BlockMode {
      * @deprecated 使えない
      */
     @Override
+    @Deprecated
     public byte[] decrypt(byte[] src, int offset) {
         return block.decrypt(src, offset);
     }
@@ -180,6 +183,7 @@ public class PKCS7Padding extends BlockMode {
      * @deprecated 使えない
      */
     @Override
+    @Deprecated
     public int[] decrypt(int[] src, int offset) {
         return block.decrypt(src, offset);
     }
@@ -188,6 +192,8 @@ public class PKCS7Padding extends BlockMode {
      * パディングしない.
      * @deprecated 使えない
      */
+    @Override
+    @Deprecated
     public long[] decrypt(long[] src, int offset) {
         return block.decrypt(src, offset);
     }

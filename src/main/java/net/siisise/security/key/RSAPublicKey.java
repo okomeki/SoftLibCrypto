@@ -158,6 +158,7 @@ public class RSAPublicKey implements java.security.interfaces.RSAPublicKey {
      * @deprecated まだ
      * @return 
      */
+    @Deprecated
     public byte[] getRawEncoded() {
         SEQUENCE s = new SEQUENCE();
         s.add(new INTEGER(0));

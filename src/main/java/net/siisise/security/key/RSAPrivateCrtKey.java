@@ -240,6 +240,7 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
      * @deprecated まだ / 使わないから要らない?
      * @return EncryptedPrivateKeyInfo
      */
+    @Deprecated
     public SEQUENCE getEncryptedPrivateKeyInfoASN1() {
         SEQUENCE s = new SEQUENCE(); // EncryptedPrivateKeyInfo
         AlgorithmIdentifier aid = new AlgorithmIdentifier(""); // PKCS #5 PBES1の
@@ -260,6 +261,7 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
      * @deprecated まだ
      * @return 
      */
+    @Deprecated
     public SEQUENCE getRFC5958EncryptedPrivateKeyInfoASN1(byte[] pass) {
         SEQUENCE s = new SEQUENCE();
          SEQUENCE ids = new SEQUENCE();
@@ -338,6 +340,7 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
      * @return SSHの方式っぽい鍵
      * @deprecated いろいろあるのでまだ未定.
      */
+    @Deprecated
     public byte[] getSSHEncoded() {
         throw new UnsupportedOperationException();
     }

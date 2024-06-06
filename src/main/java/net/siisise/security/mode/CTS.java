@@ -19,6 +19,7 @@ package net.siisise.security.mode;
  * RFC 2040
  * @deprecated まだ
  */
+@Deprecated
 public class CTS {
     
 }

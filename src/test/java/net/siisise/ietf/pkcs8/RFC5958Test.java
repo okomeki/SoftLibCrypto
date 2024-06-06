@@ -15,7 +15,6 @@
  */
 package net.siisise.ietf.pkcs8;
 
-import net.siisise.io.PEM;
 import net.siisise.iso.asn1.tag.SEQUENCE;
 import net.siisise.security.key.RSAPrivateCrtKey;
 import org.junit.jupiter.api.Test;
@@ -43,22 +42,4 @@ public class RFC5958Test {
         // TODO review the generated test code and remove the default call to fail.
 //        fail("The test case is a prototype.");
     }
-
-    /**
-     * Test of decrypt method, of class RFC5958.
-     */
-    @Test
-    public void testDecrypt() throws Exception {
-        System.out.println("RFC5958 decode test");
-        PEM pem = new PEM("ENCRYPTED PRIVATE KEY");
-        byte[] src = (byte[]) pem.load("c:/home/pki/letsencrypt/siisise.net/siisise.p8e").get(null);
-        byte[] pass = "enya1652".getBytes();
-        RSAPrivateCrtKey expResult = null;
-//        RSAPrivateCrtKey result = RFC5958.decrypt(src, pass);
-//        b64.encode(pass)
-//        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-//        fail("The test case is a prototype.");
-    }
-    
 }

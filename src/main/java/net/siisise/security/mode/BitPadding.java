@@ -20,6 +20,7 @@ import net.siisise.security.block.Block;
 /**
  * @deprecated まだ
  */
+@Deprecated
 public class BitPadding extends BlockMode {
 
     public BitPadding(Block b) {

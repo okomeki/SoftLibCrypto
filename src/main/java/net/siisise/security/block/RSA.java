@@ -43,6 +43,7 @@ import net.siisise.security.key.RSAPublicKey;
  * 
  * @deprecated まだ不安定かも
  */
+@Deprecated
 public class RSA extends OneBlock {
 
     RSAMiniPrivateKey key;

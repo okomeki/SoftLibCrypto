@@ -23,7 +23,9 @@ import net.siisise.security.block.AES;
 import net.siisise.security.block.Block;
 
 /**
- * GCM 内部用
+ * GCM 内部用GHASH.
+ * 一般的に利用できる暗号化ハッシュ関数ではない.
+ * 
  */
 public class GHASH implements MAC {
     
@@ -85,18 +87,22 @@ public class GHASH implements MAC {
     
         alen = a.length;
         blen = 0;
+        H = block.encrypt(x);
+        x = new byte[16]; // i = 0
         ghash1(a);
     }
 
+    /**
+     * A
+     * @param a 
+     */
     void ghash1(byte[] a) {
         int m = (a.length + 15) / 16; // 収納ブロック数 0のとき0 1-16のとき1
-        x = new byte[16]; // i = 0
-        H = block.encrypt(x);
         for ( int i = 0; i < m - 1; i++ ) { // i = 1 to m -1
             xorMul(a,i*16);
         }
         // i = m ToDo: m = 0 のとき?
-        PacketA p = new PacketA();
+        Packet p = new PacketA();
         p.write(a, m*16, a.length % 16);
         p.write(new byte[16 - (a.length % 16)]);
         xorMul(p.toByteArray());
@@ -115,8 +121,8 @@ public class GHASH implements MAC {
             xorMul(c,i*16);
         }
         Packet p = new PacketA();
-        p.write(c, n * 16, c.length % 16 );
-        p.write(new byte[16 - c.length % 16]);
+        p.write(c, n*16, c.length % 16 );
+        p.write(new byte[16 - (c.length % 16)]);
         xorMul(p.toByteArray());
 
         p.write(Bin.toByte(alen * 8l));

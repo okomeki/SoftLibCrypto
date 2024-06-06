@@ -58,8 +58,12 @@ PBKDF1,2,PBES1,2
   - cSHAKE256
   - TupleHash128
   - TupleHash256
+  - TupleHashXOF128
+  - TupleHashXOF256
   - ParallelHash128
   - ParallelHash256
+  - ParallelHashXOF128
+  - ParallelHashXOF256
 
 ## MAC
 鍵つきハッシュみたいなの

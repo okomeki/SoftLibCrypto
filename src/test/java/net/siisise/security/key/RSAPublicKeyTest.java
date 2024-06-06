@@ -15,7 +15,6 @@
  */
 package net.siisise.security.key;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.KeyPair;
@@ -28,7 +27,6 @@ import java.util.logging.Logger;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import net.siisise.bind.Rebind;
-import net.siisise.iso.asn1.ASN1Decoder;
 import net.siisise.iso.asn1.ASN1Object;
 import net.siisise.iso.asn1.ASN1Util;
 import net.siisise.iso.asn1.tag.ASN1Convert;

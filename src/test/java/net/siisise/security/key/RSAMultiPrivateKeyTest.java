@@ -24,9 +24,7 @@ import net.siisise.iso.asn1.ASN1Util;
 import net.siisise.iso.asn1.tag.ASN1Convert;
 import net.siisise.iso.asn1.tag.SEQUENCE;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -39,14 +37,6 @@ public class RSAMultiPrivateKeyTest {
     int keylen = 1024 * 3;
     
     public RSAMultiPrivateKeyTest() {
-    }
-    
-    @BeforeAll
-    public static void setUpClass() {
-    }
-    
-    @AfterAll
-    public static void tearDownClass() {
     }
     
     @BeforeEach
@@ -172,7 +162,6 @@ public class RSAMultiPrivateKeyTest {
 //        FileIO.dump(k);
 //        ASN1Object asn = ASN1Util.toASN1(k);
 //        System.out.println(asn);
-        byte[] expResult = null;
         byte[] result = instance.getEncoded();
         System.out.println(ASN1Util.toASN1(result));
 //        assertArrayEquals(expResult, result);
@@ -196,7 +185,6 @@ public class RSAMultiPrivateKeyTest {
     public void testCreatePrivateKey() throws Exception {
         System.out.println("createPrivateKey");
         int len = 2049;
-        RSAPrivateCrtKey expResult = null;
         RSAPrivateCrtKey key = RSAKeyGen.generatePrivateKey(len);
 //        assertEquals(expResult, key);
         // TODO review the generated test code and remove the default call to fail.

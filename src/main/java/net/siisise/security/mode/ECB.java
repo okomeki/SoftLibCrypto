@@ -23,6 +23,7 @@ import net.siisise.security.block.Block;
  * 暗号にかぶせても何の変化もない.
  * @deprecated 実用面での使用は非推奨.
  */
+@Deprecated
 public class ECB extends BlockMode {
 
     public ECB(Block block) {

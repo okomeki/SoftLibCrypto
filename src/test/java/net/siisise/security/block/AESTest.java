@@ -32,6 +32,7 @@ import net.siisise.security.mode.CBC;
 import net.siisise.security.mode.CTR;
 import net.siisise.security.mode.ECB;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -48,12 +49,10 @@ public class AESTest {
     @Test
     public void testGetBlockLength() {
         System.out.println("getBlockLength");
-        AESLong instance = new AESLong();
-        int expResult = 0;
+        AES instance = new AES();
+        int expResult = 128;
         int result = instance.getBlockLength();
-//        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-//        fail("The test case is a prototype.");
+        assertEquals(expResult, result);
     }
 
     @Test

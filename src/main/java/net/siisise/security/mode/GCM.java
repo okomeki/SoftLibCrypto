@@ -16,6 +16,7 @@
 package net.siisise.security.mode;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collector;
 import java.util.stream.Collector.Characteristics;
@@ -33,7 +34,7 @@ import net.siisise.security.mac.GHASH;
  * https://scrapbox.io/standard/GCM
  * Galois/Counter Mode(GCMx) and GMAC NIST SP 800- 38D, November 2007
  * https://doi.org/10.6028/NIST.SP.800-38D
- * Counter は IV(96bit) + 1(32bit) または GHASH らしい
+ * Counter は IV(96bit) + 1(32bit) らしい
  * P (plaintext)の長さ 2^39 -256 32bit counter の限界か
  * A (AAD: additional authenticated data)の長さ 2^64 -1
  * IVの長さ 2^64 -1
@@ -45,10 +46,14 @@ import net.siisise.security.mac.GHASH;
  * RFC 5289 TLS Elliptic Curve Cipher Suites with SHA-256/384 and AES Galois Counter Mode (GCM)
  * @deprecated まだ使えない
  */
+@Deprecated
 public class GCM extends CTR {
     
-    int[] iiv;
+//    int[] iiv;
     long[] liv;
+    // GHASH
+    long[] H;
+    long[] y;
 
     // GCTR
     CTR ctr;
@@ -57,15 +62,15 @@ public class GCM extends CTR {
     
     // GHASH
     GHASH gh;
-    GF gf;
+    GF gf = new GF(128,GF.FF128);
     
     byte[] tag;
     
     byte[] key;
     
-    
-    
-    
+    /**
+     * AES-GCM にしよう.
+     */
     public GCM() {
         super(new AES());
     }
@@ -92,35 +97,62 @@ public class GCM extends CTR {
     @Override
     public void init(byte[]... params) {
         // iv 生成用AES?
-        block.init(in(1,params)); // Y0内で呼ぶので不要 CTRのinitは使わない
+        block.init(params[0]); // Y0内で呼ぶので不要 CTRのinitは使わない
         key = params[0];
-        byte[] iv = Y0(params[1]); // block が状態遷移しないAES前提
-        iiv = Bin.btoi(iv);
+        byte[] iv = new byte[block.getBlockLength() / 8];
+        byte[] siv = Y0(params[1]); // block が状態遷移しないAES前提
+        
+        byte[] aad = null;
+        if ( params.length >= 3) {
+            aad = params[2];
+        }
+        // GHASH
+        H = block.encrypt(new long[block.getBlockLength() / 64]);   
+        y = new long[params[0].length / 8];
+        
+//        iiv = Bin.btoi(iv);
 //        iiv[3] = 1;
 //        iv = itob(iiv);
         liv = Bin.btol(iv);
         count = 1;
         // GHASH
         tag = null;
-        gh = new GHASH();
-        gf = new GF(128,GF.FF128);
         if ( params.length > 2) {
             gh.init(params[0], params[2]);
         } else {
             gh.init(params[0], new byte[0]);
         }
     }
+    
+    // 6.3 X・Y
+    long[] mul(long[] a, long[] b) {
+        return gf.mul(a,b);
+    }
+    
+    /**
+     * 6.4 GHASH_H(X).
+     * H は init で初期化
+     * y を保持する
+     * @param X bit string 
+     */
+    void GHASHUpdate(byte[] X) {
+//        int l = 2 * 8;
+        int m = X.length / 16;
+        for (int i = 0; i < m; i++ ) {
+            Bin.xorl(y, X, 16*i, 2);
+            y = gf.mul(y, H);
+        }
+    }
 
     /**
      * 
-     * @param iv 候補
-     * @return iv
+     * @param iv 候補 96bit でも 128bit でもよし
      */
     private byte[] Y0(byte[] iv) {
+        byte[] m = new byte[block.getBlockLength() / 8];
         if (iv.length == 12) {
-            byte[] m = new byte[16];
-            System.arraycopy(iv, 0, m, 0, 12);
-            m[15] = 1;
+            System.arraycopy(iv, 0, m, 0, iv.length);
+            m[15]++;
             return m;
         }
         GHASH ivgh = new GHASH(block);
@@ -136,7 +168,7 @@ public class GCM extends CTR {
         } while ( ct[x] == 0 && x >= 0);
         count++;
     }
-
+/*
     private int[] c32(int c) {
         int[] cb = new int[4];
         System.arraycopy(iiv, 0, cb, 0, 3);
@@ -144,7 +176,7 @@ public class GCM extends CTR {
         cb[3] = c;
         return cb;
     }
-
+*/
     private long[] c64(long c) {
         long[] cb = new long[2];
         System.arraycopy(liv, 0, cb, 0, 2);
@@ -173,7 +205,7 @@ public class GCM extends CTR {
         count += nlen;
         return nl.parallelStream().map(x -> Bin.ltob(block.encrypt(c64(x)))).collect(toPac);
     }
-
+/*
     private int[][] xor32(int len) {
         int nlen = count + (len + 15 ) / 16;
         List<Integer> nl = new ArrayList<>(nlen);
@@ -183,7 +215,7 @@ public class GCM extends CTR {
         count += nlen;
         return (int[][]) nl.parallelStream().map(x -> block.encrypt(c32(x))).toArray();
     }
-
+*/
     static byte[] len(byte[] x) {
         return Bin.toByte(x.length * 8l);
     }

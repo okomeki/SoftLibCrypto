@@ -21,6 +21,7 @@ import net.siisise.security.block.Block;
  * Kaoru Kurosawa, Tetsu Iwata、TMAC: Two-Key CBC MAC、2004年、IEICE Trans. Fundamentals, Vol. E87-A (1), pp. 46-52. 
  * @deprecated まだ未実装、古いので使わない方がよさそ
  */
+@Deprecated
 public class TMAC implements MAC {
     private final Block block;
     MacCBC cbc;
