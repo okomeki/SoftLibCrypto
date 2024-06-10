@@ -151,6 +151,7 @@ public class PKCS7Padding extends BlockMode {
      * @param length 
      */
     @Override
+    @Deprecated
     public void decrypt(byte[] src, int offset, byte[] dst, int doffset, int length) {
 //        block.decrypt(src, offset, dst, doffset, length);
         throw new UnsupportedOperationException("正確な長さが出せない.");
@@ -158,6 +159,10 @@ public class PKCS7Padding extends BlockMode {
 
     /**
      * 4バイト境界前提でパディング解除する
+     * @param src
+     * @param offset
+     * @param length
+     * @return 
      */
     @Override
     public int[] decrypt(int[] src, int offset, int length) {

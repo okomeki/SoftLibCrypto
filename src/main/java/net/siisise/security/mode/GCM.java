@@ -15,15 +15,7 @@
  */
 package net.siisise.security.mode;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collector;
-import java.util.stream.Collector.Characteristics;
-import net.siisise.io.Packet;
-import net.siisise.io.PacketA;
 import net.siisise.lang.Bin;
-import net.siisise.math.GF;
 import net.siisise.security.block.AES;
 import net.siisise.security.block.Block;
 import net.siisise.security.mac.GHASH;
@@ -49,20 +41,27 @@ import net.siisise.security.mac.GHASH;
 @Deprecated
 public class GCM extends CTR {
     
-//    int[] iiv;
-    long[] liv;
-    // GHASH
-    long[] H;
-    long[] y;
-
-    // GCTR
-    CTR ctr;
-    int count;
-    long[] ct;
+    static class GCTR extends CTR {
+        GCTR(Block b) {
+            super(b);
+        }
+        
+        /**
+         * vector LSB 32bitのみカウントする
+         */
+        @Override
+        void next() {
+            long u = vectorl[1] & 0xffffffff00000000l;
+            long d = ++vectorl[1] & 0x00000000ffffffffl;
+            vectorl[1] = u | d;
+        }
+    }
+    
+    GCTR ctr;
+    byte[] iv;
     
     // GHASH
     GHASH gh;
-    GF gf = new GF(128,GF.FF128);
     
     byte[] tag;
     
@@ -97,130 +96,58 @@ public class GCM extends CTR {
     @Override
     public void init(byte[]... params) {
         // iv 生成用AES?
-        block.init(params[0]); // Y0内で呼ぶので不要 CTRのinitは使わない
         key = params[0];
-        byte[] iv = new byte[block.getBlockLength() / 8];
-        byte[] siv = Y0(params[1]); // block が状態遷移しないAES前提
+        block.init(key); // Y0内で呼ぶので不要 CTRのinitは使わない
+
+        // GHASH
+        byte[] H = Bin.ltob(block.encrypt(new long[block.getBlockLength() / 64]));
+
+        iv = J0(H, params[1]); // block が状態遷移しないAES前提
         
-        byte[] aad = null;
+        ctr = new GCTR(block);
+
+        ctr.init(key,iv);
+        ctr.next(); // データ用初期値 00000002
+
+        byte[] aad;
         if ( params.length >= 3) {
             aad = params[2];
+        } else {
+            aad = new byte[0];
         }
-        // GHASH
-        H = block.encrypt(new long[block.getBlockLength() / 64]);   
-        y = new long[params[0].length / 8];
-        
-//        iiv = Bin.btoi(iv);
-//        iiv[3] = 1;
-//        iv = itob(iiv);
-        liv = Bin.btol(iv);
-        count = 1;
+
         // GHASH
         tag = null;
-        if ( params.length > 2) {
-            gh.init(params[0], params[2]);
-        } else {
-            gh.init(params[0], new byte[0]);
-        }
-    }
-    
-    // 6.3 X・Y
-    long[] mul(long[] a, long[] b) {
-        return gf.mul(a,b);
+        gh = new GHASH();
+        gh.init(H, aad);
     }
     
     /**
-     * 6.4 GHASH_H(X).
-     * H は init で初期化
-     * y を保持する
-     * @param X bit string 
+     * Algorithm 4: GCM-AE_K(IV, P, A) Step 2.
+     * @param iv 候補 96bit でも それ以外でもよし
      */
-    void GHASHUpdate(byte[] X) {
-//        int l = 2 * 8;
-        int m = X.length / 16;
-        for (int i = 0; i < m; i++ ) {
-            Bin.xorl(y, X, 16*i, 2);
-            y = gf.mul(y, H);
-        }
-    }
-
-    /**
-     * 
-     * @param iv 候補 96bit でも 128bit でもよし
-     */
-    private byte[] Y0(byte[] iv) {
+    private byte[] J0(byte[] H, byte[] iv) {
         byte[] m = new byte[block.getBlockLength() / 8];
-        if (iv.length == 12) {
+        if (iv.length == 12) { // 96 bit
             System.arraycopy(iv, 0, m, 0, iv.length);
             m[15]++;
             return m;
         }
-        GHASH ivgh = new GHASH(block);
-        ivgh.init(key);// key, aなし
-        return ivgh.doFinal(iv);
+        // 以下未確認
+//        int s = (iv.length / 16 + 15)*128 - iv.length*8;
+//        int s = (15 - (iv.length % 16));
+        GHASH ivgh = new GHASH();
+        ivgh.init(H);
+        ivgh.update(iv);
+        return ivgh.sign();
     }
     
-    void next() {
-        int x = ct.length;
-        do {
-            x--;
-            ct[x]++;
-        } while ( ct[x] == 0 && x >= 0);
-        count++;
+    @Override
+    public byte[] encrypt(byte[] src, int offset) {
+        byte[] c = ctr.encrypt(src, offset);
+        gh.update(c);
+        return c;
     }
-/*
-    private int[] c32(int c) {
-        int[] cb = new int[4];
-        System.arraycopy(iiv, 0, cb, 0, 3);
-        
-        cb[3] = c;
-        return cb;
-    }
-*/
-    private long[] c64(long c) {
-        long[] cb = new long[2];
-        System.arraycopy(liv, 0, cb, 0, 2);
-        
-        cb[1] &= 0xffffffff00000000l;
-        cb[1] |= count & 0xffffffffl;
-        return cb;
-    }
-
-    Collector<byte[], ?, Packet> toPac = Collector.of(
-            PacketA::new,
-            Packet::write,
-            (p1, p2) -> {
-                p1.write(p2);
-                return p1;
-            },
-            Characteristics.IDENTITY_FINISH);
-    
-
-    private Packet xor8(int len) {
-        int nlen = count + (len + 15 ) / 16;
-        List<Integer> nl = new ArrayList<>(nlen);
-        for (int i = count; i < nlen; i++ ) {
-            nl.add(i);
-        }
-        count += nlen;
-        return nl.parallelStream().map(x -> Bin.ltob(block.encrypt(c64(x)))).collect(toPac);
-    }
-/*
-    private int[][] xor32(int len) {
-        int nlen = count + (len + 15 ) / 16;
-        List<Integer> nl = new ArrayList<>(nlen);
-        for (int i = count; i < nlen; i++ ) {
-            nl.add(i);
-        }
-        count += nlen;
-        return (int[][]) nl.parallelStream().map(x -> block.encrypt(c32(x))).toArray();
-    }
-*/
-    static byte[] len(byte[] x) {
-        return Bin.toByte(x.length * 8l);
-    }
-
-    private Packet enc = new PacketA();
 
     /**
      * ブロック用
@@ -230,35 +157,30 @@ public class GCM extends CTR {
      */
     @Override
     public int[] encrypt(int[] src, int offset) {
-        next();
-        int[] ret = Bin.ltoi(block.encrypt(ct));
-        
-        for ( int i = 0; i < ret.length; i++ ) {
-            ret[i] ^= src[offset + i];
-        }
-        gh.update(Bin.itob(ret));
-        
-        return ret;
+        int[] c = ctr.encrypt(src, offset);
+        gh.update(Bin.itob(c));
+        return c;
     }
 
     @Override
     public long[] encrypt(long[] src, int offset) {
-        next();
-        long[] ret = block.encrypt(ct);
-        
-        for ( int i = 0; i < ret.length; i++ ) {
-            ret[i] ^= src[offset + i];
-        }
-        gh.update(Bin.ltob(ret));
-        
-        return ret;
+        long[] c = ctr.encrypt(src, offset);
+        gh.update(Bin.ltob(c));
+        return c;
     }
 
     @Override
     public int[] decrypt(int[] src, int offset) {
-        return encrypt(src, offset);
+        gh.update(Bin.itob(src, offset, 4));
+        return ctr.encrypt(src, offset);
     }
     
+    @Override
+    public long[] decrypt(long[] src, int offset) {
+        gh.update(Bin.ltob(src, offset, 2));
+        return ctr.encrypt(src, offset);
+    }
+
     /**
      * ストリーム用
      * @param src 元データ
@@ -268,30 +190,24 @@ public class GCM extends CTR {
      */
     @Override
     public byte[] encrypt(byte[] src, int offset, int length) {
-        int hl = length - enc.size();
-        if ( hl > 0 ) {
-            enc.write(xor8(hl));
-        }
-        byte[] encd = new byte[length];
-        enc.read(encd);
-        for ( int i = 0; i < length; i++ ) {
-            encd[i] ^= src[offset + i];
-        }
-        gh.update(encd);
-        return encd;
+        byte[] c = ctr.encrypt(src,offset,length);
+        gh.update(c, 0, length);
+        return c;
     }
 
     @Override
     public byte[] decrypt(byte[] src, int offset, int length) {
-        return encrypt(src, offset, length);
+        gh.update(src, offset, length);
+        return ctr.encrypt(src, offset, length);
     }
 
     public byte[] tag() {
         if ( tag == null ) {
-            tag = gh.sign();
+            byte[] S = gh.sign();
+            // CTR
+            tag = block.encrypt(iv);
+            Bin.xorl(tag, S);
         }
-        byte[] r = new byte[tag.length];
-        System.arraycopy(tag, 0, r, 0, tag.length);
-        return r;
+        return tag;
     }
 }

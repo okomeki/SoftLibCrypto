@@ -18,9 +18,6 @@ package net.siisise.security.mac;
 import net.siisise.io.Packet;
 import net.siisise.io.PacketA;
 import net.siisise.lang.Bin;
-import net.siisise.math.GF;
-import net.siisise.security.block.AES;
-import net.siisise.security.block.Block;
 
 /**
  * GCM 内部用GHASH.
@@ -29,128 +26,130 @@ import net.siisise.security.block.Block;
  */
 public class GHASH implements MAC {
     
-    Block block;
-    GF gf = new GF(128,GF.FF128);
-    byte[] H;
-    byte[] x;
-    Packet pool;
-    int alen;
-    long blen;
+    // hash subkey
+    private long[] H;
+    long[] y;
 
-    public GHASH(Block b) {
-        block = b;
-    }
-    
+    Packet pool;
+    // AAD length
+    Packet lens;
+    long alen;
+
     public GHASH() {
-        block = new AES();
     }
     
     /**
-     * AES(等)鍵の初期化
-     * @param key AES鍵
+     * @param H hash subkey
      */
     @Override
-    public void init(byte[] key) {
-        init(key, new byte[0]);
-    }
-
-    /**
-     * x にブロックを x M_n
-     * @param x 元
-     * @param a ブロック列っぽく
-     * @param n ブロック番号 1-
-     */
-    private void xorMul(byte[] a, int off) {
-        for ( int i = 0; i < x.length; i++ ) {
-            x[i] ^= a[off + i];
-        }
-        x = gf.mul(x,H);
-    }
-
-    private void xorMul(byte[] a) {
-        for ( int i = 0; i < x.length; i++ ) {
-            x[i] ^= a[i];
-        }
-        x = gf.mul(x,H);
+    public void init(byte[] H) {
+        init(H, new byte[0]);
     }
 
     /**
      * 初期値っぽいもの
-     * @param key AES鍵
+     * @param H hash subkey
      * @param a 暗号化しない部分
      */
-    public void init(byte[] key, byte[] a) {
-        if ( key != null ) {
-            block.init(key);
-        }
+    public void init(byte[] H, byte[] a) {
         pool = new PacketA();
+        lens = new PacketA();
+        this.H = Bin.btol(H);
+        y = new long[this.H.length];
+        alen = 0;
+        update(a, 0, a.length);
+        blockClose();
+    }
+
+    /**
+     * y にブロックを y M_n
+     * @param x ブロック列っぽく
+     * @param o 位置
+     */
+    private void xorMul(byte[] x, int o) {
+        Bin.xorl(y, x, o, y.length);
+        y = GF_mul(y,H);
+    }
+
+    private void xorMul(byte[] x) {
+        Bin.xorl(y, x, 0, y.length);
+        y = GF_mul(y,H);
+    }
+
+    /**
+     * 128bit固定GF ビット順が逆 a・b
+     * @param a
+     * @param b
+     * @return a・b
+     */
+    private long[] GF_mul(long[] a, long[] b) {
+        long[] r = new long[2];
+        if ( !isZero(b) ) {
+            while ( !isZero(a) ) {
+                if ( a[0] < 0 ) {
+                    Bin.xorl(r, b);
+                }
+                a = Bin.shl(a);
+                b = GF_x(b);
+            }
+        }
+        return r;
+    }
     
-        alen = a.length;
-        blen = 0;
-        H = block.encrypt(x);
-        x = new byte[16]; // i = 0
-        ghash1(a);
-    }
-
+    static final long CONST_RB = 0xe100000000000000l;
+    
     /**
-     * A
-     * @param a 
+     * ビット順が逆 a・x
+     * @param a
+     * @return a・x
      */
-    void ghash1(byte[] a) {
-        int m = (a.length + 15) / 16; // 収納ブロック数 0のとき0 1-16のとき1
-        for ( int i = 0; i < m - 1; i++ ) { // i = 1 to m -1
-            xorMul(a,i*16);
-        }
-        // i = m ToDo: m = 0 のとき?
-        Packet p = new PacketA();
-        p.write(a, m*16, a.length % 16);
-        p.write(new byte[16 - (a.length % 16)]);
-        xorMul(p.toByteArray());
+    private long[] GF_x(long[] a) {
+        long[] v = Bin.shr(a);
+        v[0] ^= CONST_RB * (a[1] & 1);
+        return v;
     }
-
-    /**
-     * 一括の場合
-     * @param c
-     * @return 
-     */
-    byte[] ghash2(byte[] c) {
-        // H Zero を暗号にかけたもの
-        int n = (c.length + 15) / 16;
-        // i = m + 1 to m + n - 1
-        for (int i = 0; i < n - 1; i++ ) {
-            xorMul(c,i*16);
+    
+    boolean isZero(long[] a) {
+        for (int i = 0; i < a.length; i++) {
+            if ( a[i] != 0 ) return false;
         }
-        Packet p = new PacketA();
-        p.write(c, n*16, c.length % 16 );
-        p.write(new byte[16 - (c.length % 16)]);
-        xorMul(p.toByteArray());
-
-        p.write(Bin.toByte(alen * 8l));
-        p.write(Bin.toByte(c.length * 8l));
-        xorMul(p.toByteArray());
-        return x;
+        return true;
     }
 
     @Override
     public void update(byte[] src, int offset, int length) {
-//        int l = Math.min(16 - pool.size(), length);
-        blen += length;
-        pool.write(src,offset,length);
-//        offset += l;
-//        length -= l;
-        byte[] d = new byte[16];
-        if (pool.length() > 16) {
-            pool.read(d);
-            xorMul(d);
+        alen += length;
+        int ps = pool.size();
+        if ( ps + length < 16 ) {
+            pool.write(src, offset, length);
+            return;
+        } else if ( ps > 0 ) {
+            int l = 16 - ps;
+            pool.write(src, offset, l);
+            offset += l;
+            length -= l;
+            xorMul(pool.toByteArray());
         }
-/*
-        while ( length > 16 ) {
-            xorMul(src,offset);
+        while ( length >= 16 ) {
+            xorMul(src, offset);
             offset += 16;
             length -= 16;
         }
-        pool.write(src,offset,length);
-*/
+        pool.write(src, offset, length);
+    }
+    
+    private void blockClose() {
+        if ( pool.size() > 0 ) { // padding
+            pad();
+        }
+
+        lens.write(Bin.toByte(alen*8));
+        alen = 0;
+    }
+    
+    private void pad() {
+        pool.write(new byte[16 - pool.size()]);
+        xorMul(pool.toByteArray());
     }
 
     /**
@@ -159,20 +158,14 @@ public class GHASH implements MAC {
      */
     @Override
     public byte[] sign() {
-        long n = (blen + 15) / 16;
-        pool.dwrite(new byte[16 - pool.size()]);
-        xorMul(pool.toByteArray());
-
-        Packet p = new PacketA();
-        p.dwrite(Bin.toByte(alen * 8l));
-        p.dwrite(Bin.toByte(blen * 8l));
-        xorMul(p.toByteArray());
-        return x;
+        blockClose();
+        xorMul(lens.toByteArray());
+        return Bin.ltob(y);
     }
 
     @Override
     public int getMacLength() {
-        return block.getBlockLength() / 8;
+        return H.length;
     }
     
 }

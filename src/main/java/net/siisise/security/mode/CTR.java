@@ -50,7 +50,8 @@ public class CTR extends LongStreamMode {
      * IV は毎回使い捨てること.
      * 充分な位置でカウントするのでも可.
      * 例 |固体固定値|初期乱数+カウント|ブロック番号|
-     * @param params (block パラメータ),CTR iv
+     * IV ブロック番号まで含めても含めなくてもよい.
+     * @param params (block パラメータ),CTR IV
      */
     @Override
     public void init(byte[]... params) {
