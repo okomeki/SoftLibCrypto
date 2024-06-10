@@ -84,30 +84,21 @@ public class GHASH implements MAC {
      */
     private long[] GF_mul(long[] a, long[] b) {
         long[] r = new long[2];
-        if ( !isZero(b) ) {
-            while ( !isZero(a) ) {
-                if ( a[0] < 0 ) {
+        for ( int j = 0; j < 2; j++ ) {
+            long t = a[j];
+            for ( int i = 63; i >= 0; i-- ) {
+                if ( ((t >>> i) & 1) != 0 ) {
                     Bin.xorl(r, b);
                 }
-                a = Bin.shl(a);
-                b = GF_x(b);
+                long x = (b[1] & 1) * CONST_RB;
+                b = Bin.shr(b);
+                b[0] ^= x;
             }
         }
         return r;
     }
     
     static final long CONST_RB = 0xe100000000000000l;
-    
-    /**
-     * ビット順が逆 a・x
-     * @param a
-     * @return a・x
-     */
-    private long[] GF_x(long[] a) {
-        long[] v = Bin.shr(a);
-        v[0] ^= CONST_RB * (a[1] & 1);
-        return v;
-    }
     
     boolean isZero(long[] a) {
         for (int i = 0; i < a.length; i++) {

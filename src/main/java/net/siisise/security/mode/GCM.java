@@ -36,10 +36,8 @@ import net.siisise.security.mac.GHASH;
  * RFC 5288 AES Galois Counter Mode (GCM) Cipher Suite for TLS
  * GCMでのAESの使用について
  * RFC 5289 TLS Elliptic Curve Cipher Suites with SHA-256/384 and AES Galois Counter Mode (GCM)
- * @deprecated まだ使えない
  */
-@Deprecated
-public class GCM extends CTR {
+public class GCM extends LongStreamMode {
     
     static class GCTR extends CTR {
         GCTR(Block b) {
@@ -57,15 +55,15 @@ public class GCM extends CTR {
         }
     }
     
-    GCTR ctr;
-    byte[] iv;
+    private GCTR ctr;
+    private byte[] iv;
     
     // GHASH
-    GHASH gh;
+    private GHASH gh;
     
-    byte[] tag;
+    private byte[] tag;
     
-    byte[] key;
+    private byte[] key;
     
     /**
      * AES-GCM にしよう.
