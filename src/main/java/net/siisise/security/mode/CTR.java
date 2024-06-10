@@ -15,6 +15,7 @@
  */
 package net.siisise.security.mode;
 
+import java.util.Arrays;
 import net.siisise.io.Packet;
 import net.siisise.io.PacketA;
 import net.siisise.lang.Bin;
@@ -110,35 +111,27 @@ public class CTR extends LongStreamMode {
     @Override
     public byte[] encrypt(byte[] src, int offset, int length) {
         int rl = xp.size();
+        byte[] ret = Arrays.copyOfRange(src, offset, offset + length);
         int roffset = 0;
-//        byte[] ret = Arrays.copyOfRange(src, offset, length);
-        byte[] ret = new byte[length];
         if ( rl > 0 ) {
-            byte[] tmp = new byte[rl];
-            roffset = xp.read(tmp);
-            for ( int i = 0; i < tmp.length; i++ ) {
-                ret[i] ^= tmp[i];
+            roffset = Math.min(rl, length);
+            byte[] mask = new byte[roffset];
+            xp.read(mask);
+            for ( int i = 0; i < roffset; i++ ) {
+                ret[i] ^= mask[i];
             }
-            offset += roffset;
             length -= roffset;
         }
         int vl = vectorl.length * 8;
         
         while ( length >= vl ) { // 並列化すると速いかも
-            long[] tmp = block.encrypt(vectorl, 0);
-//            byte[] tmp = Bin.ltob(block.encrypt(vectorl, 0));
-            long[] tmp2 = Bin.btol(src, offset, vectorl.length);
-            tmp2[0] ^= tmp[0];
-            tmp2[1] ^= tmp[1];
-            Bin.ltob(tmp2,ret,roffset);
-            offset += vl;
-            roffset += vl;
-//            for ( int j = 0; j < vl; j++ ) {
-//                ret[roffset++] ^= tmp[j/8] >> (((255-j) % 8) * 8);
-//                ret[roffset++] ^= tmp[j];
-//            }
+            long[] mask = block.encrypt(vectorl, 0);
+            for (int j = 0; j < mask.length; j++) {
+                for (int i = 7; i >= 0; i--) {
+                    ret[roffset++] ^= mask[j] >>> (i*8);
+                }
+            }
             length -= vl;
-//            xp.write(Bin.ltob(block.encrypt(vectorl,0)));
             next();
         }
         if ( length > 0 ) {
@@ -147,6 +140,7 @@ public class CTR extends LongStreamMode {
                 ret[roffset++] ^= tmp[i];
             }
             xp.write(tmp, length, tmp.length - length);
+            next();
         }
         return ret;
     }
