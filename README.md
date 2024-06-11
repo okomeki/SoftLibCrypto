@@ -28,10 +28,12 @@ PKCS #1 ぜんぶ RSA系
 AES,DES(DEA),TripleDES(TDEA),RC2 など
 
 ## 暗号モード
-CBC,ECB,CTRなど
+- CBC
+- ECB
+- CTRなど
 組み合わせ自由
 
-GCM 仮
+- GCM 1.0.3くらいから
 
 # padding
 PKCS7Padding
@@ -110,8 +112,11 @@ code | JDK (OpenSSL AES-NI) | SoftLib
 -----|----|------
 AES-CBC encode | 2608 | 1510 
 AES-CBC decode | 2716 | 1144
+AES-GCM encode |  738 |  329
 
-AMD Ryzen 2600X か 5800Xの値
+CBC AMD Ryzen 2600X か 5800Xの値
+
+GCM AMD Ryzen 5800X
 
 JDKのCBCが遅いのでAES-NIの半分くらいは出てる
 
