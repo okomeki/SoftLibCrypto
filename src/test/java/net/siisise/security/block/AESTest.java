@@ -25,12 +25,14 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import net.siisise.lang.Bin;
 import net.siisise.security.mode.CBC;
 import net.siisise.security.mode.CTR;
 import net.siisise.security.mode.ECB;
+import net.siisise.security.mode.GCM;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
@@ -212,7 +214,7 @@ public class AESTest {
     @Test
     public void testEncrypt() throws InvalidAlgorithmParameterException {
         System.out.println("encrypt speed test");
-        String alg = "AES/CTR";
+        String alg = "AES/GCM";
         //EncodeOutputStream encout = new EncodeOutputStream(instance,);
 //        byte[] expResult = null;
 //        byte[] key = { 0x2b, 0x7e, 0x15, 0x16, 0x28, (byte)0xae, (byte)0xd2, (byte)0xa6,
@@ -242,19 +244,18 @@ public class AESTest {
         byte[] expResult = {0x39,0x25,(byte)0x84,0x1d,0x02,(byte)0xdc,0x09,(byte)0xfb,
         (byte)0xdc,0x11,(byte)0x85,(byte)0x97,0x19,0x6a,0x0b,0x32};
 */        
-        int size = 500;
+        int size = 100;
         byte[] src;
         byte[] encd = null;// = instance.encrypt(src, 0, size*1024*1024);
         src = SecureRandom.getSeed(size * 1024 * 1024);
         for ( int loop = 0; loop < 4; loop++ ) {
             //src = input; //new byte[size*1024 * 1024];
-            //src = input;
             //int[] intSrc = new int[src.length/4];
             //IntBlock.btoi(src,0,intSrc,src.length/4);
         
     //        Block instance = new AES();
             long d = System.nanoTime();
-            Block instance = new CTR(new AES());
+            Block instance = new GCM(new AES());
             instance.init(key,iv);
             //intEncd = instance.encrypt(intSrc, 0, intSrc.length);
             encd = instance.encrypt(src, 0, src.length);
@@ -286,13 +287,14 @@ public class AESTest {
 //            byte[] plane2;
             long d = System.nanoTime();
             SecretKeySpec keysp = new SecretKeySpec(key, "AES");
-            IvParameterSpec cbciv = new IvParameterSpec(iv);
+            GCMParameterSpec gcmiv = new GCMParameterSpec(128, iv);
             Cipher aescbc = Cipher.getInstance(ALG);
             // ivを省略するとランダムになってしまうん?
-            aescbc.init(Cipher.ENCRYPT_MODE, keysp, cbciv );
+            aescbc.init(Cipher.ENCRYPT_MODE, keysp, gcmiv );
 //            aescbc.init(Cipher.ENCRYPT_MODE, keysp );
             
-            byte[] plane2 = aescbc.doFinal(src);
+            byte[] plane2 = aescbc.update(src);
+            byte[] tag = aescbc.doFinal();
             long e = System.nanoTime();
             
 //            for ( int i =0; i < 16; i++) {
@@ -306,7 +308,7 @@ public class AESTest {
             System.out.println( " speed : " + (size * 8*1024 / (t/1000/1000)) + "Mbps?" );
 
             d = System.nanoTime();
-            aescbc.init(Cipher.DECRYPT_MODE, keysp, cbciv );
+            aescbc.init(Cipher.DECRYPT_MODE, keysp, gcmiv );
             encd = aescbc.doFinal(plane2);
             e = System.nanoTime();
             
