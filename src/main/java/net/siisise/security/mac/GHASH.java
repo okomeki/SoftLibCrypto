@@ -119,14 +119,16 @@ public class GHASH implements MAC {
         long t = y[0];
         long u = y[1];
         for (int i = 0; i < 64; i++) {
-            if ((t << i) < 0) {
+            if (t < 0) {
                 b ^= HCa[i];
                 c ^= HCb[i];
             }
-            if ((u << i) < 0) {
+            if (u < 0) {
                 b ^= HCc[i];
                 c ^= HCd[i];
             }
+            t<<=1;
+            u<<=1;
         }
         y = new long[] {b, c};
     }
