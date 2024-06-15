@@ -28,6 +28,7 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import net.siisise.io.PacketA;
 import net.siisise.lang.Bin;
 import net.siisise.security.mode.CBC;
 import net.siisise.security.mode.CTR;
@@ -309,7 +310,8 @@ public class AESTest {
 
             d = System.nanoTime();
             aescbc.init(Cipher.DECRYPT_MODE, keysp, gcmiv );
-            encd = aescbc.doFinal(plane2);
+            aescbc.update(plane2);
+            encd = aescbc.doFinal(tag);
             e = System.nanoTime();
             
             assertArrayEquals(src, encd,"JDK dec CBCがちがうのか");
