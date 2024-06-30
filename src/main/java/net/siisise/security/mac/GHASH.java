@@ -27,10 +27,10 @@ import net.siisise.lang.Bin;
 public class GHASH implements MAC {
 
     // hash subkey Cache
-    private long[] HCa = new long[64];
-    private long[] HCb = new long[64];
-    private long[] HCc = new long[64];
-    private long[] HCd = new long[64];
+    private final long[] HCa = new long[64];
+    private final long[] HCb = new long[64];
+    private final long[] HCc = new long[64];
+    private final long[] HCd = new long[64];
     private long[] y;
 
     private Packet pool;
@@ -46,6 +46,10 @@ public class GHASH implements MAC {
      */
     @Override
     public void init(byte[] H) {
+        init(Bin.btol(H), new byte[0]);
+    }
+
+    public void init(long[] H) {
         init(H, new byte[0]);
     }
 
@@ -55,11 +59,11 @@ public class GHASH implements MAC {
      * @param H hash subkey
      * @param a 暗号化しない部分
      */
-    public void init(byte[] H, byte[] a) {
+    public void init(long[] H, byte[] a) {
         pool = new PacketA();
         lens = new PacketA();
         buildHCache(H);
-        y = new long[H.length / 8];
+        y = new long[H.length];
         alen = 0;
         update(a, 0, a.length);
         blockClose();
@@ -69,8 +73,8 @@ public class GHASH implements MAC {
      * Hの乗算結果をキャッシュして4倍くらい高速化.
      * @param H 
      */
-    private void buildHCache(byte[] H) {
-        long[] x = Bin.btol(H);
+    private void buildHCache(long[] H) {
+        long[] x = H;
         for (int i = 0; i < 64; i++) {
             HCa[i] = x[0];
             HCb[i] = x[1];
@@ -99,12 +103,12 @@ public class GHASH implements MAC {
      */
     private void xorMul(byte[] x, int o) {
         Bin.xorl(y, x, o, y.length);
-        GF_YmulH();
+        YmulH();
     }
 
     private void xorMul(byte[] x) {
         Bin.xorl(y, x, 0, y.length);
-        GF_YmulH();
+        YmulH();
     }
 
     /**
@@ -112,7 +116,7 @@ public class GHASH implements MAC {
      * 変態演算なのでメモリ食うかも
      * y・H
      */
-    private void GF_YmulH() {
+    private void YmulH() {
         long b = 0;
         long c = 0;
         
@@ -123,11 +127,11 @@ public class GHASH implements MAC {
                 b ^= HCa[i];
                 c ^= HCb[i];
             }
+            t<<=1;
             if (u < 0) {
                 b ^= HCc[i];
                 c ^= HCd[i];
             }
-            t<<=1;
             u<<=1;
         }
         y = new long[] {b, c};
@@ -147,17 +151,17 @@ public class GHASH implements MAC {
             length -= l;
             xorMul(pool.toByteArray());
         }
-        while (length >= 16) {
-            xorMul(src, offset);
-            offset += 16;
-            length -= 16;
+        int b = length / 16;
+        for (int i = 0; i < b; i++) {
+            xorMul(src, offset + i * 16);
         }
-        pool.write(src, offset, length);
+        pool.write(src, offset + b * 16, length % 16);
     }
 
     private void blockClose() {
-        if (pool.size() > 0) { // padding
-            pool.write(new byte[16 - pool.size()]);
+        int ps = pool.size();
+        if (ps > 0) { // padding
+            pool.write(new byte[16 - ps]);
             xorMul(pool.toByteArray());
         }
 

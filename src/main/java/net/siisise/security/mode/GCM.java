@@ -98,7 +98,7 @@ public class GCM extends LongStreamMode {
         block.init(key); // Y0内で呼ぶので不要 CTRのinitは使わない
 
         // GHASH
-        byte[] H = Bin.ltob(block.encrypt(new long[block.getBlockLength() / 64]));
+        long[] H = block.encrypt(new long[block.getBlockLength() / 64]);
 
         iv = J0(H, params[1]); // block が状態遷移しないAES前提
         
@@ -124,7 +124,7 @@ public class GCM extends LongStreamMode {
      * Algorithm 4: GCM-AE_K(IV, P, A) Step 2.
      * @param iv 候補 96bit でも それ以外でもよし
      */
-    private byte[] J0(byte[] H, byte[] iv) {
+    private byte[] J0(long[] H, byte[] iv) {
         byte[] m = new byte[block.getBlockLength() / 8];
         if (iv.length == 12) { // 96 bit
             System.arraycopy(iv, 0, m, 0, iv.length);

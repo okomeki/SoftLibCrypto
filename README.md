@@ -118,7 +118,7 @@ CBC AMD Ryzen 2600X か 5800Xの値
 
 GCM AMD Ryzen 5800X
 
-JDKのCBCが遅いのでAES-NIの半分くらいは出てる
+JDKの暗号はAES-NIの割に遅いのでAES-NIの半分くらいは出てる
 
 # License
 
@@ -126,16 +126,27 @@ Apache 2.0 License としたいです。
 
 # Maven
 
+JDK11以降用 module対応っぽい版
 ~~~
 <dependency>
     <groupId>net.siisise</groupId>
-    <artifactId>softlib-crypto</artifactId>
-    <version>1.0.2</version>
+    <artifactId>softlib-crypto.module</artifactId>
+    <version>1.0.3</version>
     <scope>test</scope>
     <type>jar</type>
 </dependency>
 ~~~
-バージョンは 1.0.2 です。
-開発版は1.0.3-SNAPSHOTかも。
+JDK8用
+~~~
+<dependency>
+    <groupId>net.siisise</groupId>
+    <artifactId>softlib-crypto</artifactId>
+    <version>1.0.3</version>
+    <scope>test</scope>
+    <type>jar</type>
+</dependency>
+~~~
+バージョンは 1.0.3 です。
+開発版は1.0.4-SNAPSHOTかも。
 
 
