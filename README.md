@@ -132,7 +132,6 @@ JDK11以降用 module対応っぽい版
     <groupId>net.siisise</groupId>
     <artifactId>softlib-crypto.module</artifactId>
     <version>1.0.3</version>
-    <scope>test</scope>
     <type>jar</type>
 </dependency>
 ~~~
@@ -142,7 +141,6 @@ JDK8用
     <groupId>net.siisise</groupId>
     <artifactId>softlib-crypto</artifactId>
     <version>1.0.3</version>
-    <scope>test</scope>
     <type>jar</type>
 </dependency>
 ~~~
