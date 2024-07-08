@@ -18,6 +18,7 @@ package net.siisise.security.mac;
 import net.siisise.io.Packet;
 import net.siisise.io.PacketA;
 import net.siisise.lang.Bin;
+import net.siisise.lang.ParamThread;
 
 /**
  * GCM 内部用GHASH.
@@ -37,6 +38,8 @@ public class GHASH implements MAC {
     // AAD length
     private Packet lens;
     private long alen;
+    
+    ParamThread th;
 
     public GHASH() {
     }
@@ -134,31 +137,55 @@ public class GHASH implements MAC {
             }
             u<<=1;
         }
-        y = new long[] {b, c};
+        y[0] = b;
+        y[1] = c;
     }
 
     @Override
     public void update(byte[] src, int offset, int length) {
         alen += length;
-        int ps = pool.size();
-        if (ps + length < 16) {
-            pool.write(src, offset, length);
-            return;
-        } else if (ps > 0) {
-            int l = 16 - ps;
-            pool.write(src, offset, l);
-            offset += l;
-            length -= l;
-            xorMul(pool.toByteArray());
+        pool.write(src, offset, length);
+        thread();
+    }
+
+    /**
+     * MAC計算用別スレッドが停止していたら走らせる.
+     */
+    void thread() {
+        ParamThread t = th;
+        if ( t == null || !t.isAlive()) {
+            try {
+                th = new ParamThread(this, "q");
+                th.start();
+            } catch (NoSuchMethodException ex) {
+                throw new IllegalStateException(ex);
+            }
         }
-        int b = length / 16;
-        for (int i = 0; i < b; i++) {
-            xorMul(src, offset + i * 16);
+    }
+
+    /**
+     * MAC計算スレッド.
+     * 別スレッドにするだけ.
+     */
+    public void q() throws java.lang.SecurityException {
+        byte[] d = new byte[16];
+        while (pool.size() >= 16) {
+            pool.read(d);
+            xorMul(d);
         }
-        pool.write(src, offset + b * 16, length % 16);
+        th = null;
     }
 
     private void blockClose() {
+        Thread t = th;
+        if ( t != null ) {
+            try {
+                t.join();
+            } catch (InterruptedException ex) {
+                throw new IllegalStateException(ex);
+            }
+        }
+        
         int ps = pool.size();
         if (ps > 0) { // padding
             pool.write(new byte[16 - ps]);
