@@ -30,11 +30,13 @@ public interface Block extends EncBlock, DecBlock {
      *
      * @return ビット単位のブロック長.
      */
+    @Override
     int getBlockLength();
-    
+
     /**
      * 必要な乱数のビット長のめやす.
      * IV, secret, solt などの長さ
+     *
      * @return ビット単位の長さの配列
      */
     int[] getParamLength();
@@ -42,9 +44,9 @@ public interface Block extends EncBlock, DecBlock {
     /**
      * 後ろの要素が外側のBlockにかかる.
      * AES CBC の場合、ivをCBCがとり、keyをAESがとる。
+     *
      * @param keyandparam シークレット鍵とIVなど
      */
     void init(byte[]... keyandparam);
-
 
 }

@@ -25,7 +25,7 @@ import net.siisise.security.io.BlockIOListener;
  */
 class DecodeStream implements BlockIOListener {
 
-    private final Block block;
+    private final DecBlock block;
     private final boolean pad;
     private final PacketS pac = new PacketS();
     private final OutputStream out;

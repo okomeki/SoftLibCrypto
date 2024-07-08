@@ -19,6 +19,8 @@ package net.siisise.security.block;
  * ブロック暗号
  */
 public interface EncBlock {
+    
+    int getBlockLength();
 
     /**
      * block mode 暗号化用.
@@ -64,4 +66,8 @@ public interface EncBlock {
     byte[] encrypt(byte[] src, int offset);
     int[] encrypt(int[] src, int offset);
     long[] encrypt(long[] src, int offset);
+    
+    byte[] doFinalEncrypt();
+    byte[] doFinalEncrypt(byte[] src);
+    byte[] doFinalEncrypt(byte[] src, int offset, int length);
 }

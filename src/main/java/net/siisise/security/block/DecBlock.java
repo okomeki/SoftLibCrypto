@@ -20,6 +20,7 @@ package net.siisise.security.block;
  */
 public interface DecBlock {
     
+    int getBlockLength();
     /**
      * 復号処理.
      * @param src 暗号データ列
@@ -48,4 +49,8 @@ public interface DecBlock {
     byte[] decrypt(byte[] src, int offset);
     int[] decrypt(int[] src, int offset);
     long[] decrypt(long[] src, int offset);
+    
+    byte[] doFinalDecrypt();
+    byte[] doFinalDecrypt(byte[] src);
+    byte[] doFinalDecrypt(byte[] src, int offset, int length);
 }

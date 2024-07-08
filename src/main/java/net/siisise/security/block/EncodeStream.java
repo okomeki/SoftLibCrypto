@@ -24,23 +24,23 @@ import net.siisise.security.io.BlockIOOutputStream;
 import net.siisise.security.PacketS;
 
 /**
- * 暗号、復号化するストリームを作る。
+ * 暗号、復号化するストリームを作る実験。
  * パディングするので送信タイミングはずれることがある。
  */
 class EncodeStream implements BlockIOListener {
 
-    private final Block block;
+    private final EncBlock block;
     private final OutputStream out;
     private final PacketS pac;
     private final boolean padding;
 
     /**
      * 
-     * @param b
+     * @param b 暗号
      * @param out
      * @param pad paddingを付与する?
      */
-    EncodeStream(Block b, OutputStream out, boolean pad) {
+    public EncodeStream(Block b, OutputStream out, boolean pad) {
         block = b;
         this.out = out;
         padding = pad;
