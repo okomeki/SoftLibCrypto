@@ -61,6 +61,7 @@ public class RSAES_PKCS1_v1_5Test {
         
         RSAES es = new RSAES_PKCS1_v1_5();
         byte[] encd = es.encrypt(pub, msg);
+        es = new RSAES_PKCS1_v1_5();
         byte[] dec = es.decrypt(key, encd);
         assertArrayEquals(msg, dec);
         

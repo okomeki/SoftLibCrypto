@@ -132,7 +132,7 @@ JDK11以降用 module対応っぽい版
 <dependency>
     <groupId>net.siisise</groupId>
     <artifactId>softlib-crypto.module</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.6</version>
     <type>jar</type>
 </dependency>
 ~~~
@@ -141,11 +141,11 @@ JDK8用
 <dependency>
     <groupId>net.siisise</groupId>
     <artifactId>softlib-crypto</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.6</version>
     <type>jar</type>
 </dependency>
 ~~~
-バージョンは 1.0.3 です。
-開発版は1.0.4-SNAPSHOTかも。
+バージョンは 1.0.5 です。
+開発版は1.0.7-SNAPSHOTかも。
 
 

@@ -252,6 +252,8 @@ public class GCM extends LongStreamMode implements StreamAEAD {
     public byte[] doFinalDecrypt(byte[] src, int offset, int length) {
         byte[] dec = decrypt(src, offset, length - 16);
         byte[] t = tag();
+//        byte[] st = Arrays.copyOfRange(src, offset + length - 16, 16);
+//        if (!Arrays.equals(t, st)) {
         if (!Arrays.equals(t, 0, 16, src, offset + length - 16, 16)) {
             throw new IllegalStateException();
         }

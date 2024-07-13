@@ -19,6 +19,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import net.siisise.block.ReadableBlock;
 import net.siisise.io.Packet;
 import net.siisise.io.PacketA;
 import net.siisise.lang.Bin;
@@ -150,32 +151,32 @@ public class EME_OAEP implements EME {
     }
     
     /**
-     * EME-OAEPデコード
+     * EME-OAEP 復号化操作.
+     * 7.1.2. Decryption Operation
+     *  3. EME-OAEP decoding.
      * @param EM パディングデータ
      * @return 元データ
      */
     @Override
     public byte[] decode(byte[] EM) {
-        // a. 計算済み
+        // a.
+        if ( lHash == null ) {
+            lHash = md.digest();
+        }
         // b. 分離
         byte Y = EM[0];
-        //byte[] maskedSeed = new byte[hLen];
-        byte[] maskedSeed = Arrays.copyOfRange(EM, 1, 1 + hLen);
-        //System.arraycopy(EM, 1, maskedSeed, 0, hLen);
-//        byte[] maskedDB = new byte[EM.length - hLen - 1];
-        byte[] maskedDB = Arrays.copyOfRange(EM, 1 + hLen, EM.length);
-//        System.arraycopy(EM, hLen + 1, maskedDB, 0, maskedDB.length);
-        // c.
-        // d.
-        byte[] seed = Bin.xorl(maskedSeed, mgf.generate(maskedDB, hLen));
-        // e.
-        // int k = EM.length;
-        // f.
-        byte[] DB = Bin.xorl(maskedDB, mgf.generate(seed, EM.length-hLen -1));
+        byte[] seed = Arrays.copyOfRange(EM, 1, 1 + hLen);
+        byte[] DB = Arrays.copyOfRange(EM, 1 + hLen, EM.length);
+        // c. seedMask = MGF(maskedDB, hLen)
+        // d. seed = maskedSeed \\xor seedMask
+        Bin.xorl(seed, mgf.generate(DB, hLen));
+        // e. dbMask = MGF( seed, k - hLen - 1 )
+        // f. DB = maskedDB \\xor dbMask
+        Bin.xorl(DB, mgf.generate(seed, EM.length-hLen -1));
         // g.
         byte[] lHash2 = new byte[hLen];
 //        System.arraycopy(DB, 0, lHash2, 0, hLen);
-        PacketA pac = new PacketA(DB);
+        ReadableBlock pac = ReadableBlock.wrap(DB);
         pac.read(lHash2);
         // PS
         int i;

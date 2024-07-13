@@ -63,6 +63,7 @@ public class RSAES_OAEPTest {
         
         RSAES es = new RSAES_OAEP(new SHA1());
         byte[] encd = es.encrypt(pub, msg);
+        es = new RSAES_OAEP(new SHA1());
         byte[] dec = es.decrypt(key, encd);
         assertArrayEquals(msg, dec);
     }
