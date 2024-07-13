@@ -21,7 +21,13 @@ package net.siisise.security.stream;
  * いろいろ未定
  */
 public interface Stream {
-    
+
+    default byte[] encrypt(byte[] src) {
+        return encrypt(src, 0, src.length);
+    }
     byte[] encrypt(byte[] src, int offset, int length);    
+    default byte[] decrypt(byte[] src) {
+        return decrypt(src, 0, src.length);
+    }
     byte[] decrypt(byte[] src, int offset, int length);    
 }

@@ -106,22 +106,27 @@ public class PKCS7Padding extends BlockMode {
     }
 
     /**
-     * パディングしない.
-     * @deprecated 使えない
+     * srcの長さが足りないときにPadding.
      */
     @Override
-    @Deprecated
     public byte[] encrypt(byte[] src, int offset) {
+        if ( blockLen > src.length - offset) {
+            return encrypt(src, offset, src.length - offset);
+        }
         return block.encrypt(src, offset);
     }
 
     /**
-     * パディングしない.
-     * @deprecated 使えない
+     * srcの長さが足りないときにPadding.
+     * @param src メッセージ
+     * @param offset 位置
+     * @return 暗号
      */
     @Override
-    @Deprecated
     public int[] encrypt(int[] src, int offset) {
+        if ( blockLen > (src.length - offset) * 4) {
+            return encrypt(src, offset, src.length - offset);
+        }
         return block.encrypt(src, offset);
     }
 

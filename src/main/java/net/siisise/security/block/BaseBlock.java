@@ -124,34 +124,4 @@ public abstract class BaseBlock implements Block {
         return dec;
     }
 
-    @Override
-    public byte[] doFinalEncrypt() {
-        return doFinalEncrypt(new byte[0]);
-    }
-
-    @Override
-    public byte[] doFinalEncrypt(byte[] src) {
-        return doFinalEncrypt(src, 0, src.length);
-    }
-
-    @Override
-    public byte[] doFinalEncrypt(byte[] src, int offset, int length) {
-        return encrypt(src, offset, length);
-    }
-
-    @Override
-    public byte[] doFinalDecrypt() {
-        return doFinalDecrypt(new byte[0]);
-    }
-
-    @Override
-    public byte[] doFinalDecrypt(byte[] src) {
-        return doFinalDecrypt(src, 0, src.length);
-    }
-
-    @Override
-    public byte[] doFinalDecrypt(byte[] src, int offset, int length) {
-        return decrypt(src, offset, length);
-    }
-
 }

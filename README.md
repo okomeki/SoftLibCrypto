@@ -112,13 +112,14 @@ code | JDK (OpenSSL AES-NI) | SoftLib
 -----|----|------
 AES-CBC encode | 2608 | 1510 
 AES-CBC decode | 2716 | 1144
-AES-GCM encode |  738 |  329
+AES-GCM encode |  591 | 1457
+AES-GCM decode | 3237 | 1531
 
 CBC AMD Ryzen 2600X か 5800Xの値
 
 GCM AMD Ryzen 5800X
 
-JDKの暗号はAES-NIの割に遅いのでAES-NIの半分くらいは出てる
+JDKの暗号はAES-NIの割に遅いのでAES-NIの半分くらいは出てる さらにJDKのGCMはなぜか遅い
 
 # License
 

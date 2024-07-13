@@ -15,6 +15,9 @@
  */
 package net.siisise.security.mode;
 
+import java.util.Arrays;
+import net.siisise.io.Packet;
+import net.siisise.io.PacketA;
 import net.siisise.lang.Bin;
 import net.siisise.security.block.AES;
 import net.siisise.security.block.Block;
@@ -37,9 +40,10 @@ import net.siisise.security.mac.GHASH;
  * GCMでのAESの使用について
  * RFC 5289 TLS Elliptic Curve Cipher Suites with SHA-256/384 and AES Galois Counter Mode (GCM)
  */
-public class GCM extends LongStreamMode {
-    
+public class GCM extends LongStreamMode implements StreamAEAD {
+
     static class GCTR extends CTR {
+
         GCTR(Block b) {
             super(b);
         }
@@ -95,17 +99,19 @@ public class GCM extends LongStreamMode {
     public void init(byte[]... params) {
         // iv 生成用AES?
         key = params[0];
-        block.init(key); // Y0内で呼ぶので不要 CTRのinitは使わない
+        block.init(key);
 
         // GHASH
+        gh = new GHASH();
         long[] H = block.encrypt(new long[block.getBlockLength() / 64]);
+        gh.init(H);
 
-        iv = J0(H, params[1]); // block が状態遷移しないAES前提
-        
+        iv = J0(params[1]);
+
         ctr = new GCTR(block);
 
         ctr.init(key,iv);
-        ctr.next(); // データ用初期値 00000002
+        ctr.next(); // データ用初期値
 
         byte[] aad;
         if ( params.length >= 3) {
@@ -116,15 +122,15 @@ public class GCM extends LongStreamMode {
 
         // GHASH
         tag = null;
-        gh = new GHASH();
-        gh.init(H, aad);
+        gh.clear();
+        gh.aad(aad);
     }
     
     /**
      * Algorithm 4: GCM-AE_K(IV, P, A) Step 2.
      * @param iv 候補 96bit でも それ以外でもよし
      */
-    private byte[] J0(long[] H, byte[] iv) {
+    private byte[] J0(byte[] iv) {
         byte[] m = new byte[block.getBlockLength() / 8];
         if (iv.length == 12) { // 96 bit
             System.arraycopy(iv, 0, m, 0, iv.length);
@@ -134,10 +140,9 @@ public class GCM extends LongStreamMode {
         // 以下未確認
 //        int s = (iv.length / 16 + 15)*128 - iv.length*8;
 //        int s = (15 - (iv.length % 16));
-        GHASH ivgh = new GHASH();
-        ivgh.init(H);
-        ivgh.update(iv);
-        return ivgh.sign();
+        gh.aad(new byte[0]);
+        gh.update(iv);
+        return gh.sign();
     }
     
     @Override
@@ -193,12 +198,24 @@ public class GCM extends LongStreamMode {
         return c;
     }
 
+    /**
+     * 
+     * @param src
+     * @param offset
+     * @param length
+     * @return 
+     */
     @Override
     public byte[] decrypt(byte[] src, int offset, int length) {
         gh.update(src, offset, length);
         return ctr.encrypt(src, offset, length);
     }
 
+    /**
+     * タグ単体で取得する.
+     * @return 認証タグ
+     */
+    @Override
     public byte[] tag() {
         if ( tag == null ) {
             byte[] S = gh.sign();
@@ -207,5 +224,37 @@ public class GCM extends LongStreamMode {
             Bin.xorl(tag, S);
         }
         return tag;
+    }
+    
+    /**
+     * タグを含む.
+     * @param src
+     * @param offset
+     * @param length
+     * @return 暗号 + 認証タグ
+     */
+    @Override
+    public byte[] doFinalEncrypt(byte[] src, int offset, int length) {
+        Packet pac = new PacketA();
+        pac.write(encrypt(src, offset, length));
+        pac.write(tag());
+        return pac.toByteArray();
+    }
+    
+    /**
+     * MAC に必要な長さが含まれる前提.
+     * @param src 認証コードを含む
+     * @param offset
+     * @param length 16以上
+     * @return 
+     */
+    @Override
+    public byte[] doFinalDecrypt(byte[] src, int offset, int length) {
+        byte[] dec = decrypt(src, offset, length - 16);
+        byte[] t = tag();
+        if (!Arrays.equals(t, 0, 16, src, offset + length - 16, 16)) {
+            throw new IllegalStateException();
+        }
+        return dec;
     }
 }

@@ -24,11 +24,12 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import net.siisise.lang.Bin;
+import net.siisise.security.mode.StreamAEAD;
 
 /**
  * Java AES. Java 標準の暗号を速度比較のためにラップしてみる.
  */
-public class CipherWrap extends LongBlock {
+public class CipherWrap extends LongBlock implements StreamAEAD {
 
     String transformation;
     private Cipher enc;
@@ -102,6 +103,22 @@ public class CipherWrap extends LongBlock {
         try {
             return enc.doFinal(src, offset, length);
         } catch (IllegalBlockSizeException | BadPaddingException ex) {
+            throw new IllegalStateException(ex);
+        }
+    }
+
+    @Override
+    public byte[] tag() {
+        return doFinalEncrypt();
+    }
+
+    @Override
+    public byte[] doFinalDecrypt(byte[] src, int offset, int length) {
+        try {
+            return dec.doFinal(src, offset, length);
+        } catch (IllegalBlockSizeException ex) {
+            throw new IllegalStateException(ex);
+        } catch (BadPaddingException ex) {
             throw new IllegalStateException(ex);
         }
     }

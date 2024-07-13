@@ -29,6 +29,16 @@ public abstract class LongStreamMode extends LongBlockMode {
     public LongStreamMode(Block block) {
         super(block);
     }
+    
+    @Override
+    public byte[] encrypt(byte[] src) {
+        return encrypt(src, 0, src.length);
+    }
+
+    @Override
+    public byte[] decrypt(byte[] src) {
+        return decrypt(src, 0, src.length);
+    }
 
     /**
      * ストリーム用暗号化.

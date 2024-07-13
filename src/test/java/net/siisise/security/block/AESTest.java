@@ -26,12 +26,9 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.GCMParameterSpec;
-import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import net.siisise.io.PacketA;
 import net.siisise.lang.Bin;
 import net.siisise.security.mode.CBC;
-import net.siisise.security.mode.CTR;
 import net.siisise.security.mode.ECB;
 import net.siisise.security.mode.GCM;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -196,19 +193,6 @@ public class AESTest {
     }
 
     /**
-     * Test of init method, of class AESCBC.
-     */
-    @Test
-    public void testInit() {
-        System.out.println("init");
-        byte[] key = null;
-        Block instance = new AES();
-//        instance.init(key);
-        // TODO review the generated test code and remove the default call to fail.
-//        fail("The test case is a prototype.");
-    }
-
-    /**
      * Test of encrypt method, of class AESCBC.
      * @throws java.security.InvalidAlgorithmParameterException
      */
@@ -256,6 +240,7 @@ public class AESTest {
         
     //        Block instance = new AES();
             long d = System.nanoTime();
+//            Block instance = new GCM(new CipherWrap("AES/ECB/NoPadding"));
             Block instance = new GCM(new AES());
             instance.init(key,iv);
             //intEncd = instance.encrypt(intSrc, 0, intSrc.length);
@@ -280,7 +265,7 @@ public class AESTest {
             t = e - d;
             System.out.println("SoftLibCrypto " + alg + " decrypt time : "  + t );
         
-            System.out.println( " speed : " + (size * 8*1024 / (t/1000/1000)) );
+            System.out.println( " speed : " + (size * 8*1024 / (t/1000/1000)) + "Mbps" );
         }
         String ALG = alg + "/nopadding";
 
@@ -309,6 +294,8 @@ public class AESTest {
             System.out.println( " speed : " + (size * 8*1024 / (t/1000/1000)) + "Mbps?" );
 
             d = System.nanoTime();
+            gcmiv = new GCMParameterSpec(128, iv);
+            aescbc = Cipher.getInstance(ALG);
             aescbc.init(Cipher.DECRYPT_MODE, keysp, gcmiv );
             aescbc.update(plane2);
             encd = aescbc.doFinal(tag);

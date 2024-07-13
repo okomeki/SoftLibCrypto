@@ -53,7 +53,10 @@ public class GHASH implements MAC {
     }
 
     public void init(long[] H) {
-        init(H, new byte[0]);
+        pool = new PacketA();
+        lens = new PacketA();
+        buildHCache(H);
+        y = new long[H.length];
     }
 
     /**
@@ -67,9 +70,7 @@ public class GHASH implements MAC {
         lens = new PacketA();
         buildHCache(H);
         y = new long[H.length];
-        alen = 0;
-        update(a, 0, a.length);
-        blockClose();
+        aad(a);
     }
 
     /**
@@ -89,6 +90,19 @@ public class GHASH implements MAC {
             x = GF_x(x);
         }
     }
+    
+    /**
+     * H を維持したまま他を消す.
+     */
+    public void clear() {
+        y = new long[y.length];
+    }
+    
+    public void aad(byte[] a) {
+        alen = 0;
+        update(a, 0, a.length);
+        blockClose();
+    }
 
     private static final long CONST_RB = 0xe100000000000000l;
 
@@ -102,13 +116,7 @@ public class GHASH implements MAC {
      * y にブロックを y M_n
      *
      * @param x ブロック列っぽく
-     * @param o 位置
      */
-    private void xorMul(byte[] x, int o) {
-        Bin.xorl(y, x, o, y.length);
-        YmulH();
-    }
-
     private void xorMul(byte[] x) {
         Bin.xorl(y, x, 0, y.length);
         YmulH();
