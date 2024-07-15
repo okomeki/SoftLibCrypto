@@ -23,17 +23,17 @@ import java.math.BigInteger;
 public class DSADomainFull extends DSADomain {
 
     private final BigInteger domainParameterSeed;
-    private final BigInteger counter;
+    private final int counter;
 
     /**
      * 
-     * @param p
-     * @param q
+     * @param p L の長さの素数
+     * @param q N の長さの素数
      * @param g
      * @param domain_parameter_seed 生成用
      * @param counter 生成用
      */
-    public DSADomainFull(BigInteger p, BigInteger q, BigInteger g, BigInteger domain_parameter_seed, BigInteger counter) {
+    public DSADomainFull(BigInteger p, BigInteger q, BigInteger g, BigInteger domain_parameter_seed, int counter) {
         super(p, q, g);
         domainParameterSeed = domain_parameter_seed;
         this.counter = counter;
@@ -43,7 +43,7 @@ public class DSADomainFull extends DSADomain {
         return domainParameterSeed;
     }
 
-    public BigInteger getCounter() {
+    public int getCounter() {
         return counter;
     }
 
