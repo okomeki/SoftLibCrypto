@@ -145,7 +145,7 @@ JDK8用
     <type>jar</type>
 </dependency>
 ~~~
-バージョンは 1.0.5 です。
+バージョンは 1.0.6 です。
 開発版は1.0.7-SNAPSHOTかも。
 
 

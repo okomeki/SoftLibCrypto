@@ -20,6 +20,7 @@ import java.security.NoSuchAlgorithmException;
 import javax.crypto.SecretKey;
 import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.iso.asn1.tag.NULL;
+import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.security.digest.BlockMessageDigest;
 import net.siisise.security.digest.SHA1;
 import net.siisise.security.digest.SHA224;
@@ -69,16 +70,16 @@ import net.siisise.security.digest.SHA512256;
  */
 public class HMAC implements MAC {
 
-    public static final String RSADSI = "1.2.840.113549";
-    public static final String DIGESTALGORITHM = RSADSI + ".2";
+    public static final OBJECTIDENTIFIER RSADSI = new OBJECTIDENTIFIER("1.2.840.113549");
+    public static final OBJECTIDENTIFIER DIGESTALGORITHM = RSADSI.sub(2);
 //    public static final String idHmacWithMD5 = DIGESTALGORITHM + ".6";
-    public static final String idhmacWithSHA1 = DIGESTALGORITHM + ".7";
-    public static final String idhmacWithSHA224 = DIGESTALGORITHM + ".8";
-    public static final String idhmacWithSHA256 = DIGESTALGORITHM + ".9";
-    public static final String idhmacWithSHA384 = DIGESTALGORITHM + ".10";
-    public static final String idhmacWithSHA512 = DIGESTALGORITHM + ".11";
-    public static final String idhmacWithSHA512224 = DIGESTALGORITHM + ".12";
-    public static final String idhmacWithSHA512256 = DIGESTALGORITHM + ".13";
+    public static final OBJECTIDENTIFIER idhmacWithSHA1 = DIGESTALGORITHM.sub(7);
+    public static final OBJECTIDENTIFIER idhmacWithSHA224 = DIGESTALGORITHM.sub(8);
+    public static final OBJECTIDENTIFIER idhmacWithSHA256 = DIGESTALGORITHM.sub(9);
+    public static final OBJECTIDENTIFIER idhmacWithSHA384 = DIGESTALGORITHM.sub(10);
+    public static final OBJECTIDENTIFIER idhmacWithSHA512 = DIGESTALGORITHM.sub(11);
+    public static final OBJECTIDENTIFIER idhmacWithSHA512224 = DIGESTALGORITHM.sub(12);
+    public static final OBJECTIDENTIFIER idhmacWithSHA512256 = DIGESTALGORITHM.sub(13);
 
 //    private HMACSpi spi;
     private MessageDigest md;

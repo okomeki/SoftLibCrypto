@@ -13,10 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.siisise.security.sign;
+package net.siisise.security.key;
 
 import java.math.BigInteger;
 import java.security.interfaces.DSAParams;
+import java.util.ArrayList;
+import java.util.List;
+import net.siisise.bind.Rebind;
+import net.siisise.iso.asn1.tag.ASN1DERFormat;
 
 /**
  * DSA ドメインパラメータ
@@ -57,5 +61,14 @@ public class DSADomain implements DSAParams {
     @Override
     public BigInteger getG() {
         return g;
+    }
+    
+    public byte[] getEncoded() {
+        List l = new ArrayList();
+        l.add(p);
+        l.add(q);
+        l.add(g);
+        return Rebind.valueOf(l, new ASN1DERFormat());
+        
     }
 }

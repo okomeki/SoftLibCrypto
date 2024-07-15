@@ -16,7 +16,10 @@
 package net.siisise.ietf.pkcs.asn1;
 
 import java.math.BigInteger;
+import java.util.LinkedHashMap;
 import java.util.List;
+import net.siisise.bind.Rebind;
+import net.siisise.bind.format.TypeFormat;
 import net.siisise.iso.asn1.tag.INTEGER;
 import net.siisise.iso.asn1.tag.NULL;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
@@ -50,7 +53,15 @@ public class PrivateKeyInfo {
         privateKeyAlgorithm = new PrivateKeyAlgorithmIdentifier(oid);
         this.privateKey = privateKey;
     }
-    
+
+    public <T> T rebind(TypeFormat<T> format) {
+        LinkedHashMap s = new LinkedHashMap();
+        s.put("version", version);
+        s.put("privateKeyAlgorithm", privateKeyAlgorithm);
+        s.put("privateKey", privateKey);
+        return Rebind.valueOf(s,format);
+    }
+
     public SEQUENCE encodeASN1() {
         SEQUENCE s = new SEQUENCE();
         s.add(version);

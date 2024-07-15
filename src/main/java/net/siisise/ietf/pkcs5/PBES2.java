@@ -16,10 +16,11 @@
 package net.siisise.ietf.pkcs5;
 
 import java.util.Arrays;
-import net.siisise.io.FileIO;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
+import net.siisise.iso.asn1.tag.SEQUENCE;
 import net.siisise.security.block.Block;
 import net.siisise.security.mac.MAC;
+import net.siisise.security.mode.PKCS7Padding;
 
 /**
  * RFC 8018 PKCS #5
@@ -99,7 +100,34 @@ public class PBES2 implements PBES {
      * @param password 
      */
     public void init(Block block, byte[] password) {
+        throw new java.lang.UnsupportedOperationException("まだない");
+    }
+    
+    public void init(byte[] password) {
+        int[] ps = block.getParamLength();
+        int[] bs = new int[ps.length];
+        int s = 0;
+        for (int p : ps) {
+            s += (p + 7) / 8;
+        }
+        byte[] ll = kdf.kdf(password, s);
+        s = (ps[0] + 7) / 8;
+        byte[] key = Arrays.copyOfRange(ll, 0, s);
+        byte[] iv = Arrays.copyOfRange(ll, s, s + (ps[1] + 7) / 8);
+        block.init(key, iv);
+    }
+
+    /**
+     * 
+     * @param seq OID次のパラメータ
+     */
+    public void setASN1(SEQUENCE seq) {
         
+        if ( seq.get(0,0).equals(PBKDF2.OID)) {
+            kdf.setASN1Params((SEQUENCE) seq.get(0,1));
+        } else {
+            throw new IllegalStateException();
+        }
     }
 
     /**
@@ -110,13 +138,8 @@ public class PBES2 implements PBES {
      */
     @Override
     public byte[] encrypt(byte[] message) {
-        int blength = block.getBlockLength();
-        
-        int padlength = blength - (message.length % blength);
-        byte[] src = new byte[message.length + padlength];
-        System.arraycopy(message, 0, src, 0, message.length);
-        Arrays.fill(src, message.length, src.length, (byte)padlength);
-        return block.encrypt(src, 0, src.length);
+        PKCS7Padding pad = new PKCS7Padding(block);
+        return pad.doFinalEncrypt(message);
     }
 
     /**
@@ -126,14 +149,12 @@ public class PBES2 implements PBES {
      */
     @Override
     public byte[] decrypt(byte[] message) {
-        byte[] mpad = block.decrypt(message, 0, message.length);
-        FileIO.dump(mpad); // DEBUG中
-        byte[] d = new byte[mpad.length - mpad[mpad.length - 1]];
-        System.arraycopy(mpad, 0, d, 0, d.length);
-        return d;
+        PKCS7Padding pad = new PKCS7Padding(block);
+        return pad.doFinalDecrypt(message);
     }
 
     void setBlock(Block encryptionScheme) {
         this.block = encryptionScheme;
+//        block.init(keyandparam);
     }
 }

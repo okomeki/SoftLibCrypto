@@ -16,8 +16,11 @@
 package net.siisise.ietf.pkcs5;
 
 import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
+import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.SEQUENCE;
+import net.siisise.security.block.AES;
 import net.siisise.security.block.Block;
+import net.siisise.security.mode.CBC;
 
 /**
  *
@@ -35,18 +38,30 @@ public class PBES2params {
     
     public PBES2 decode() {
         PBES2 es;
-        Block block;
         if ( keyDerivationFunc.algorithm.equals(PBKDF2.OID)) {
             PBKDF2 kdf = PBKDF2params.decode((SEQUENCE) keyDerivationFunc.parameters).decode();
             es = new PBES2(kdf);
         } else {
             throw new UnsupportedOperationException(keyDerivationFunc.algorithm.toString());
         }
-        es.setBlock(getEncryptionScheme());
+        Block block = getEncryptionScheme();
+        block.getParamLength();
+        es.setBlock(block);
+        
         return es;
     }
     
+    OBJECTIDENTIFIER aes128_cbc_pad = new OBJECTIDENTIFIER("2.16.840.1.101.3.4.1.2");
+    
+    /**
+     * 
+     * @return PADなしBlock暗号 (仮)
+     */
     public Block getEncryptionScheme() {
+        
+        if ( aes128_cbc_pad.equals(encryptionScheme.algorithm) ) {
+            return new CBC(new AES());
+        }
         // B.2.2. DES-EDE3-CBC-Pad
         // RFC 1423 Padding
         //       24 octet encryption keey

@@ -15,6 +15,8 @@
  */
 package net.siisise.security.block;
 
+import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
+
 /**
  * ブロック暗号モジュール.
  *
@@ -22,6 +24,8 @@ package net.siisise.security.block;
  * CFBやOFBを使うとストリームモードでも利用可能。
  */
 public interface Block extends EncBlock, DecBlock {
+    public static final OBJECTIDENTIFIER rsadsi = new OBJECTIDENTIFIER("1.2.840.113549");
+    public static final OBJECTIDENTIFIER encryptionAlgorithm = rsadsi.sub(3);
 
     /**
      * Bit block length.

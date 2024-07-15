@@ -35,6 +35,10 @@ public class PBKDF1 implements PBKDF {
     public PBKDF1() {
     }
 
+    /**
+     * ハッシュ関数を指定した初期化.
+     * @param md 使用するハッシュ関数
+     */
     public PBKDF1(MessageDigest md) {
         this.md = md;
     }
@@ -45,7 +49,7 @@ public class PBKDF1 implements PBKDF {
 
     /**
      * 
-     * @param md
+     * @param md 使用するハッシュ関数
      * @param salt salt, an octet string
      * @param c iteration count, positive integer 繰り返し数 4000ぐらい
      */
@@ -54,16 +58,27 @@ public class PBKDF1 implements PBKDF {
         this.salt = salt;
         this.c = c;
     }
+    
+    public void init(byte[] salt, int c) {
+        this.salt = salt;
+        this.c = c;
+    }
 
     /**
      * 
-     * @param md
+     * @param md 使用するハッシュ関数
      * @param salt salt, an octet string
      * @param c iteration count, positive integer 繰り返し数 4000ぐらい
      * @param dkLen length in octets of derived key, a positive integer 派生鍵の長さ  (最大値はMDにより異なる)
      */
     public void init(MessageDigest md, byte[] salt, int c, int dkLen) {
         this.md = md;
+        this.salt = salt;
+        this.c = c;
+        this.dkLen = dkLen;
+    }
+    
+    public void init(byte[] salt, int c, int dkLen) {
         this.salt = salt;
         this.c = c;
         this.dkLen = dkLen;

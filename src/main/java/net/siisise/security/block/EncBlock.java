@@ -66,8 +66,14 @@ public interface EncBlock {
     byte[] encrypt(byte[] src, int offset);
     int[] encrypt(int[] src, int offset);
     long[] encrypt(long[] src, int offset);
-    
-//    byte[] doFinalEncrypt();
-//    byte[] doFinalEncrypt(byte[] src);
-//    byte[] doFinalEncrypt(byte[] src, int offset, int length);
+
+    default byte[] doFinalEncrypt() {
+        return doFinalEncrypt(new byte[0]);
+    }
+    default byte[] doFinalEncrypt(byte[] src) {
+        return doFinalEncrypt(src, 0, src.length);
+    }
+    default byte[] doFinalEncrypt(byte[] src, int offset, int length) {
+        return encrypt(src, offset, length);
+    }
 }

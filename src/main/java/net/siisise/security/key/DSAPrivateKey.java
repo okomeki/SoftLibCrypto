@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.siisise.security.sign;
+package net.siisise.security.key;
 
 import java.math.BigInteger;
 import java.security.interfaces.DSAParams;
@@ -51,8 +51,7 @@ public class DSAPrivateKey implements java.security.interfaces.DSAPrivateKey {
 
     @Override
     public String getAlgorithm() {
-//        return "DSA";
-        throw new UnsupportedOperationException("Not supported yet.");
+        return "DSA";
     }
 
     /**
@@ -67,6 +66,11 @@ public class DSAPrivateKey implements java.security.interfaces.DSAPrivateKey {
     @Override
     public byte[] getEncoded() {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+    
+    public DSAPublicKey getPublicKey() {
+        BigInteger y = params.getG().modPow(x, params.getP());
+        return new DSAPublicKey(y, params);
     }
     
 }

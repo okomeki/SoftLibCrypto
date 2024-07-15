@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.siisise.security.sign;
+package net.siisise.security.key;
 
 import java.math.BigInteger;
 
@@ -46,5 +46,7 @@ public class DSADomainFull extends DSADomain {
     public int getCounter() {
         return counter;
     }
+    
+    
 
 }

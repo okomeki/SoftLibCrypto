@@ -38,6 +38,7 @@ public class AES extends IntBlock {
      * AES 128bit固定
      */
     private final int blockLength = 128;
+    private final int keyLength;
 
     private static final int[] Rcon = new int[11];
 
@@ -169,6 +170,19 @@ public class AES extends IntBlock {
      */
     private long[] ldw;
 
+    public AES() {
+        keyLength = 128;
+    }
+    
+    public AES(int bit) {
+        keyLength = bit;
+    }
+    
+    @Override
+    public int[] getParamLength() {
+        return new int[] {keyLength};
+    }
+    
     /**
      * 鍵.
      * AESは128bit長.

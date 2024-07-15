@@ -15,6 +15,8 @@
  */
 package net.siisise.security.block;
 
+import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
+
 /**
  * Data Encryption Standard.
  * FIPS PUB 46-3.
@@ -28,6 +30,7 @@ package net.siisise.security.block;
  */
 @Deprecated
 public class DES extends OneBlock {
+    public static final OBJECTIDENTIFIER desCBC = new OBJECTIDENTIFIER("1.3.14.3.2.7");
 
     /**
      * DESのブロック長.

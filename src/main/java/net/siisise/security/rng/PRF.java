@@ -15,6 +15,10 @@
  */
 package net.siisise.security.rng;
 
+/**
+ * 疑似乱数関数 Pseudo Random Function (PRF).
+ * MAC, KDF など
+ */
 public interface PRF {
     
 }

@@ -50,7 +50,13 @@ public interface DecBlock {
     int[] decrypt(int[] src, int offset);
     long[] decrypt(long[] src, int offset);
     
-//    byte[] doFinalDecrypt();
-//    byte[] doFinalDecrypt(byte[] src);
-//    byte[] doFinalDecrypt(byte[] src, int offset, int length);
+    default byte[] doFinalDecrypt() {
+        return doFinalDecrypt(new byte[0]);
+    }
+    default byte[] doFinalDecrypt(byte[] src) {
+        return doFinalDecrypt(src, 0, src.length);
+    }
+    default byte[] doFinalDecrypt(byte[] src, int offset, int length) {
+        return decrypt(src, offset, length);
+    }
 }

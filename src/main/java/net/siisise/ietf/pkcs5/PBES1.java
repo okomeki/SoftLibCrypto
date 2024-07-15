@@ -16,7 +16,6 @@
 package net.siisise.ietf.pkcs5;
 
 import java.security.MessageDigest;
-import java.util.Arrays;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.security.block.Block;
 import net.siisise.security.block.DES;
@@ -25,6 +24,7 @@ import net.siisise.security.digest.MD2;
 import net.siisise.security.digest.MD5;
 import net.siisise.security.digest.SHA1;
 import net.siisise.security.mode.CBC;
+import net.siisise.security.mode.PKCS7Padding;
 
 /**
  * RFC 8018 6. Encryption Schemes
@@ -41,6 +41,8 @@ public class PBES1 implements PBES {
     static final OBJECTIDENTIFIER pbeWithMD5AndRC2_CBC = PBKDF2.PKCS5.sub(6);
     static final OBJECTIDENTIFIER pbeWithSHA1AndDES_CBC = PBKDF2.PKCS5.sub(10);
     static final OBJECTIDENTIFIER pbeWithSHA1AndRC2_CBC = PBKDF2.PKCS5.sub(11);
+    // PBKDF2 12 
+    // PBES2 13 
 
     private Block block;
     private byte[] k;
@@ -111,13 +113,9 @@ public class PBES1 implements PBES {
      */
     @Override
     public byte[] encrypt(byte[] message) {
-        // RFC 1423 の padding
-        int padlen = 8 - (message.length % 8);
-        int len = message.length + padlen;
-        byte[] em = new byte[len];
-        System.arraycopy(message, 0, em, 0, message.length);
-        Arrays.fill(em, message.length, em.length, (byte)padlen);
-        return block.encrypt(em, 0, em.length);
+        // RFC 1423 PEM と PKCS の padding は同じ
+        PKCS7Padding pad = new PKCS7Padding(block);
+        return pad.doFinalEncrypt(message);
     }
     
     /**
@@ -144,16 +142,8 @@ public class PBES1 implements PBES {
      */
     @Override
     public byte[] decrypt(byte[] message) {
-//        block.init(iv, k);
-        byte[] em = block.decrypt(message, message.length);
-        int d = em[em.length - 1];
-        if ( d > 8 || d < 1) {
-            throw new SecurityException();
-        }
-        int len = em.length - d;
-        byte[] dec = new byte[len];
-        System.arraycopy(em, 0, dec, 0, len);
-        return dec;
+        PKCS7Padding enc = new PKCS7Padding(block);
+        return enc.doFinalDecrypt(message);
     }
     
     /**

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 okome.
+ * Copyright 2024 okome.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.siisise.security.rng;
+package net.siisise.security.block;
 
 /**
- * psudo random number generator. 疑似乱数生成器.
+ *
  */
-public interface PRNG extends RNG {
+public interface PadBlock extends Block, EncodePadBlock,DecodePadBlock {
     
 }

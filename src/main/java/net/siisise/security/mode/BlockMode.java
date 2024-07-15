@@ -15,6 +15,7 @@
  */
 package net.siisise.security.mode;
 
+import java.util.Arrays;
 import net.siisise.security.block.Block;
 import net.siisise.security.block.IntBlock;
 
@@ -79,6 +80,9 @@ public abstract class BlockMode extends IntBlock {
      */
     @Override
     public int[] getParamLength() {
-        return new int[] {block.getBlockLength(), getBlockLength() };
+        int[] pl = block.getParamLength();
+        int[] np = Arrays.copyOf(pl, pl.length + 1);
+        np[np.length - 1] = getBlockLength();
+        return np;
     }
 }

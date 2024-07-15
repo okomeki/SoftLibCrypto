@@ -46,23 +46,11 @@ public interface StreamAEAD extends Stream {
      */
     byte[] tag();
 
-    default byte[] doFinalEncrypt() {
-        return doFinalEncrypt(new byte[0]);
-    }
-
-    default byte[] doFinalEncrypt(byte[] src) {
-        return doFinalEncrypt(src, 0, src.length);
-    }
-
+    byte[] doFinalEncrypt();
+    byte[] doFinalEncrypt(byte[] src);
     byte[] doFinalEncrypt(byte[] src, int offset, int length);
 
-    default byte[] doFinalDecrypt() {
-        return doFinalDecrypt(new byte[0]);
-    }
-
-    default byte[] doFinalDecrypt(byte[] src) {
-        return doFinalDecrypt(src, 0, src.length);
-    }
-
+    byte[] doFinalDecrypt();
+    byte[] doFinalDecrypt(byte[] src);
     byte[] doFinalDecrypt(byte[] src, int offset, int length);
 }

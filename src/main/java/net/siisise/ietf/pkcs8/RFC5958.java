@@ -73,7 +73,7 @@ public class RFC5958 extends PKCS8 {
             s3.add(new OCTETSTRING(salt));
             s3.add(new INTEGER(c));
              SEQUENCE s4 = new SEQUENCE();
-             s4.add(new OBJECTIDENTIFIER(HMAC.idhmacWithSHA256)); // HMACwithSHA256
+             s4.add(HMAC.idhmacWithSHA256); // HMACwithSHA256
              s4.add(new NULL());
             s3.add(s4);
            s2.add(s3); // 0,1,0,1
@@ -116,7 +116,7 @@ public class RFC5958 extends PKCS8 {
                 byte[] salt = ((OCTETSTRING)pbkdf2params.salt).getValue();
                 int c = ((INTEGER)pbkdf2params.iterationCount).getValue().intValue();
                 MAC hmac;
-                if ( pbkdf2params.prf.algorithm.equals(new OBJECTIDENTIFIER(HMAC.idhmacWithSHA256)) ) {
+                if ( pbkdf2params.prf.algorithm.equals(HMAC.idhmacWithSHA256) ) {
                     hmac = new HMAC(new SHA256());
                     hmac.init(((OCTETSTRING)pbkdf2params.prf.parameters).getValue());
                 } else {
