@@ -16,6 +16,7 @@
 package net.siisise.security.block;
 
 import net.siisise.security.key.RSAMiniPrivateKey;
+import net.siisise.security.key.RSAPrivateCrtKey;
 import net.siisise.security.key.RSAPublicKey;
 import net.siisise.security.padding.EME;
 
@@ -28,11 +29,34 @@ import net.siisise.security.padding.EME;
  * 
  * IEEE 1363
  */
-public class RSAES {
+public class RSAES implements ES {
     final EME eme;
+    
+    private RSAPublicKey pub;
+    private RSAMiniPrivateKey prv;
 
     public RSAES(EME eme) {
         this.eme = eme;
+    }
+
+    /**
+     * 暗号化用鍵.
+     * @param pubKey 公開鍵 
+     */
+    public void init(RSAPublicKey pubKey) {
+        pub = pubKey;
+    }
+
+    /**
+     * 暗号、復号用鍵.
+     * フル鍵の場合は暗号化も可能
+     * @param prvKey 秘密鍵
+     */
+    public void init(RSAMiniPrivateKey prvKey) {
+        prv = prvKey;
+        if ( prvKey instanceof RSAPrivateCrtKey ) {
+            pub = ((RSAPrivateCrtKey)prvKey).getPublicKey();
+        }
     }
 
     /**
@@ -46,6 +70,11 @@ public class RSAES {
         int k = (pub.getModulus().bitLength() + 7) / 8;
         byte[] EM = eme.encoding(k, m);
         return pub.rsaep(EM, k);
+    }
+    
+    @Override
+    public byte[] encrypt(byte[] m) {
+        return encrypt(pub,m);
     }
 
     /**
@@ -64,5 +93,10 @@ public class RSAES {
         } catch ( SecurityException e) { // ばれないように一カ所で再度発する.
             throw new SecurityException("decryption error");
         }
+    }
+
+    @Override
+    public byte[] decrypt(byte[] m) {
+        return decrypt(prv,m);
     }
 }
