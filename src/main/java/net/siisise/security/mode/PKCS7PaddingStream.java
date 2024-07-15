@@ -27,7 +27,7 @@ import net.siisise.security.stream.Stream;
  * 1バイト単位で送信する場合など Stream暗号と同じことをしたいとき1回単位で送信可能にする.
  */
 public class PKCS7PaddingStream implements Stream {
-    private Block block;
+    private final Block block;
     private int len;
 
     public PKCS7PaddingStream(Block block) {
@@ -78,5 +78,8 @@ public class PKCS7PaddingStream implements Stream {
     public byte[] decrypt(byte[] src, int offset, int length) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-    
+
+    public byte[] doFinalEncrypt(byte[] src, int offset, int length) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

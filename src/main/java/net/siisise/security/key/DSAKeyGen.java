@@ -13,18 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.siisise.security.sign;
+package net.siisise.security.key;
 
 import java.math.BigInteger;
-import java.security.DigestException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.spec.DSAPrivateKeySpec;
+import java.security.spec.DSAPublicKeySpec;
 import net.siisise.ietf.pkcs1.PKCS1;
 import net.siisise.io.PacketA;
 import net.siisise.lang.Bin;
 import net.siisise.security.digest.SHA1;
+import net.siisise.security.digest.SHA224;
 import net.siisise.security.digest.SHA256;
+import net.siisise.security.digest.SHA512256;
 
 /**
  * DSAのDomainとx y 鍵生成.
@@ -39,10 +42,14 @@ public class DSAKeyGen {
         final int L;
         // 素数 q の希望の長さ bit
         final int N;
+        
+        // 仮
+        final MessageDigest H;
 
-        LNPair(int l, int n) {
+        LNPair(int l, int n, MessageDigest h) {
             L = l;
             N = n;
+            H = h;
         }
 
         boolean equals(int l, int n) {
@@ -61,17 +68,43 @@ public class DSAKeyGen {
     /**
      * FIPS PUB 186-4 で指定可能なのは4種類のみ.
      */
-    public static final LNPair LN1016 = new LNPair(1024, 160);
-    public static final LNPair LN2022 = new LNPair(2048, 224);
-    public static final LNPair LN2025 = new LNPair(2048, 256);
-    public static final LNPair LN3025 = new LNPair(3072, 256);
+    public static final LNPair LN1016 = new LNPair(1024, 160, new SHA1());
+    public static final LNPair LN2022 = new LNPair(2048, 224, new SHA224());
+    public static final LNPair LN2025 = new LNPair(2048, 256, new SHA256());
+    public static final LNPair LN3025 = new LNPair(3072, 256, new SHA512256());
+    
+    private SecureRandom srnd;
+
+    private final MessageDigest md;
+    // 仮
+    private final int index;
+
+    /**
+     * 初期仮.
+     * @param md 鍵の種類により変更が必要かも
+     */
+    public DSAKeyGen(MessageDigest md) {
+        this.md = md;
+        index = 7;
+        try {
+            srnd = SecureRandom.getInstanceStrong();
+        } catch (NoSuchAlgorithmException ex) {
+            throw new IllegalStateException(ex);
+        }
+    }
+    
+    public DSAKeyGen() {
+        this(new SHA1());
+    }
+    
 
     /**
      * ひととおりDSAで使える秘密鍵を生成する。
      *
+     * @param lp domainの種類
      * @return 新規の秘密鍵
      */
-    DSAPrivateKey gen(LNPair lp) {
+    public DSAPrivateKey gen(LNPair lp) {
         DSADomain domain = genDomain(lp);
         return genPrivateKey(domain);
     }
@@ -84,15 +117,29 @@ public class DSAKeyGen {
      * @return
      */
     DSAPrivateKey genPrivateKey(DSADomain domain) {
-        throw new java.lang.UnsupportedOperationException("まだない");
+        BigInteger x = genK(domain.getQ());
+        return new DSAPrivateKey(x, domain);
     }
 
+    public DSAPrivateKey toPrivateKey(DSAPrivateKeySpec spec) {
+        return new DSAPrivateKey(spec.getX(), spec.getP(), spec.getQ(), spec.getG());
+    }
+
+    public DSAPublicKey toPrivateKey(DSAPublicKeySpec spec) {
+        return new DSAPublicKey(spec.getY(), spec.getP(), spec.getQ(), spec.getG());
+    }
+    
     /**
-     *
+     * k または x の生成.
+     * 0 &lt; k &lt; q
      * @return ランダムなようなそうでないような.
      */
-    BigInteger genK() {
-        throw new java.lang.UnsupportedOperationException("まだない");
+    private BigInteger genK(BigInteger q) {
+        byte[] kbin = new byte[(q.bitLength() + 8) / 8];
+        srnd.nextBytes(kbin);
+        kbin[0] &= 0x7f;
+        BigInteger k = new BigInteger(kbin);
+        return k.mod(q.subtract(BigInteger.ONE)).add(BigInteger.ONE);
     }
 
     /**
@@ -104,9 +151,10 @@ public class DSAKeyGen {
      *
      * p, q, g
      *
+     * @param ln 種類
      * @return DSADomain
      */
-    DSADomain genDomain(LNPair ln) {
+    public DSADomain genDomain(LNPair ln) {
         return a2gen(a1gen(ln));
     }
 
@@ -120,10 +168,6 @@ public class DSAKeyGen {
         return a11gen(ln);
     }
 
-    MessageDigest md = new SHA256();
-    // 仮
-    int index = 7;
-
     /**
      * p q の生成
      *
@@ -131,7 +175,7 @@ public class DSAKeyGen {
      * @return p と q, g は未定義
      */
     private DSADomain a11gen(LNPair ln) {
-        return a112gen(ln, md, 256);
+        return a112gen(ln, ln.H, 256);
     }
 
     /**
@@ -235,47 +279,43 @@ public class DSAKeyGen {
         int b = ln.L - 1 - (n * outlen); // 4. b = 端数
 
         byte[] seed = new byte[(seedlen + 7) / 8];
-        BigInteger q;
-        try {
-            SecureRandom srnd = SecureRandom.getInstanceStrong();
-            while (true) {
-                do {
-                    srnd.nextBytes(seed); // 5. ビットシーケンス
-                    byte[] U = md.digest(seed); // 6.
-                    U[0] |= 0x80; // 7. 指定ビット数、奇数にする
-                    U[U.length - 1] |= 0x01;
-                    q = toNum(U);
-                } while (!testC3(q)); // 8. 素数テスト 9. 素数でない場合 5.へ
 
-                BigInteger domain_parameter_seed = toNum(seed); // 5. の残り
+        while (true) {
+            BigInteger q;
+            do {
+                srnd.nextBytes(seed); // 5. ビットシーケンス
+                byte[] U = md.digest(seed); // 6.
+                U[0] |= 0x80; // 7. 指定ビット数、奇数にする
+                U[U.length - 1] |= 0x01;
+                q = toNum(U);
+            } while (!testC3(q)); // 8. 素数テスト 9. 素数でない場合 5.へ
 
-                int offset = 1; // 10.
-                for (int counter = 0; counter < ln.L * 4; counter++) { // 11.
-                    BigInteger cnt = domain_parameter_seed.add(BigInteger.valueOf(offset));
-                    PacketA V = new PacketA();
-                    for (int j = 0; j <= n; j++) {
-                        // 11.1.
-                        byte[] cb = toBin(cnt);
-                        V.backWrite(md.digest(cb));
-                        cnt = cnt.add(BigInteger.ONE);
-                    }
-                    byte[] W = new byte[(ln.L + 7) / 8];
-                    V.backRead(W); // 11.2
-                    W[0] |= 0x80; // 11.3
-                    BigInteger X = toNum(W);
-                    BigInteger c = X.mod(q.shiftLeft(1)); // 11.4
-                    BigInteger p = X.subtract(c).add(BigInteger.ONE); // 11.5
-                    if (p.bitLength() >= ln.L - 1) { // 11.6
-                        if (testC3(p)) { // 11.7
-                            return new DSADomainFull(p, q, BigInteger.ZERO, domain_parameter_seed, counter);
-                        }
-                    }
-                    offset += n + 1;
+            BigInteger domain_parameter_seed = toNum(seed); // 5. の残り
 
+            int offset = 1; // 10.
+            for (int counter = 0; counter < ln.L * 4; counter++) { // 11.
+                BigInteger cnt = domain_parameter_seed.add(BigInteger.valueOf(offset));
+                PacketA V = new PacketA();
+                for (int j = 0; j <= n; j++) {
+                    // 11.1.
+                    byte[] cb = toBin(cnt);
+                    V.backWrite(md.digest(cb));
+                    cnt = cnt.add(BigInteger.ONE);
                 }
+                byte[] W = new byte[(ln.L + 7) / 8];
+                V.backRead(W); // 11.2
+                W[0] |= 0x80; // 11.3
+                BigInteger X = toNum(W);
+                BigInteger c = X.mod(q.shiftLeft(1)); // 11.4
+                BigInteger p = X.subtract(c).add(BigInteger.ONE); // 11.5
+                if (p.bitLength() >= ln.L - 1) { // 11.6
+                    if (testC3(p)) { // 11.7
+                        return new DSADomainFull(p, q, BigInteger.ZERO, domain_parameter_seed, counter);
+                    }
+                }
+                offset += n + 1;
+
             }
-        } catch (NoSuchAlgorithmException e) { // 起きない前提
-            throw new IllegalStateException(e);
         }
     }
 
@@ -309,12 +349,8 @@ public class DSAKeyGen {
             return new DSADomainFull(d.getP(), d.getQ(), g, ((DSADomainFull) d).getDomainParameterSeed(), ((DSADomainFull) d).getCounter());
         } else {
             BigInteger g;
-            try {
-                g = a21gen(d);
-                return new DSADomain(d.getP(), d.getQ(), g);
-            } catch (NoSuchAlgorithmException ex) {
-                throw new IllegalStateException(ex);
-            }
+            g = a21gen(d);
+            return new DSADomain(d.getP(), d.getQ(), g);
         }
     }
     
@@ -328,18 +364,18 @@ public class DSAKeyGen {
     /**
      * g生成. A.2.1. 古い方法
      */
-    private BigInteger a21gen(DSADomain d) throws NoSuchAlgorithmException {
+    private BigInteger a21gen(DSADomain d) {
         BigInteger p = d.getP();
         BigInteger q = d.getQ();
         BigInteger e = p.subtract(BigInteger.ONE).divide(q); // 1.
-        SecureRandom srnd = SecureRandom.getInstanceStrong();
 
         BigInteger g;
         do {
             BigInteger h;
             do {
-                byte[] a = srnd.generateSeed((p.bitLength() + 7) / 8);
-                h = new BigInteger(a).mod(p.subtract(BigInteger.ONE));
+                byte[] a = new byte[(p.bitLength() + 7) / 8];
+                srnd.nextBytes(a);
+                h = toNum(a).mod(p.subtract(BigInteger.ONE));
             } while (h.compareTo(BigInteger.ONE) < 0);
             g = h.modPow(e, p);
         } while (g.equals(BigInteger.ONE));
@@ -364,42 +400,42 @@ public class DSAKeyGen {
     private BigInteger a23gen(DSADomainFull d, MessageDigest md, int index) {
         if ( (index & 0xff) != index ) return null; // 1.
         BigInteger q = d.getQ();
-        int N = q.bitLength(); // 2.
+//        int N = q.bitLength(); // 2.
         BigInteger p = d.getP();
         BigInteger e = (p.subtract(BigInteger.ONE).divide(q)); // 3.
         short count = 0; // 4.
+        byte[] seed = toBin(d.getDomainParameterSeed());
         BigInteger g;
-        BigInteger two = BigInteger.ONE.shiftLeft(1);
         do {
             count++; // 5.
             if ( count == 0) return null; // 6.
-            md.update(toBin(d.getDomainParameterSeed())); // 7.
+            md.update(seed); // 7.
             md.update("ggen".getBytes());
             md.update((byte)index);
             md.update((byte)(count >>> 8));
             md.update((byte)count);
             byte[] W = md.digest(); // 8.
             g = toNum(W).modPow(e, p);
-        } while (g.compareTo(two) < 0);
+        } while (g.compareTo(BigInteger.ONE) <= 0);
         return g;
     }
     
     private boolean a24valid(DSADomainFull d, MessageDigest md, int index) {
         BigInteger p = d.getP();
         BigInteger q = d.getQ();
-        BigInteger seed = d.getDomainParameterSeed();
+        byte[] seed = toBin(d.getDomainParameterSeed());
         BigInteger g = d.getG();
         if ( (index & 0xff) != index ) return false; // 1.
         if (g.compareTo(BigInteger.ONE) <= 0 || g.compareTo(p) >= 0) return false;  // 2.
         if (!g.modPow(q, p).equals(BigInteger.ONE)) return false;
-        int N = q.bitLength(); // 4.
+//        int N = q.bitLength(); // 4.
         BigInteger e = p.subtract(BigInteger.ONE).divide(q);
         int count = 0;
         BigInteger computed_g;
         do {
             count++;
             if ( count == 0) return false;
-            md.update(toBin(seed));
+            md.update(seed);
             md.update("ggen".getBytes());
             md.update((byte)index);
             md.update((byte)(count >>> 8));

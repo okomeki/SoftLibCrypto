@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.siisise.security.sign;
+package net.siisise.security.key;
 
 import java.math.BigInteger;
 import java.security.interfaces.DSAParams;
+import net.siisise.iso.asn1.tag.ASN1DERFormat;
 
 /**
  * DSA公開鍵.
@@ -40,9 +41,9 @@ public class DSAPublicKey implements java.security.interfaces.DSAPublicKey {
     /**
      * DSA公開鍵
      * @param y DSA公開鍵成分
-     * @param p 
-     * @param q
-     * @param g 
+     * @param p domain 成分
+     * @param q domain 成分
+     * @param g domain 成分 
      */
     public DSAPublicKey(BigInteger y, BigInteger p, BigInteger q, BigInteger g ) {
         this.y = y;
@@ -65,7 +66,7 @@ public class DSAPublicKey implements java.security.interfaces.DSAPublicKey {
 
     @Override
     public String getAlgorithm() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return "DSA";
     }
 
     /**
@@ -80,7 +81,14 @@ public class DSAPublicKey implements java.security.interfaces.DSAPublicKey {
 
     @Override
     public byte[] getEncoded() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        /*
+        List sequence = new ArrayList();
+        sequence.add(params.getP());
+        sequence.add(params.getG());
+        sequence.add(params.getQ());
+        sequence.add(y);
+        */
+        return new ASN1DERFormat().numberFormat(y);
     }
     
 }
