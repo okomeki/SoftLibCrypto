@@ -87,39 +87,6 @@ public class DSA implements SignVerify {
     }
 
     /**
-     * 
-     * ( L, N ) = (1024, 160) (2048, 224) (2048, 256) (3072, 256) の4種類 
-     * @param pLen L 1024 bit 以上
-     * @param qLen N 160 bit 以上
-     * @deprecated まだ
-     * @return 
-     */
-    @Deprecated
-    public DSAPrivateKeySpec genSpec(int pLen, int qLen) {
-        BigInteger p = BigInteger.probablePrime(pLen, rnd); // modulus
-        BigInteger q = BigInteger.probablePrime(qLen, rnd); // divisor of (p-1)
-        BigInteger pnl = p.subtract(BigInteger.ONE);
-        
-        int rLen = ( qLen + 7 ) & (~ 3);
-        
-        BigInteger g = BigInteger.valueOf(2);  // GF(p) の 1 < g < p
-//        g.gcd(p).equals(BigInteger.ONE)
-        while (!g.gcd(p).equals(BigInteger.ONE)) {
-            g = g.add(BigInteger.ONE);
-        }
-        
-        // 秘密鍵
-        byte[] xsrc = new byte[(qLen + 8) / 8];
-        
-        rnd.nextBytes(xsrc);
-        xsrc[0] = 0;
-        BigInteger x = new BigInteger(xsrc).mod(q); // private key
-        
-//        return new DSAPrivateKeySpec(x, p, q, g);
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    /**
      * DSA秘密鍵仕様から秘密鍵を構築.
      * @param spec DSA秘密鍵仕様
      * @return DSA秘密鍵

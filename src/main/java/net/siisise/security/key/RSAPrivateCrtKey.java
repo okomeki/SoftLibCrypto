@@ -155,9 +155,9 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
      */
     @Override
     public String getFormat() {
-        if ( format == Format.PKCS1 ) {
+        if ( format == Format.PKCS1 ) { // RSA PRIVATE KEY
             return "PKCS#1";
-        } else if ( format == Format.PKCS8 ) {
+        } else if ( format == Format.PKCS8 ) { // PRIVATE KEY
             return "PKCS#8";
 //        } else if ( format == Format.PKCS8PEM ) {
 //            return "PKCS#8PEM";
@@ -193,10 +193,10 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
      */
     @Override
     public byte[] getEncoded() {
-        if (format == Format.PKCS1) {
+        if (format == Format.PKCS1) { // RSA PRIVATE KEY
             return getPKCS1Encoded();
         }
-        return getPKCS8Encoded();
+        return getPKCS8Encoded(); // PRIVATE KEY
     }
 
     public byte[] getPKCS8Encoded() {
@@ -205,6 +205,7 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
 
     /**
      * PKCS #8 DER ぐらい.
+     * OpenSSL PRIVATE KEY
      * OBJECTIDENTIFIER が判別する容器に梱包したもの
      * RFC 5208 5. Private-Key Information Syntax
      * 
@@ -290,6 +291,7 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
      * Optional なし
      * @param <T>
      * @param format 
+     * @return  
      */
     public <T> T rebind(TypeFormat<T> format) {
         LinkedHashMap prv = new LinkedHashMap();

@@ -17,12 +17,14 @@ package net.siisise.security.sign;
 
 import net.siisise.security.digest.SHA1;
 import net.siisise.security.digest.SHA224;
+import net.siisise.security.key.DSAKeyGen;
+import net.siisise.security.key.DSAPrivateKey;
+import net.siisise.security.key.DSAPublicKey;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
- * @author okome
  */
 public class DSATest {
     

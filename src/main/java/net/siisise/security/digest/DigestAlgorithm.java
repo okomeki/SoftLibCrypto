@@ -28,7 +28,8 @@ import net.siisise.iso.asn1.tag.SEQUENCE;
  * RFC 8017 PKCS #1 A. と C.
  */
 public class DigestAlgorithm extends AlgorithmIdentifier {
-    public static final OBJECTIDENTIFIER DIGESTALGORITHM = new OBJECTIDENTIFIER("1.2.840.113549.2");
+    public static final OBJECTIDENTIFIER rsadsi = new OBJECTIDENTIFIER("1.2.840.113549");
+    public static final OBJECTIDENTIFIER DIGESTALGORITHM = rsadsi.sub(2);
     /**
      * @deprecated 
      */

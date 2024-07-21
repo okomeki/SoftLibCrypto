@@ -17,7 +17,6 @@ package net.siisise.security.rng;
 
 /**
  * 予測不可能性 てきとー
- * @author okome
  */
 public interface Unpredictability {
     
