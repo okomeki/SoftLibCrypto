@@ -19,6 +19,7 @@ package net.siisise.security.stream;
  * Google ?
  * @deprecated まだ未実装
  */
+@Deprecated
 public class ChaCha20 {
     
 }
