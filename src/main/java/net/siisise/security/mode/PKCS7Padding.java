@@ -202,6 +202,9 @@ public class PKCS7Padding extends BlockMode {
             decBlock = block.decrypt(decBlock, 0, decBlock.length);
             byte l = decBlock[len -1];
             len = ((int)l) & 0xff;
+            if ( len > blockLength ) {
+                throw new IllegalStateException( "pad "+ len);
+            }
             for ( int i = decBlock.length - len; i < decBlock.length; i++) {
                 if ( decBlock[i] != l) {
                     throw new IllegalStateException();

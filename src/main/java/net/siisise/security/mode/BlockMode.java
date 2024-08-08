@@ -24,6 +24,31 @@ import net.siisise.security.block.IntBlock;
  */
 public abstract class BlockMode extends IntBlock {
     protected Block block;
+
+    /**
+     * AESっぽい
+     * @param block
+     * @param mode
+     * @return 
+     */
+    public static Block mode(Block block, int mode) {
+        switch (mode) {
+            case 1:
+                return new ECB(block);
+            case 2:
+                return new CBC(block);
+            case 3:
+                return new OFB(block);
+            case 4:
+                return new CFB(block);
+            case 6:
+                return new GCM(block);
+            case 7:
+                return new CCM(block);
+            default:
+                throw new java.lang.UnsupportedOperationException();
+        }
+    }
     
     protected BlockMode(Block b) {
         block = b;
@@ -76,7 +101,7 @@ public abstract class BlockMode extends IntBlock {
     /**
      * 必要なパラメータの長さ
      * 後ろが外側用のパラメータ長.
-     * @return 
+     * @return key, iv の長さ
      */
     @Override
     public int[] getParamLength() {

@@ -84,6 +84,11 @@ public class HKDF implements KDF {
         return hkdf(salt, ikm, info, dkLen);
     }
 
+    @Override
+    public byte[] kdf(byte[] ikm, int dkLen) {
+        return hkdf(salt, ikm, info, dkLen);
+    }
+
     /**
      * Extract
      * Section 2.2.

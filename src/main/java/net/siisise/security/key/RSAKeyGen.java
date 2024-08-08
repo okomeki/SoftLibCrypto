@@ -27,10 +27,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import net.siisise.iso.asn1.ASN1Object;
+import net.siisise.iso.asn1.ASN1Tag;
 import net.siisise.iso.asn1.ASN1Util;
 import net.siisise.iso.asn1.tag.INTEGER;
 import net.siisise.iso.asn1.tag.SEQUENCE;
+import net.siisise.iso.asn1.tag.SEQUENCEList;
+import net.siisise.iso.asn1.tag.SEQUENCEMap;
 import net.siisise.security.key.RSAMultiPrivateKey.OtherPrimeInfo;
 
 /**
@@ -171,8 +173,8 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
             return pkey;
         } else if ( v == 1 ) {
             List<RSAMultiPrivateKey.OtherPrimeInfo> op = new ArrayList<>();
-            List<ASN1Object> apis = ((SEQUENCE) rsa.get(9)).getValue();
-            for ( ASN1Object api : apis ) {
+            List<ASN1Tag> apis = ((SEQUENCE) rsa.get(9)).getValue();
+            for ( ASN1Tag api : apis ) {
                 SEQUENCE mp = (SEQUENCE) api;
                 RSAMultiPrivateKey.OtherPrimeInfo pi = new RSAMultiPrivateKey.OtherPrimeInfo();
                 pi.prime = ((INTEGER)mp.get(0)).getValue();
@@ -195,16 +197,16 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
      * @param key
      * @return 
      */
-    public static SEQUENCE encodePrivate8(RSAPrivateCrtKey key) {
+    public static SEQUENCEMap encodePrivate8(RSAPrivateCrtKey key) {
         return key.getPKCS8PrivateKeyInfo().encodeASN1();
     }
     
-    public static SEQUENCE encodePublic1(RSAPublicKey pub) {
+    public static SEQUENCEMap encodePublic1(RSAPublicKey pub) {
         return pub.getPKCS1ASN1();
     }
 
     public static RSAPublicKey decodePublic1(byte[] asn) throws IOException {
-        SEQUENCE seq = (SEQUENCE) ASN1Util.toASN1(asn);
+        SEQUENCEList seq = (SEQUENCEList) ASN1Util.toASN1(asn);
         BigInteger n = ((INTEGER)seq.get(0)).getValue();
         BigInteger e = ((INTEGER)seq.get(1)).getValue();
         return new RSAPublicKey(n, e);
@@ -215,7 +217,7 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
      * @param key
      * @return 
      */
-    public static SEQUENCE encodePrivate1(RSAPrivateCrtKey key) {
+    public static SEQUENCEMap encodePrivate1(RSAPrivateCrtKey key) {
         return key.getPKCS1ASN1();
     }
 

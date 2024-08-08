@@ -90,6 +90,18 @@ public class GCM extends LongStreamMode implements StreamAEAD {
     }
 
     /**
+     * nonce
+     * @return nonce bit length
+     */
+    @Override
+    public int[] getParamLength() {
+        int[] pl = block.getParamLength();
+        int[] np = Arrays.copyOf(pl, pl.length + 1);
+        np[np.length - 1] = getBlockLength() - 32;
+        return np;
+    }
+
+    /**
      * 
      * iv 96bit または ?
      * iv は使い捨て( 再利用禁止、衝突するRNDよりCountがいい )

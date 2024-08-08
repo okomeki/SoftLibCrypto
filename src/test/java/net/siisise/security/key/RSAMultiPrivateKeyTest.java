@@ -19,7 +19,10 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import net.siisise.iso.asn1.ASN1Object;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.xml.transform.TransformerException;
+import net.siisise.iso.asn1.ASN1Tag;
 import net.siisise.iso.asn1.ASN1Util;
 import net.siisise.iso.asn1.tag.ASN1Convert;
 import net.siisise.iso.asn1.tag.SEQUENCE;
@@ -126,9 +129,15 @@ public class RSAMultiPrivateKeyTest {
     public void testGetPKCS1ASN1Rebind() {
         System.out.println("getPKCS1ASN1 rebind");
         RSAMultiPrivateKey instance = (RSAMultiPrivateKey) RSAKeyGen.generatePrivateKey(256, srnd, 4);
-        ASN1Object expResult = instance.rebind(new ASN1Convert());
+        ASN1Tag expResult = instance.rebind(new ASN1Convert());
         SEQUENCE result = instance.getPKCS1ASN1();
-        assertEquals(expResult, result);
+        try {
+            System.out.println(ASN1Util.toString(ASN1Util.toXML(result)));
+            System.out.println(ASN1Util.toString(ASN1Util.toXML(expResult)));
+        } catch (TransformerException ex) {
+            Logger.getLogger(RSAMultiPrivateKeyTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        assertTrue(expResult.equals( result));
         // TODO review the generated test code and remove the default call to fail.
 //        fail("The test case is a prototype.");
     }
@@ -163,6 +172,7 @@ public class RSAMultiPrivateKeyTest {
 //        ASN1Object asn = ASN1Util.toASN1(k);
 //        System.out.println(asn);
         byte[] result = instance.getEncoded();
+        System.out.println(ASN1Util.DERtoASN1(result));
         System.out.println(ASN1Util.toASN1(result));
 //        assertArrayEquals(expResult, result);
         // TODO review the generated test code and remove the default call to fail.

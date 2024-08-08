@@ -15,7 +15,6 @@
  */
 package net.siisise.security.key;
 
-import java.io.IOException;
 import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -24,13 +23,13 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import net.siisise.bind.Rebind;
-import net.siisise.iso.asn1.ASN1Object;
+import net.siisise.iso.asn1.ASN1Tag;
 import net.siisise.iso.asn1.ASN1Util;
 import net.siisise.iso.asn1.tag.ASN1Convert;
 import net.siisise.iso.asn1.tag.SEQUENCE;
+import net.siisise.iso.asn1.tag.SEQUENCEList;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -168,7 +167,7 @@ public class RSAPublicKeyTest {
         BigInteger n = BigInteger.valueOf(1234567890123456l);
         BigInteger e = BigInteger.valueOf(65537);
         RSAPublicKey instance = new RSAPublicKey(n,e);
-        SEQUENCE ex1ASN1 = new SEQUENCE();
+        SEQUENCE ex1ASN1 = new SEQUENCEList();
         ex1ASN1.add(instance.getModulus());
         ex1ASN1.add(instance.getPublicExponent());
         ASN1Convert asncnv = new ASN1Convert();
@@ -177,13 +176,9 @@ public class RSAPublicKeyTest {
 //        byte[] rebindASN1 = instance.rebind(asncnv).encodeAll();
         byte[] rebind2ASN1 = Rebind.valueOf(instance, asncnv).encodeAll();
         try {
-            ASN1Object ex1 = ASN1Util.toASN1(rebind2ASN1);
+            ASN1Tag ex1 = ASN1Util.toASN1(rebind2ASN1);
             
             System.out.println(ASN1Util.toString(ASN1Util.toXML(ex1)));
-        } catch (IOException ex) {
-            Logger.getLogger(RSAPublicKeyTest.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ParserConfigurationException ex) {
-            Logger.getLogger(RSAPublicKeyTest.class.getName()).log(Level.SEVERE, null, ex);
         } catch (TransformerException ex) {
             Logger.getLogger(RSAPublicKeyTest.class.getName()).log(Level.SEVERE, null, ex);
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 okome.
+ * Copyright 2022-2024 okome.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,20 +17,20 @@ package net.siisise.ietf.pkcs5;
 
 import java.util.Arrays;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
-import net.siisise.iso.asn1.tag.SEQUENCE;
 import net.siisise.security.block.Block;
 import net.siisise.security.mac.MAC;
-import net.siisise.security.mode.PKCS7Padding;
 
 /**
  * RFC 8018 PKCS #5
  * Section 6.2. PBES2
- *
+ * A.4. PBES2
  */
 public class PBES2 implements PBES {
     public static final OBJECTIDENTIFIER id_PBES2 = PBKDF2.PKCS5.sub(13);
     private final PBKDF2 kdf;
     private Block block;
+    // 1つなので仮
+    private byte[][] params;
     
     public PBES2(PBKDF2 kdf) {
         this.kdf = kdf;
@@ -69,6 +69,24 @@ public class PBES2 implements PBES {
         this.block = block;
         return block;
     }
+
+    public Block initAndSalt(Block block, byte[] password, byte[] salt, int c) {
+//        digest.getDigestLength();
+        int[] nlen = block.getParamLength();
+        nlen = new int[] {nlen[0]};
+        int[] blen = new int[nlen.length];
+        for (int i = 0; i < nlen.length; i++ ) {
+            blen[i] = (nlen[i] + 7) / 8;
+        }
+        
+        kdf.init(salt,c);
+//        kdf.init(hmac);
+        byte[][] dk = kdf.pbkdf(password, blen);
+        
+        block.init(dk[0], salt); // k, iv
+        this.block = block;
+        return block;
+    }
     
     /**
      * 
@@ -80,17 +98,8 @@ public class PBES2 implements PBES {
      * @return 
      */
     public Block init(Block block, MAC hmac, byte[] password, byte[] salt, int c) {
-//        digest.getDigestLength();
-        int[] nlen = block.getParamLength(); // ビット
-        int[] blen = new int[nlen.length]; // バイト
-        for ( int i = 0; i < nlen.length; i++ ) {
-            blen[i] = (nlen[i] + 7) / 8;
-        }
         kdf.init(hmac, salt, c);
-        // hmac.init();
-        byte[][] dk = kdf.pbkdf(password, blen);
-        block.init(dk); // k, iv
-        this.block = block;
+        init(block, password);
         return block;
     }
 
@@ -100,34 +109,51 @@ public class PBES2 implements PBES {
      * @param password 
      */
     public void init(Block block, byte[] password) {
-        throw new java.lang.UnsupportedOperationException("まだない");
+        // hmac.init();
+        this.block = block;
+//        int[] nlen = block.getParamLength(); // ビット
+//        int[] blen = new int[nlen.length]; // バイト
+//        for ( int i = 0; i < nlen.length; i++ ) {
+//            blen[i] = (nlen[i] + 7) / 8;
+//        }
+//        byte[][] dk = kdf.pbkdf(password, blen);
+//        block.init(dk); // k, iv
+        init(password);
     }
     
+    /**
+     * iv設定用(仮)
+     * @param params iv
+     */
+    public void setParam(byte[]... params) {
+        this.params = params;
+    }
+
+    /**
+     * PBES2Paramからの生成想定.
+     * @param password パスワード
+     */
     public void init(byte[] password) {
         int[] ps = block.getParamLength();
         int[] bs = new int[ps.length];
+        if ( params == null ) {
+            params = new byte[0][];
+        }
         int s = 0;
-        for (int p : ps) {
-            s += (p + 7) / 8;
+        for (int i = 0; i < ps.length - params.length; i++) {
+            s += (ps[i] + 7) / 8;
         }
         byte[] ll = kdf.kdf(password, s);
         s = (ps[0] + 7) / 8;
         byte[] key = Arrays.copyOfRange(ll, 0, s);
-        byte[] iv = Arrays.copyOfRange(ll, s, s + (ps[1] + 7) / 8);
-        block.init(key, iv);
-    }
-
-    /**
-     * 
-     * @param seq OID次のパラメータ
-     */
-    public void setASN1(SEQUENCE seq) {
-        
-        if ( seq.get(0,0).equals(PBKDF2.OID)) {
-            kdf.setASN1Params((SEQUENCE) seq.get(0,1));
+        byte[][] prs = new byte[ps.length][];
+        prs[0] = Arrays.copyOfRange(key, 0, s);
+        if ( params.length >= 1) {
+            prs[1] = params[0];
         } else {
-            throw new IllegalStateException();
+            prs[1] = Arrays.copyOfRange(ll, s, s + (ps[1] + 7) / 8);
         }
+        block.init(prs);
     }
 
     /**
@@ -138,8 +164,7 @@ public class PBES2 implements PBES {
      */
     @Override
     public byte[] encrypt(byte[] message) {
-        PKCS7Padding pad = new PKCS7Padding(block);
-        return pad.doFinalEncrypt(message);
+        return block.doFinalEncrypt(message);
     }
 
     /**
@@ -149,12 +174,10 @@ public class PBES2 implements PBES {
      */
     @Override
     public byte[] decrypt(byte[] message) {
-        PKCS7Padding pad = new PKCS7Padding(block);
-        return pad.doFinalDecrypt(message);
+        return block.doFinalDecrypt(message);
     }
 
     void setBlock(Block encryptionScheme) {
         this.block = encryptionScheme;
-//        block.init(keyandparam);
     }
 }

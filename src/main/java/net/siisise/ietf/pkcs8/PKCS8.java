@@ -20,6 +20,8 @@ import net.siisise.ietf.pkcs.asn1.PrivateKeyInfo;
 import net.siisise.iso.asn1.ASN1Util;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.SEQUENCE;
+import net.siisise.iso.asn1.tag.SEQUENCEList;
+import net.siisise.iso.asn1.tag.SEQUENCEMap;
 import net.siisise.security.key.RSAPrivateCrtKey;
 import net.siisise.security.key.RSAKeyGen;
 
@@ -34,18 +36,17 @@ import net.siisise.security.key.RSAKeyGen;
  */
 public class PKCS8 {
     
-    public static final OBJECTIDENTIFIER PKCS = new OBJECTIDENTIFIER("1.2.840.113549.1");
-    public static final OBJECTIDENTIFIER PKCS1 = PKCS.sub(1);
+    public static final OBJECTIDENTIFIER PKCS = net.siisise.ietf.pkcs1.PKCS1.PKCS; // new OBJECTIDENTIFIER("1.2.840.113549.1");
+    public static final OBJECTIDENTIFIER PKCS1 = net.siisise.ietf.pkcs1.PKCS1.PKCS1;
+    public static final OBJECTIDENTIFIER rsaEncryption = net.siisise.ietf.pkcs1.PKCS1.rsaEncryption;
     public static final OBJECTIDENTIFIER PKCS8 = PKCS.sub(8);
-    public static final OBJECTIDENTIFIER rsaEncryption = PKCS1.sub(1);
-    
     
     /**
      * 5. Private-Key Information Syntax
      * @param key 鍵をPKCS #8形式(暗号なし,DER)にする
      * @return 
      */
-    public static SEQUENCE getPrivateKeyInfo(RSAPrivateCrtKey key) {
+    public static SEQUENCEMap getPrivateKeyInfo(RSAPrivateCrtKey key) {
         PrivateKeyInfo info = new PrivateKeyInfo(rsaEncryption, key.getPKCS1Encoded());
         return info.encodeASN1();
     }
@@ -57,7 +58,7 @@ public class PKCS8 {
      * @throws IOException 
      */
     public static RSAPrivateCrtKey setPrivateKeyInfo(byte[] src) throws IOException {
-        PrivateKeyInfo info = PrivateKeyInfo.decode((SEQUENCE) ASN1Util.toASN1(src));
+        PrivateKeyInfo info = PrivateKeyInfo.decode((SEQUENCEList) ASN1Util.toASN1(src));
         if ( info.version == 0 && rsaEncryption.equals(info.privateKeyAlgorithm.algorithm) ) {
             return RSAKeyGen.decodeSecret1(info.privateKey);
         }

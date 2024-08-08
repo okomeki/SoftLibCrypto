@@ -21,6 +21,7 @@ import java.security.MessageDigest;
 import java.util.Arrays;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
 import net.siisise.iso.asn1.tag.SEQUENCE;
+import net.siisise.iso.asn1.tag.SEQUENCEList;
 
 /**
  * RFC 8017 PKCS #1
@@ -64,7 +65,7 @@ public class EMSA_PKCS1_v1_5 implements EMSA {
         byte[] H = md.digest();
         len = 0;
         // DigestInfo
-        SEQUENCE digestInfo = new SEQUENCE();
+        SEQUENCE digestInfo = new SEQUENCEList();
         DigestAlgorithm alg = new DigestAlgorithm();
         alg.algorithm = DigestAlgorithm.toOID(md);
         digestInfo.add(alg.encodeASN1());

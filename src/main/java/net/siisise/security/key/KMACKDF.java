@@ -15,6 +15,7 @@
  */
 package net.siisise.security.key;
 
+import java.util.Arrays;
 import net.siisise.security.mac.KMAC;
 
 /**
@@ -51,6 +52,11 @@ public class KMACKDF implements KDF {
     @Override
     public byte[] kdf(byte[] password) {
         return mac.doFinal(password);
+    }
+
+    @Override
+    public byte[] kdf(byte[] password, int len) {
+        return Arrays.copyOf(kdf(password), len);
     }
 
 }

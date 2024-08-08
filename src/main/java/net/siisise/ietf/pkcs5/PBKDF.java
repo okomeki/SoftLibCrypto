@@ -23,6 +23,12 @@ import net.siisise.security.key.KDF;
  * 鍵導出関数?
  */
 public interface PBKDF extends KDF {
+    /**
+     * 
+     * @param salt
+     * @param c 
+     */
+    void init(byte[] salt, int c);
     
     /**
      * 派生鍵を生成するよ.
@@ -40,6 +46,7 @@ public interface PBKDF extends KDF {
      * @param dkLen ハッシュ鍵長 (最大値はKDFにより異なる)
      * @return DK derived key 派生鍵
      */
+    @Override
     byte[] kdf(byte[] password, int dkLen);
     /**
      * 派生鍵を生成するよ.

@@ -27,9 +27,9 @@ import java.util.Arrays;
 @Deprecated
 public class PBKDF1 implements PBKDF {
 
-    private MessageDigest md;
-    private byte[] salt;
-    private int c;
+    protected MessageDigest md;
+    protected byte[] salt;
+    protected int c;
     private int dkLen;
 
     public PBKDF1() {
@@ -47,18 +47,7 @@ public class PBKDF1 implements PBKDF {
         this.md = md;
     }
 
-    /**
-     * 
-     * @param md 使用するハッシュ関数
-     * @param salt salt, an octet string
-     * @param c iteration count, positive integer 繰り返し数 4000ぐらい
-     */
-    public void init(MessageDigest md, byte[] salt, int c) {
-        this.md = md;
-        this.salt = salt;
-        this.c = c;
-    }
-    
+    @Override
     public void init(byte[] salt, int c) {
         this.salt = salt;
         this.c = c;
@@ -69,18 +58,26 @@ public class PBKDF1 implements PBKDF {
      * @param md 使用するハッシュ関数
      * @param salt salt, an octet string
      * @param c iteration count, positive integer 繰り返し数 4000ぐらい
+     */
+    public void init(MessageDigest md, byte[] salt, int c) {
+        init(md);
+        init(salt, c);
+    }
+
+    /**
+     * 
+     * @param md 使用するハッシュ関数
+     * @param salt salt, an octet string
+     * @param c iteration count, positive integer 繰り返し数 4000ぐらい
      * @param dkLen length in octets of derived key, a positive integer 派生鍵の長さ  (最大値はMDにより異なる)
      */
     public void init(MessageDigest md, byte[] salt, int c, int dkLen) {
-        this.md = md;
-        this.salt = salt;
-        this.c = c;
+        init(md, salt, c);
         this.dkLen = dkLen;
     }
     
     public void init(byte[] salt, int c, int dkLen) {
-        this.salt = salt;
-        this.c = c;
+        init(salt, c);
         this.dkLen = dkLen;
     }
     
@@ -105,7 +102,7 @@ public class PBKDF1 implements PBKDF {
      */
     @Override
     public byte[] kdf(byte[] password, int dkLen) {
-        return pbkdf1(md, password, salt, c, dkLen);
+        return pbkdf( password, salt, c, dkLen);
     }
 
     /**
@@ -115,7 +112,7 @@ public class PBKDF1 implements PBKDF {
     */
     @Override
     public byte[] kdf(byte[] password) {
-        return pbkdf1(md, password, salt, c, dkLen);
+        return pbkdf( password, salt, c, dkLen);
     }
     
     /**

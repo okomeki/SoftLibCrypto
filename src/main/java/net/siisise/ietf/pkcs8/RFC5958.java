@@ -18,24 +18,23 @@ package net.siisise.ietf.pkcs8;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import net.siisise.bind.Rebind;
 import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.ietf.pkcs5.PBES2;
 import net.siisise.ietf.pkcs5.PBES2params;
 import net.siisise.ietf.pkcs5.PBKDF2;
-import net.siisise.ietf.pkcs5.PBKDF2params;
 import net.siisise.iso.asn1.ASN1Object;
 import net.siisise.iso.asn1.ASN1Util;
+import net.siisise.iso.asn1.tag.ASN1Convert;
 import net.siisise.iso.asn1.tag.INTEGER;
-import net.siisise.iso.asn1.tag.NULL;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
 import net.siisise.iso.asn1.tag.SEQUENCE;
+import net.siisise.iso.asn1.tag.SEQUENCEList;
 import net.siisise.security.block.AES;
-import net.siisise.security.block.Block;
 import net.siisise.security.digest.SHA256;
 import net.siisise.security.key.RSAPrivateCrtKey;
 import net.siisise.security.mac.HMAC;
-import net.siisise.security.mac.MAC;
 import net.siisise.security.mode.CBC;
 
 /**
@@ -57,34 +56,40 @@ public class RFC5958 extends PKCS8 {
      */
     public SEQUENCE getRFC5958EncryptedPrivateKeyInfoASN1(RSAPrivateCrtKey key, byte[] pass) throws NoSuchAlgorithmException {
         SecureRandom srnd = SecureRandom.getInstanceStrong();
-        byte[] salt = srnd.generateSeed(8);
+        byte[] salt = new byte[16];
+        srnd.nextBytes(salt);
         int c = 2048;
         PBKDF2 kdf = new PBKDF2(new HMAC(new SHA256()));
         CBC block = new CBC(new AES());
+        byte[] iv = new byte[16];
+        srnd.nextBytes(iv);
         PBES2 es = new PBES2(kdf);
+        es.setParam(iv);
         es.init(block, pass, salt, c);
-        SEQUENCE s = new SEQUENCE();
-         SEQUENCE ids = new SEQUENCE(); // 0 AlgorithmIdentifier
-          ids.add(PBES2.id_PBES2); // 0,0
-          SEQUENCE s1 = new SEQUENCE(); // 0,1
-           SEQUENCE s2 = new SEQUENCE(); //0,1,0
-           s2.add(PBKDF2.OID); // 0,1,0,0
-            SEQUENCE s3 = new SEQUENCE(); // 0,1,0,1
-            s3.add(new OCTETSTRING(salt));
-            s3.add(new INTEGER(c));
-             SEQUENCE s4 = new SEQUENCE();
-             s4.add(HMAC.idhmacWithSHA256); // HMACwithSHA256
-             s4.add(new NULL());
-            s3.add(s4);
-           s2.add(s3); // 0,1,0,1
-          s1.add(s2); // 0.1.0
-           s2 = new SEQUENCE();
-           s2.add(AES.sub(42)); // aes256-CBC-PAD
-           s2.add(new OCTETSTRING(new byte[16])); // パラメータ aes鍵? iv?
-          s1.add(s2); // 0.1.1
-         ids.add(s1); // 0.1
-        s.add(ids);
-        s.add(new OCTETSTRING(new byte[1232])); // あんごう
+        byte[] encdData = es.encrypt(key.getPKCS1Encoded());
+        ASN1Convert format = new ASN1Convert();
+
+        SEQUENCE s = new SEQUENCEList();
+         AlgorithmIdentifier es2 = new AlgorithmIdentifier();
+         es2.algorithm = PBES2.id_PBES2;
+           SEQUENCE esPara = new SEQUENCEList(); // 0,1
+         es2.parameters = esPara;
+             AlgorithmIdentifier kdfai = new AlgorithmIdentifier();
+             kdfai.algorithm = PBKDF2.OID;
+               SEQUENCE kdfparams = new SEQUENCEList(); // 0,1,0,1
+             kdfai.parameters = kdfparams;
+               kdfparams.add(new OCTETSTRING(salt));
+               kdfparams.add(new INTEGER(c));
+                 AlgorithmIdentifier ss = new AlgorithmIdentifier();
+                 ss.algorithm = HMAC.idhmacWithSHA256;
+               kdfparams.add(ss.encodeASN1());
+           esPara.add(kdfai.encodeASN1()); // 0.1.0
+             AlgorithmIdentifier enc = new AlgorithmIdentifier();
+             enc.algorithm = AES.sub(42); // aes256-CBC-PAD
+             enc.parameters = new OCTETSTRING(iv);
+           esPara.add(enc.encodeASN1()); // 0.1.1
+        s.add(es2.encodeASN1());
+        s.add(new OCTETSTRING(encdData)); // あんごう
         return s;
     }
     
@@ -108,35 +113,13 @@ public class RFC5958 extends PKCS8 {
         AlgorithmIdentifier alg = AlgorithmIdentifier.decode((SEQUENCE) s.get(0));
         if ( alg.algorithm.equals(PBES2.id_PBES2)) {
             PBES2params pbes2params = PBES2params.decode((SEQUENCE) alg.parameters);
+            PBES2 es = pbes2params.decode();
             ASN1Object kdfid = pbes2params.keyDerivationFunc.algorithm;
-            PBES2 es = new PBES2();
-            if ( kdfid.equals(PBKDF2.OID)) {
-                PBKDF2 kdf = new PBKDF2();
-                PBKDF2params pbkdf2params = PBKDF2params.decode((SEQUENCE) pbes2params.keyDerivationFunc.parameters);
-                byte[] salt = ((OCTETSTRING)pbkdf2params.salt).getValue();
-                int c = ((INTEGER)pbkdf2params.iterationCount).getValue().intValue();
-                MAC hmac;
-                if ( pbkdf2params.prf.algorithm.equals(HMAC.idhmacWithSHA256) ) {
-                    hmac = new HMAC(new SHA256());
-                    hmac.init(((OCTETSTRING)pbkdf2params.prf.parameters).getValue());
-                } else {
-                    throw new UnsupportedOperationException();
-                }
-                Block block;
-                if ( s.get(0,1,1,0).equals(AES.sub(42))) {
-                    block = new CBC(new AES());
-                } else {
-                    throw new UnsupportedOperationException();
-                }
-                byte[] iv = ((OCTETSTRING)s.get(0,1,1,1)).getValue(); // iv か何か
-                byte[] enc = ((OCTETSTRING)s.get(1)).getValue();
-                
-                kdf.init(new HMAC(new SHA256()), salt, c);
-                es.init(block, hmac, pass, salt, c);
-                byte[] dec = es.decrypt(enc);
-                SEQUENCE seq = (SEQUENCE)ASN1Util.toASN1(dec);
-                System.out.println(seq);
-            }
+            byte[] enc = ((OCTETSTRING)s.get(1)).getValue();
+            es.init(pass);
+            byte[] dec = es.decrypt(enc);
+            SEQUENCE seq = (SEQUENCE)ASN1Util.toASN1(dec);
+            System.out.println(seq);
         }
         throw new UnsupportedOperationException();
     }

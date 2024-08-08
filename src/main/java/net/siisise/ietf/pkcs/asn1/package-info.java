@@ -15,5 +15,6 @@
  */
 /**
  * ASN.1 行き場のないものをまとめる
+ * X.208 は古いので X.680 の方にあわせる
  */
 package net.siisise.ietf.pkcs.asn1;

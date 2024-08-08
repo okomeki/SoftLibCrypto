@@ -19,7 +19,7 @@ import java.math.BigInteger;
 import java.security.PrivateKey;
 import net.siisise.ietf.pkcs1.PKCS1;
 import net.siisise.iso.asn1.tag.INTEGER;
-import net.siisise.iso.asn1.tag.SEQUENCE;
+import net.siisise.iso.asn1.tag.SEQUENCEMap;
 
 /**
  * RFC 8017 PKCS #1 3.2.
@@ -171,7 +171,7 @@ public class RSAMiniPrivateKey implements PrivateKey, java.security.interfaces.R
      */
     @Override
     public byte[] getEncoded() {
-        SEQUENCE seq = getPKCS1ASN1();
+        SEQUENCEMap seq = getPKCS1ASN1();
         return seq.encodeAll();
     }
 
@@ -179,10 +179,10 @@ public class RSAMiniPrivateKey implements PrivateKey, java.security.interfaces.R
      * 公開鍵の形式を借り
      * @return 
      */
-    SEQUENCE getPKCS1ASN1() {
-        SEQUENCE seq = new SEQUENCE();
-        seq.add(new INTEGER(modulus)); // n
-        seq.add(new INTEGER(privateExponent)); // e
+    SEQUENCEMap getPKCS1ASN1() {
+        SEQUENCEMap seq = new SEQUENCEMap();
+        seq.put("modulus", new INTEGER(modulus)); // n
+        seq.put("privateExponent", new INTEGER(privateExponent)); // e
         return seq;
     }
 }

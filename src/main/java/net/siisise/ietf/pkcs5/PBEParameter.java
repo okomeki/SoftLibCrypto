@@ -15,27 +15,37 @@
  */
 package net.siisise.ietf.pkcs5;
 
+import net.siisise.bind.Rebind;
+import net.siisise.bind.format.TypeFormat;
+import net.siisise.iso.asn1.tag.INTEGER;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
-import net.siisise.iso.asn1.tag.SEQUENCE;
+import net.siisise.iso.asn1.tag.SEQUENCEMap;
 
 /**
  * PBES1用
  */
 public class PBEParameter {
-    byte[] salt;
+
+    public byte[] salt;
     int iterationCount;
 
-    public SEQUENCE encodeASN1() {
-        SEQUENCE s = new SEQUENCE();
-        s.add(new OCTETSTRING(salt));
-        s.add(iterationCount);
-        return s;
+    public PBES1 encode(OBJECTIDENTIFIER oid, byte[] password) {
+        PBES1 es = decode();
+        es.init(oid, password);
+        return es;
+    }
+
+    public PBES1 decode() {
+        PBES1 es = new PBES1();
+        es.init(salt, iterationCount);
+        return es;
     }
     
-    public PBES1 encode(OBJECTIDENTIFIER oid, byte[] password) {
-        PBES1 es = new PBES1();
-        es.init(oid, password, salt, iterationCount);
-        return es;
+    public <V> V rebind(TypeFormat<V> format) {
+        SEQUENCEMap seq = new SEQUENCEMap();
+        seq.put("salt", new OCTETSTRING(salt));
+        seq.put("iterationCount", new INTEGER(iterationCount));
+        return Rebind.valueOf(seq, format);
     }
 }

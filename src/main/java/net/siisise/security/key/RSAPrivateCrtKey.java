@@ -16,7 +16,6 @@
 package net.siisise.security.key;
 
 import java.math.BigInteger;
-import java.util.LinkedHashMap;
 import net.siisise.bind.format.TypeFormat;
 import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.ietf.pkcs.asn1.PrivateKeyInfo;
@@ -27,6 +26,8 @@ import net.siisise.iso.asn1.tag.INTEGER;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
 import net.siisise.iso.asn1.tag.SEQUENCE;
+import net.siisise.iso.asn1.tag.SEQUENCEList;
+import net.siisise.iso.asn1.tag.SEQUENCEMap;
 import net.siisise.security.mac.HMAC;
 
 /**
@@ -243,9 +244,9 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
      */
     @Deprecated
     public SEQUENCE getEncryptedPrivateKeyInfoASN1() {
-        SEQUENCE s = new SEQUENCE(); // EncryptedPrivateKeyInfo
+        SEQUENCE s = new SEQUENCEList(); // EncryptedPrivateKeyInfo
         AlgorithmIdentifier aid = new AlgorithmIdentifier(""); // PKCS #5 PBES1の
-        SEQUENCE ids = aid.encodeASN1(); // AlgorithmIdentifier
+        SEQUENCEMap ids = aid.encodeASN1(); // AlgorithmIdentifier
         s.add(ids); // encryptionAlgorithm EncryptionAlgorithmIdentifier
         
         throw new UnsupportedOperationException();
@@ -264,20 +265,20 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
      */
     @Deprecated
     public SEQUENCE getRFC5958EncryptedPrivateKeyInfoASN1(byte[] pass) {
-        SEQUENCE s = new SEQUENCE();
-         SEQUENCE ids = new SEQUENCE();
+        SEQUENCE s = new SEQUENCEList();
+         SEQUENCE ids = new SEQUENCEList();
           ids.add(PBES2.id_PBES2);
-          SEQUENCE s1 = new SEQUENCE();
-           SEQUENCE s2 = new SEQUENCE();
+          SEQUENCE s1 = new SEQUENCEList();
+           SEQUENCE s2 = new SEQUENCEList();
            s2.add(PBKDF2.OID);
-            SEQUENCE s3 = new SEQUENCE();
+            SEQUENCE s3 = new SEQUENCEList();
             s3.add(new OCTETSTRING(new byte[8])); // 乱数?
             s3.add(new INTEGER(2048));
              AlgorithmIdentifier ai = new AlgorithmIdentifier(HMAC.idhmacWithSHA256); // HMACwithSHA256
             s3.add(ai.encodeASN1());
            s2.add(s3);
           s1.add(s2);
-           s2 = new SEQUENCE();
+           s2 = new SEQUENCEList();
            s2.add(new OBJECTIDENTIFIER("1.2.16.840.1.101.3.4.1.42")); // aes256-CBC-PAD
            s2.add(new OCTETSTRING(new byte[16])); // パラメータ aes鍵? iv?
           s1.add(s2);
@@ -294,16 +295,7 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
      * @return  
      */
     public <T> T rebind(TypeFormat<T> format) {
-        LinkedHashMap prv = new LinkedHashMap();
-        prv.put("version", 0);
-        prv.put("modulus", modulus);
-        prv.put("publicExponent", publicExponent);
-        prv.put("privateExponent", privateExponent);
-        prv.put("prime1", prime1);
-        prv.put("prime2", prime2);
-        prv.put("exponent1", exponent1);
-        prv.put("exponent2", exponent2);
-        prv.put("coefficient", coefficient);
+        SEQUENCEMap prv = getPKCS1ASN1();
         return format.mapFormat(prv);
     }
 
@@ -323,17 +315,17 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
      * @return 
      */
     @Override
-    public SEQUENCE getPKCS1ASN1() {
-        SEQUENCE prv = new SEQUENCE();
-        prv.add(0);
-        prv.add(modulus);
-        prv.add(publicExponent);
-        prv.add(privateExponent);
-        prv.add(prime1);
-        prv.add(prime2);
-        prv.add(exponent1);
-        prv.add(exponent2);
-        prv.add(coefficient);
+    public SEQUENCEMap getPKCS1ASN1() {
+        SEQUENCEMap prv = new SEQUENCEMap();
+        prv.put("version", 0);
+        prv.put("modulus", modulus);
+        prv.put("publicExponent", publicExponent);
+        prv.put("privateExponent", privateExponent);
+        prv.put("prime1", prime1);
+        prv.put("prime2", prime2);
+        prv.put("exponent1", exponent1);
+        prv.put("exponent2", exponent2);
+        prv.put("coefficient", coefficient);
         return prv;
     }
     

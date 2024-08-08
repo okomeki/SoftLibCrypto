@@ -89,11 +89,20 @@ public class TripleDES extends OneBlock {
         }
     }
 
+    /**
+     * プロック長.
+     * @return ブロック長 64bit
+     */
     @Override
     public int getBlockLength() {
         return block1.getBlockLength();
     }
     
+    /**
+     * 鍵長.
+     * DESブロック長の3倍
+     * @return 192bit
+     */
     @Override
     public int[] getParamLength() {
         return new int[] {getBlockLength() * 3};

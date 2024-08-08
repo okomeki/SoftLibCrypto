@@ -15,14 +15,9 @@
  */
 package net.siisise.ietf.pkcs5;
 
-import java.io.IOException;
 import net.siisise.block.ReadableBlock;
-import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.io.PacketA;
-import net.siisise.iso.asn1.ASN1Util;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
-import net.siisise.iso.asn1.tag.OCTETSTRING;
-import net.siisise.iso.asn1.tag.SEQUENCE;
 import net.siisise.security.digest.SHA1;
 import net.siisise.security.mac.HMAC;
 import net.siisise.security.mac.MAC;
@@ -92,43 +87,6 @@ public class PBKDF2 implements PBKDF {
     public void init(byte[] salt, int c) {
         this.salt = salt;
         this.c = c;
-    }
-    
-    /**
-     * Appendix A. ASN.1 Syntax
-     * A.2. PBKDF2
-     * salt と c かな?
-     * @deprecated まだない
-     * @param params
-     * @throws IOException 
-     */
-    @Deprecated
-    public void setASN1Params(byte[] params) throws IOException {
-        SEQUENCE ps = (SEQUENCE) ASN1Util.toASN1(params);
-        setASN1Params(ps);
-    }
-    
-    /**
-     * ToDo: PBKDF2params の方にあるので消す?
-     * @param ps 
-     */
-    public void setASN1Params(SEQUENCE ps) {
-        PBKDF2params params = PBKDF2params.decode(ps);
-        if ( params.salt instanceof OCTETSTRING ) {
-            salt = ((OCTETSTRING)params.salt).getValue();
-        } else if ( params.salt instanceof SEQUENCE ) {
-            AlgorithmIdentifier pbkdf2SaltSources = AlgorithmIdentifier.decode((SEQUENCE)params.salt);
-            throw new UnsupportedOperationException();
-        }
-        c = params.iterationCount.intValue();
-        if ( params.keyLength != null ) {
-            dkLen = params.keyLength.intValue();
-        }
-        if ( params.prf != null ) {
-            prf = HMAC.decode(params.prf);
-        } else {
-            prf = new HMAC(new SHA1());
-        }
     }
     
     /**

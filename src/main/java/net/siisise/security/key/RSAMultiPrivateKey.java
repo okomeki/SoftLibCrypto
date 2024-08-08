@@ -17,10 +17,10 @@ package net.siisise.security.key;
 
 import java.io.Serializable;
 import java.math.BigInteger;
-import java.util.LinkedHashMap;
 import java.util.List;
 import net.siisise.bind.format.TypeFormat;
-import net.siisise.iso.asn1.tag.SEQUENCE;
+import net.siisise.iso.asn1.tag.SEQUENCEList;
+import net.siisise.iso.asn1.tag.SEQUENCEMap;
 
 /**
  * RFC 8017 PKCS #1 3.2. RSA Private Key.
@@ -42,12 +42,16 @@ public class RSAMultiPrivateKey extends RSAPrivateCrtKey {
         public BigInteger exponent;     // d
         public BigInteger coefficient;  // t
         
-        public <T> T rebind(TypeFormat<T> format) {
-            LinkedHashMap info = new LinkedHashMap();
+        SEQUENCEMap encode() {
+            SEQUENCEMap info = new SEQUENCEMap();
             info.put("prime", prime);
             info.put("exponent", exponent);
             info.put("coefficient", coefficient);
-            return format.mapFormat(info);
+            return info;
+        }
+        
+        public <T> T rebind(TypeFormat<T> format) {
+            return format.mapFormat(encode());
         }
     }
 
@@ -114,27 +118,23 @@ public class RSAMultiPrivateKey extends RSAPrivateCrtKey {
      * @return 
      */
     @Override
-    public SEQUENCE getPKCS1ASN1() {
-        SEQUENCE prv = new SEQUENCE();
-        prv.add(version);
-        prv.add(modulus);
-        prv.add(publicExponent);
-        prv.add(privateExponent);
-        prv.add(prime1);
-        prv.add(prime2);
-        prv.add(exponent1);
-        prv.add(exponent2);
-        prv.add(coefficient);
+    public SEQUENCEMap getPKCS1ASN1() {
+        SEQUENCEMap prv = new SEQUENCEMap();
+        prv.put("version", version);
+        prv.put("modulus", modulus);
+        prv.put("publicExponent", publicExponent);
+        prv.put("privateExponent", privateExponent);
+        prv.put("prime1", prime1);
+        prv.put("prime2", prime2);
+        prv.put("exponent1", exponent1);
+        prv.put("exponent2", exponent2);
+        prv.put("coefficient", coefficient);
         if ( version > 0 ) {
-            SEQUENCE ots = new SEQUENCE(); // SEQUENCE OF OtherPrimeInfo
+            SEQUENCEList ots = new SEQUENCEList(); // SEQUENCE OF OtherPrimeInfo
             for ( OtherPrimeInfo pi : otherPrimeInfos ) {
-                SEQUENCE dpi = new SEQUENCE();
-                dpi.add(pi.prime);
-                dpi.add(pi.exponent);
-                dpi.add(pi.coefficient);
-                ots.add(dpi);
+                ots.add(pi.encode());
             }
-            prv.add(ots);
+            prv.put("otherPrimeInfos", ots);
         }
         return prv;
     }
@@ -149,20 +149,7 @@ public class RSAMultiPrivateKey extends RSAPrivateCrtKey {
      */
     @Override
     public <T> T rebind(TypeFormat<T> format) {
-        LinkedHashMap prv = new LinkedHashMap();
-        prv.put("version", version);
-        prv.put("modulus", modulus);
-        prv.put("publicExponent", publicExponent);
-        prv.put("privateExponent", privateExponent);
-        prv.put("prime1", prime1);
-        prv.put("prime2", prime2);
-        prv.put("exponent1", exponent1);
-        prv.put("exponent2", exponent2);
-        prv.put("coefficient", coefficient);
-        if ( version > 0 ) {
-            // SEQUENCE OF OtherPrimeInfo
-            prv.put("otherPrimeInfos", otherPrimeInfos);
-        }
+        SEQUENCEMap prv = getPKCS1ASN1();
         return format.mapFormat(prv);
     }
 

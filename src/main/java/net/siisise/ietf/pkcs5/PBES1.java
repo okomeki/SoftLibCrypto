@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 okome.
+ * Copyright 2022-2024 okome.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,10 +43,29 @@ public class PBES1 implements PBES {
     static final OBJECTIDENTIFIER pbeWithSHA1AndRC2_CBC = PBKDF2.PKCS5.sub(11);
     // PBKDF2 12 
     // PBES2 13 
+    
+    final PBKDF1 kdf;
 
-    private Block block;
-    private byte[] k;
-    private byte[] iv;
+    protected Block block;
+    protected byte[] k;
+    protected byte[] iv;
+    
+    public PBES1() {
+        kdf = new PBKDF1();
+    }
+    
+    protected PBES1(PBKDF1 kdf) {
+        this.kdf = kdf;
+    }
+
+    /**
+     * PBEParameter
+     * @param salt PBKDFのパラメータ 8バイト(64bit)以上推奨
+     * @param c ハッシュ繰り返し数 PBKDFのパラメータ 1000以上推奨
+     */
+    public void init(byte[] salt, int c) {
+        kdf.init(salt, c);
+    }
     
     /**
      *
@@ -60,20 +79,24 @@ public class PBES1 implements PBES {
      * @param block DES/CBC RC2/CBC
      * @param digest PBKDFのパラメータ
      * @param password PBKDFのパラメータ
-     * @param salt PBKDFのパラメータ
-     * @param c ハッシュ繰り返し数 PBKDFのパラメータ
      */
-    public void init(Block block, MessageDigest digest, byte[] password, byte[] salt, int c) {
+    public void init(Block block, MessageDigest digest, byte[] password) {
         this.block = block;
-        byte[] dk = PBKDF1.pbkdf1(digest, password, salt, c, 16);
+        kdf.init(digest);
+        byte[] dk = kdf.kdf(password, 16);
         k = new byte[8];
         iv = new byte[8];
         System.arraycopy(dk, 0, k, 0, 8);
         System.arraycopy(dk, 8, iv, 0, 8);
         block.init(k,iv);
     }
+    
+    public void init(Block block, MessageDigest digest, byte[] password, byte[] salt, int c) {
+        init(salt, c);
+        init(block, digest, password);
+    }
 
-    public void init(OBJECTIDENTIFIER oid, byte[] password, byte[] salt, int c) {
+    public void init(OBJECTIDENTIFIER oid, byte[] password) {
         MessageDigest md;
         Block b;
         if ( pbeWithMD2AndDES_CBC.equals(oid)) {
@@ -97,7 +120,7 @@ public class PBES1 implements PBES {
         } else {
             throw new SecurityException();
         }
-        init(new CBC(b), md, password, salt, c);
+        init(new PKCS7Padding(new CBC(b)), md, password);
     }
 
     /** 2回目があれば */
@@ -114,8 +137,7 @@ public class PBES1 implements PBES {
     @Override
     public byte[] encrypt(byte[] message) {
         // RFC 1423 PEM と PKCS の padding は同じ
-        PKCS7Padding pad = new PKCS7Padding(block);
-        return pad.doFinalEncrypt(message);
+        return block.doFinalEncrypt(message);
     }
     
     /**
@@ -131,7 +153,8 @@ public class PBES1 implements PBES {
      */
     public static byte[] encrypt(Block block, MessageDigest digest, byte[] message, byte[] password, byte[] salt, int c) {
         PBES1 pb = new PBES1();
-        pb.init(block, digest, password, salt, c);
+        pb.init(salt, c);
+        pb.init(block, digest, password);
         return pb.encrypt(message);
     }
     
@@ -142,8 +165,7 @@ public class PBES1 implements PBES {
      */
     @Override
     public byte[] decrypt(byte[] message) {
-        PKCS7Padding enc = new PKCS7Padding(block);
-        return enc.doFinalDecrypt(message);
+        return block.doFinalDecrypt(message);
     }
     
     /**
@@ -158,7 +180,8 @@ public class PBES1 implements PBES {
      */
     public static byte[] decrypt(Block block, MessageDigest digest, byte[] message, byte[] password, byte[] salt, int c) {
         PBES1 pb = new PBES1();
-        pb.init(block, digest, password, salt, c);
+        pb.init(salt, c);
+        pb.init(block, digest, password);
         return pb.decrypt(message);
     }
     

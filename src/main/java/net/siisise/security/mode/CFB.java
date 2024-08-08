@@ -27,6 +27,10 @@ public final class CFB extends LongStreamMode {
     
     private byte[] vector;
     protected int offset;
+    
+    public CFB(Block block) {
+        super(block);
+    }
 
     public CFB(Block block, byte[] key, byte[] iv) {
         super(block);

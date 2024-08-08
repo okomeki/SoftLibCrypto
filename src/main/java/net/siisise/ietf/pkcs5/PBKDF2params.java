@@ -15,15 +15,18 @@
  */
 package net.siisise.ietf.pkcs5;
 
+import java.math.BigInteger;
 import java.util.LinkedHashMap;
 import net.siisise.bind.Rebind;
 import net.siisise.bind.format.TypeFormat;
-import net.siisise.iso.asn1.ASN1Object;
 import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
+import net.siisise.iso.asn1.ASN1Tag;
 import net.siisise.iso.asn1.tag.ASN1Convert;
 import net.siisise.iso.asn1.tag.INTEGER;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
 import net.siisise.iso.asn1.tag.SEQUENCE;
+import net.siisise.iso.asn1.tag.SEQUENCEList;
+import net.siisise.iso.asn1.tag.SEQUENCEMap;
 import net.siisise.security.digest.SHA1;
 import net.siisise.security.mac.HMAC;
 
@@ -32,11 +35,25 @@ import net.siisise.security.mac.HMAC;
  */
 public class PBKDF2params {
 
-    public ASN1Object salt; // CHOICE { OCTETSTRING , AlgorithmIdentifier }
-    public INTEGER iterationCount;
-    public INTEGER keyLength;
-    public AlgorithmIdentifier prf;
+    public ASN1Tag salt; // CHOICE { OCTETSTRING , AlgorithmIdentifier }
+    public BigInteger iterationCount;
+    public BigInteger keyLength;
+    public AlgorithmIdentifier prf = new AlgorithmIdentifier(HMAC.idhmacWithSHA1);
 
+    public PBKDF2params(byte[] salt, long iterationCount, int keyLength) {
+        this.salt = new OCTETSTRING(salt);
+        this.iterationCount = BigInteger.valueOf(iterationCount);
+        this.keyLength = BigInteger.valueOf(keyLength);
+    }
+    
+    public PBKDF2params(byte[] salt, long iterationCount) {
+        this.salt = new OCTETSTRING(salt);
+        this.iterationCount = BigInteger.valueOf(iterationCount);
+    }
+
+    PBKDF2params() {
+    }
+    
     /**
      * 
      * @param s AlgorithmIdentifier params
@@ -46,10 +63,10 @@ public class PBKDF2params {
         PBKDF2params params = new PBKDF2params();
         params.salt = s.get(0); // choice specified OCTET STRING
         // otherSource AlgorithmIdentifier {{PBKDF2-SaltSources}}
-        params.iterationCount = (INTEGER) s.get(1);
+        params.iterationCount = ((INTEGER) s.get(1)).getValue();
         int offset = 2;
         if (s.get(2) instanceof INTEGER) {
-            params.keyLength = (INTEGER) s.get(2); // OPTIONAL
+            params.keyLength = ((INTEGER) s.get(2)).getValue(); // OPTIONAL
             offset++;
         }
         if (s.size() >= offset) {
@@ -60,18 +77,18 @@ public class PBKDF2params {
         return params;
     }
 
-    public SEQUENCE encodeASN1() {
-        return (SEQUENCE)rebind(new ASN1Convert());
-/*
-        SEQUENCE seq = new SEQUENCE();
-        seq.add(salt);
-        seq.add(iterationCount);
+    public SEQUENCEMap encodeASN1() {
+//        return (SEQUENCE)rebind(new ASN1Convert());
+
+        SEQUENCEMap seq = new SEQUENCEMap();
+        seq.put("salt",salt);
+        seq.put("iterationCount", iterationCount);
         if (keyLength != null) {
-            seq.add(keyLength); // OPTIONAL
+            seq.put("keyLength", keyLength); // OPTIONAL
         }
         seq.add(prf.encodeASN1()); // DEFAULT algid-hmacWithSHA1
         return seq;
-*/
+
     }
 
     /**
@@ -96,10 +113,10 @@ public class PBKDF2params {
         if (this.salt instanceof OCTETSTRING) {
             tsalt = ((OCTETSTRING) salt).getValue();
         } else {
-            AlgorithmIdentifier pbkdf2SaltSources = AlgorithmIdentifier.decode((SEQUENCE) salt);
+            AlgorithmIdentifier pbkdf2SaltSources = AlgorithmIdentifier.decode((SEQUENCEList) salt);
             throw new UnsupportedOperationException();
         }
-        int c = iterationCount.getValue().intValue();
+        int c = iterationCount.intValue();
         HMAC hprf;
         if (prf != null) {
             hprf = HMAC.decode(prf);

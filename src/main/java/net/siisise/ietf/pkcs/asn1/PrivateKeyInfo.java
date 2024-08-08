@@ -20,11 +20,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import net.siisise.bind.Rebind;
 import net.siisise.bind.format.TypeFormat;
+import net.siisise.iso.asn1.ASN1Cls;
 import net.siisise.iso.asn1.tag.INTEGER;
 import net.siisise.iso.asn1.tag.NULL;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
-import net.siisise.iso.asn1.tag.SEQUENCE;
+import net.siisise.iso.asn1.tag.SEQUENCEList;
+import net.siisise.iso.asn1.tag.SEQUENCEMap;
 
 /**
  * RFC 5208 Section 5. Private-Key Information Syntax
@@ -62,22 +64,27 @@ public class PrivateKeyInfo {
         return Rebind.valueOf(s,format);
     }
 
-    public SEQUENCE encodeASN1() {
-        SEQUENCE s = new SEQUENCE();
-        s.add(version);
-        s.add(privateKeyAlgorithm.encodeASN1());
-        s.add(new OCTETSTRING(privateKey));
+    public SEQUENCEMap encodeASN1() {
+        SEQUENCEMap s = new SEQUENCEMap();
+        s.put("version", new INTEGER(version));
+        s.put("privateKeyAlgorithm", privateKeyAlgorithm.encodeASN1());
+        s.put("privateKey", new OCTETSTRING(privateKey));
         if ( attributes != null ) {
+            SEQUENCEList atrs = new SEQUENCEList(ASN1Cls.CONTEXT_SPECIFIC, 0);
+            //for ( a : attributes) {
+                
+            //}
+            s.put("attributes", atrs);
             // attributes [0] IMPLICIT Attributes OPTIONAL
             throw new UnsupportedOperationException();
         }
         return s;
     }
 
-    public static PrivateKeyInfo decode(SEQUENCE seq) {
+    public static PrivateKeyInfo decode(SEQUENCEList seq) {
         INTEGER ver = (INTEGER) seq.get(0);
         if ( ver.getValue().equals(BigInteger.ZERO)) {
-            AlgorithmIdentifier ai = AlgorithmIdentifier.decode((SEQUENCE) seq.get(1));
+            AlgorithmIdentifier ai = AlgorithmIdentifier.decode((SEQUENCEList) seq.get(1));
             if (ai.parameters.equals(new NULL()) ) {
                 PrivateKeyInfo info = new PrivateKeyInfo(ai.algorithm, ((OCTETSTRING)seq.get(2)).getValue());
                 if (seq.size() == 3) {

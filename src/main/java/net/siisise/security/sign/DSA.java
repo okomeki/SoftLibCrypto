@@ -15,7 +15,6 @@
  */
 package net.siisise.security.sign;
 
-import java.io.IOException;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -33,8 +32,6 @@ import net.siisise.ietf.pkcs1.PKCS1;
 import net.siisise.iso.asn1.ASN1Util;
 import net.siisise.iso.asn1.tag.ASN1DERFormat;
 import net.siisise.iso.asn1.tag.SEQUENCE;
-//import net.siisise.security.key.DSAPrivateKey;
-//import net.siisise.security.key.DSAPublicKey;
 
 /**
  * FIPS PUB 186-4
@@ -197,7 +194,7 @@ public class DSA implements SignVerify {
      */
     @Override
     public boolean verify(byte[] sign) {
-        try {
+//        try {
             SEQUENCE asn = (SEQUENCE) ASN1Util.toASN1(sign);
             List l = Rebind.valueOf(asn, List.class);
 
@@ -220,8 +217,8 @@ public class DSA implements SignVerify {
             // v = (((g)^u1(y)^u2) mod p) mod q
             BigInteger v = params.getG().modPow(u1, p).multiply(verifyKey.getY().modPow(u2, p)).mod(p).mod( q);
             return v.equals(r);
-        } catch (IOException ex) {
-            return false;
-        }
+//        } catch (IOException ex) {
+//            return false;
+//        }
     }
 }

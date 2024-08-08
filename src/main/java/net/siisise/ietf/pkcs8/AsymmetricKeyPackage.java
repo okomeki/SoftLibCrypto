@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 okome.
+ * Copyright 2024 okome.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,20 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.siisise.security.key;
+package net.siisise.ietf.pkcs8;
+
+import java.util.Arrays;
+import java.util.List;
+import net.siisise.bind.Rebind;
+import net.siisise.bind.format.TypeFormat;
 
 /**
- * 鍵導出関数.
- * 擬似的な共通鍵を生成する
- * ASN.1 から出力まで繋げる予定
+ * ASN.1 X.690 DER 出力が必要.
+ * ASN.1 X.690 BER 受信に対応する必要あり.
  */
-public interface KDF {
-    /**
-     * 共通鍵のようなものを生成する.
-     * 他の要素はASN.1 などから読み込む想定.
-     * @param password パスワードのようなもの(可変長)
-     * @return DK 共通鍵的なもの(指定サイズ)
-     */
-    byte[] kdf(byte[] password);
-    byte[] kdf(byte[] password, int len);
+public class AsymmetricKeyPackage {
+    OneAsymmetricKey[] keys;
+    
+    public <V> V rebind(TypeFormat<V> format) {
+        List list = Arrays.asList(keys);
+        return Rebind.valueOf(list, format);
+    }
 }

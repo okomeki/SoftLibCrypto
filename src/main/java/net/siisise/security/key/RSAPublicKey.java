@@ -16,7 +16,6 @@
 package net.siisise.security.key;
 
 import java.math.BigInteger;
-import java.util.LinkedHashMap;
 import net.siisise.bind.format.TypeFormat;
 import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.ietf.pkcs1.PKCS1;
@@ -26,6 +25,8 @@ import net.siisise.iso.asn1.tag.NULL;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
 import net.siisise.iso.asn1.tag.SEQUENCE;
+import net.siisise.iso.asn1.tag.SEQUENCEList;
+import net.siisise.iso.asn1.tag.SEQUENCEMap;
 
 /**
  * RFC 8017 PKCS #1
@@ -110,13 +111,13 @@ public class RSAPublicKey implements java.security.interfaces.RSAPublicKey {
         return getPKCS1ASN1().encodeAll();
     }
 
-    public SEQUENCE getPKCS1ASN1() {
+    public SEQUENCEMap getPKCS1ASN1() {
 /*      // rebind 任せでもいい
         return (SEQUENCE)rebind(new ASN1Convert());
 /*/
-        SEQUENCE pub = new SEQUENCE();
-        pub.add(modulus); // n
-        pub.add(publicExponent); // e
+        SEQUENCEMap pub = new SEQUENCEMap();
+        pub.put("modules", modulus); // n
+        pub.put("publicExponent", publicExponent); // e
         return pub;
 //*/
     }
@@ -129,7 +130,7 @@ public class RSAPublicKey implements java.security.interfaces.RSAPublicKey {
      * @return 出力
      */
     public <T> T rebind(TypeFormat<T> format) {
-        LinkedHashMap rsaPublicKey = new LinkedHashMap();
+        SEQUENCEMap rsaPublicKey = new SEQUENCEMap();
         rsaPublicKey.put("modulus", modulus); // n
         rsaPublicKey.put("publicExponent", publicExponent); // e
         return format.mapFormat(rsaPublicKey);
@@ -145,7 +146,7 @@ public class RSAPublicKey implements java.security.interfaces.RSAPublicKey {
     }
 
     public SEQUENCE getPKCS8ASN1() {
-        SEQUENCE s = new SEQUENCE();
+        SEQUENCE s = new SEQUENCEList();
         AlgorithmIdentifier aid = new AlgorithmIdentifier("1.2.840.113549.1.1.1");
         s.add(aid.encodeASN1());
         s.add(new BITSTRING(getPKCS1Encoded()));
@@ -160,9 +161,9 @@ public class RSAPublicKey implements java.security.interfaces.RSAPublicKey {
      */
     @Deprecated
     public byte[] getRawEncoded() {
-        SEQUENCE s = new SEQUENCE();
+        SEQUENCE s = new SEQUENCEList();
         s.add(new INTEGER(0));
-        SEQUENCE v = new SEQUENCE();
+        SEQUENCE v = new SEQUENCEList();
         v.add(new OBJECTIDENTIFIER("")); // ToDo: 不明
         v.add(new NULL());
         s.add(v);

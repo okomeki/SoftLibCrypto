@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 okome.
+ * Copyright 2024 okome.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,21 +16,30 @@
 package net.siisise.ietf.pkcs8;
 
 import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
+import net.siisise.iso.asn1.tag.INTEGER;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
 import net.siisise.iso.asn1.tag.SEQUENCE;
+import net.siisise.iso.asn1.tag.SEQUENCEList;
 
 /**
- * RFC 5208
- * RFC 5958 PKCS #5 系 3. Encrypted Private Key Info
+ * RFC 5208 PKCS #8 5. Private-Key Information Syntax
  */
-public class EncryptedPrivateKeyInfo {
+public class PrivateKeyInfo {
+    static class Version extends INTEGER {}
 
-    public AlgorithmIdentifier encryptionAlgorithm;
-    public OCTETSTRING encryptedData;
-
-    public static void decode(SEQUENCE seq) {
-        EncryptedPrivateKeyInfo info = new EncryptedPrivateKeyInfo();
-        info.encryptionAlgorithm = AlgorithmIdentifier.decode((SEQUENCE) seq.get(0));
-        info.encryptedData = (OCTETSTRING) seq.get(1);
+    public static class PrivateKey extends OCTETSTRING {
+        public PrivateKey() {
+        }
+        public PrivateKey(byte[] key) {
+            super(key);
+        }
     }
+    static class Attributes extends SEQUENCEList {}
+    
+    public INTEGER version;
+    AlgorithmIdentifier privateKeyAlgorithm;
+    OCTETSTRING privateKey;
+    SEQUENCE attributes; // [0]
+    
+    
 }

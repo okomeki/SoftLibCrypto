@@ -29,6 +29,10 @@ public final class OFB extends StreamMode {
 
     Packet xp;
 
+    public OFB(Block block) {
+        super(block);
+    }
+    
     public OFB(Block block, byte[] key, byte[] iv) {
         super(block);
         init(key, iv);
