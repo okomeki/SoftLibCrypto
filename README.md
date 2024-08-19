@@ -10,6 +10,14 @@ JCAは準備中かな。
 
 PKI系のものは別途パッケージにする予定です。
 
+## PKCS
+ASN.1 DER対応なども別パッケージになっているので
+- PKCS #1 RSA 全機能
+- PKCS #5 Password base 全機能
+  - SHA-3系対応済み
+- PKCS #8
+ぐらいなら気軽に対応している
+
 ## 公開鍵暗号,署名
 PKCS #1 ぜんぶ RSA系
 - RSAEP
@@ -22,27 +30,47 @@ PKCS #1 ぜんぶ RSA系
   - EME-PKCS1_v1_5
 - RSASSA-PSS
 - RSASSA-PKCS1_v1_5
+
 など
 
 ## 共通鍵 Block 暗号
-AES,DES(DEA),TripleDES(TDEA),RC2 など
+- AES
+- DES(DEA)
+- TripleDES(TDEA)
+- RC2
+
+など
 
 ## 暗号モード
 - CBC
+- CFB
 - ECB
-- CTRなど
-組み合わせ自由
+- CTR
+- OFB
+- etc
 
-- GCM 1.0.3くらいから
+暗号との組み合わせは自由
+
+- GCM 1.0.3くらいから スレッド対応
+- CCM
 
 # padding
-PKCS7Padding
+- PKCS7Padding
+
 まだ少ない
 
 # パスワード系
-HKDF
-PKCS #5
-PBKDF1,2,PBES1,2
+- KDF1,2,3
+- HKDF
+- PKCS #5
+  - PBKDF1
+  - PBKDF2
+  - PBES1
+  - PBES2
+- KMACKDF
+- OpenSSL
+  - PBKDF1改
+- etc...
 
 ## Stream 暗号
 
@@ -75,6 +103,9 @@ PBKDF1,2,PBES1,2
 - OMAC2
 - KMAC
 - XCBC
+- MacCBC
+- NMAC RFC 6151
+- etc...
 
 などブロック暗号,ハッシュとの組み合わせは自由
 
@@ -103,8 +134,11 @@ TDEA-CMAC
 ほか64bit, 128bit暗号は対応できそう
 
 ## ASN.1
-DER
-XML,JSON変換
+- BER
+- DER
+- PEM
+
+XML,JSON,Javaなど相互変換
 PKCS #8,#9,#12 鍵の符号化などは一部対応
 
 ## 速度
