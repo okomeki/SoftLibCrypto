@@ -27,7 +27,7 @@ import net.siisise.security.block.Block;
  */
 public final class OFB extends StreamMode {
 
-    Packet xp;
+    protected Packet xp;
 
     public OFB(Block block) {
         super(block);

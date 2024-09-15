@@ -15,6 +15,8 @@
  */
 package net.siisise.security.block;
 
+import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
+
 /**
  * 3DES. TDEA DESede.
  * とある暗号アルゴリズム.
@@ -24,6 +26,9 @@ package net.siisise.security.block;
  */
 @Deprecated
 public class TripleDES extends OneBlock {
+    
+    public static final OBJECTIDENTIFIER desEDE3_CBC = encryptionAlgorithm.sub(7);
+    // パラメータ OCTETSTRING(SIZE(8))
 
     private DES block1;
     private DES block2;

@@ -29,6 +29,10 @@ public interface MAC extends SignVerify {
         update(src);
         return sign();
     }
+    
+    default byte[] doFinal() {
+        return sign();
+    }
 
     /**
      * バイト単位の出力長

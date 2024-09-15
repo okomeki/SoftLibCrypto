@@ -15,6 +15,7 @@
  */
 package net.siisise.security.block;
 
+import net.siisise.ietf.pkcs1.PKCS1;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 
 /**
@@ -24,7 +25,7 @@ import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
  * CFBやOFBを使うとストリームモードでも利用可能。
  */
 public interface Block extends EncBlock, DecBlock {
-    public static final OBJECTIDENTIFIER rsadsi = new OBJECTIDENTIFIER("1.2.840.113549");
+    public static final OBJECTIDENTIFIER rsadsi = PKCS1.rsadsi;
     public static final OBJECTIDENTIFIER encryptionAlgorithm = rsadsi.sub(3);
 
     /**

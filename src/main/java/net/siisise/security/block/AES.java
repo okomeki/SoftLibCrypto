@@ -15,6 +15,7 @@
  */
 package net.siisise.security.block;
 
+import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.lang.Bin;
 
 /**
@@ -32,6 +33,26 @@ import net.siisise.lang.Bin;
  * https://tex2e.github.io/blog/crypto/aes-mix-columns
  */
 public class AES extends IntBlock {
+
+    public static final OBJECTIDENTIFIER AES = new OBJECTIDENTIFIER("2.16.840.1.101.3.4.1");
+    public static final OBJECTIDENTIFIER aes128_ECB_PAD = AES.sub(1);
+    public static final OBJECTIDENTIFIER aes128_CBC_PAD = AES.sub(2);
+    public static final OBJECTIDENTIFIER aes128_OFB = AES.sub(3);
+    public static final OBJECTIDENTIFIER aes128_CFB = AES.sub(4);
+    public static final OBJECTIDENTIFIER aes128_GCM = AES.sub(6);
+    public static final OBJECTIDENTIFIER aes128_CCM = AES.sub(7);
+    public static final OBJECTIDENTIFIER aes192_ECB_PAD = AES.sub(21);
+    public static final OBJECTIDENTIFIER aes192_CBC_PAD = AES.sub(22);
+    public static final OBJECTIDENTIFIER aes192_OFB = AES.sub(23);
+    public static final OBJECTIDENTIFIER aes192_CFB = AES.sub(24);
+    public static final OBJECTIDENTIFIER aes192_GCM = AES.sub(26);
+    public static final OBJECTIDENTIFIER aes192_CCM = AES.sub(27);
+    public static final OBJECTIDENTIFIER aes256_ECB_PAD = AES.sub(41);
+    public static final OBJECTIDENTIFIER aes256_CBC_PAD = AES.sub(42);
+    public static final OBJECTIDENTIFIER aes256_OFB = AES.sub(43);
+    public static final OBJECTIDENTIFIER aes256_CFB = AES.sub(44);
+    public static final OBJECTIDENTIFIER aes256_GCM = AES.sub(46);
+    public static final OBJECTIDENTIFIER aes256_CCM = AES.sub(47);
 
     /**
      * Rijndael 128～256ビット 32ビット単位

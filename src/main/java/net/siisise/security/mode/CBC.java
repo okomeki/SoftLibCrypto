@@ -24,7 +24,7 @@ import net.siisise.security.block.Block;
  */
 public class CBC extends LongBlockMode {
 
-    private long[] vectorl;
+    protected long[] vectorl;
 
     public CBC(Block block) {
         super(block);
@@ -51,6 +51,11 @@ public class CBC extends LongBlockMode {
         vectorl = Bin.btol(vector);
     }
 
+    /**
+     * 初期.
+     * @param block Block暗号
+     * @param key Block用key
+     */
     @Override
     public void init(Block block, byte[] key) {
         super.init(block, key);

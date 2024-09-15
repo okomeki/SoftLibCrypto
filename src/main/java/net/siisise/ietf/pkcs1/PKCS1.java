@@ -1,8 +1,6 @@
 package net.siisise.ietf.pkcs1;
 
 import java.math.BigInteger;
-import java.security.MessageDigest;
-import net.siisise.iso.asn1.ASN1;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.security.block.RSAES;
 import net.siisise.security.block.RSAES_OAEP;
@@ -20,7 +18,8 @@ import net.siisise.security.sign.RSASSA_PKCS1_v1_5;
  */
 public class PKCS1 {
 
-    public static final OBJECTIDENTIFIER PKCS = new OBJECTIDENTIFIER("1.2.840.113549.1");
+    public static final OBJECTIDENTIFIER rsadsi = new OBJECTIDENTIFIER("1.2.840.113549");
+    public static final OBJECTIDENTIFIER PKCS = rsadsi.sub(1);
     // Appendix C. ASN.1 Module
     public static final OBJECTIDENTIFIER PKCS1 = PKCS.sub(1);
     public static final OBJECTIDENTIFIER PKCS_1 = PKCS1.sub(0,1);
@@ -42,15 +41,6 @@ public class PKCS1 {
 //    public static final OBJECTIDENTIFIER NIST_SHA2 = new OBJECTIDENTIFIER("2.16.840.1.101.3.4.2");
 //    public static final OBJECTIDENTIFIER id_sha224 = NIST_SHA2.
     
-    ASN1 RSAPublicKey = ASN1.SEQUENCE;
-    ASN1 RSAPrivateKey = ASN1.SEQUENCE;
-    
-    MessageDigest md;
-    
-    public void init(MessageDigest md) {
-        this.md = md;
-    }
-
     /**
      * 4. Data Conversion Primitives
      * 4.1. I2OSP

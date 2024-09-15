@@ -15,6 +15,8 @@
  */
 package net.siisise.security.block;
 
+import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
+
 /**
  * RFC 2268 A Description of the RC2(r) Encryption Algorithm
  * 64bit Feistel構造 Block暗号
@@ -24,6 +26,7 @@ package net.siisise.security.block;
  */
 @Deprecated
 public class RC2 extends OneBlock {
+    public static final OBJECTIDENTIFIER rc2CBC = encryptionAlgorithm.sub(2);
     
     int t1 = 64;
     // 鍵拡張

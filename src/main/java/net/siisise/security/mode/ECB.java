@@ -29,6 +29,11 @@ public class ECB extends BlockMode {
     public ECB(Block block) {
         super(block);
     }
+    
+    @Override
+    public int[] getParamLength() {
+        return block.getParamLength();
+    }
 
     @Override
     public byte[] encrypt(byte[] src, int offset) {
