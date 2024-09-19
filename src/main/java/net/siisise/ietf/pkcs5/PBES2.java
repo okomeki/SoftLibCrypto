@@ -31,15 +31,27 @@ public class PBES2 implements PBES {
     private Block block;
     // 1つなので仮
     private byte[][] params;
-    
+
+    /**
+     * PBKDF2を指定して初期化.
+     * @param kdf PBKDF2
+     */
     public PBES2(PBKDF2 kdf) {
         this.kdf = kdf;
     }
 
+    /**
+     * MACアルゴリズムを指定して初期化.
+     * @param hmac PBKDF2用疑似乱数関数 MAC PRF
+     */
     public PBES2(MAC hmac) {
         this(new PBKDF2(hmac));
     }
-    
+
+    /**
+     * 標準設定で初期化.
+     * PBKDF2(HMAC-SHA1)
+     */
     public PBES2() {
         kdf = new PBKDF2();
     }
@@ -70,8 +82,15 @@ public class PBES2 implements PBES {
         return block;
     }
 
-    public Block initAndSalt(Block block, byte[] password, byte[] salt, int c) {
-//        digest.getDigestLength();
+    /*
+     * saltをIVに使用する想定の仮.
+     * @param block
+     * @param password
+     * @param salt salt
+     * @param c iteration count
+     * @return 
+     */
+/*    public Block initAndSalt(Block block, byte[] password, byte[] salt, int c) {
         int[] nlen = block.getParamLength();
         nlen = new int[] {nlen[0]};
         int[] blen = new int[nlen.length];
@@ -87,11 +106,11 @@ public class PBES2 implements PBES {
         this.block = block;
         return block;
     }
-    
+*/    
     /**
      * 
      * @param block XXX-CBC
-     * @param hmac
+     * @param hmac PBKDF2用疑似乱数関数 MAC PRF
      * @param password password
      * @param salt salt
      * @param c iteration count

@@ -41,17 +41,28 @@ public class RSASSA_PKCS1_v1_5 extends RSASSA {
     public RSASSA_PKCS1_v1_5(MessageDigest md) {
         super(new EMSA_PKCS1_v1_5(md));
     }
-    
+
+    /**
+     * 秘密鍵で署名.
+     * @param skey private key 私有鍵
+     * @return 
+     */
     @Override
     public byte[] sign(RSAMiniPrivateKey skey) {
         int k = (skey.getModulus().bitLength() + 7) / 8;
         byte[] EM = emsa.encode(k);
         return skey.rsasp1(EM, k);
     }
-    
+
+    /**
+     * 公開鍵で検証.
+     * @param pub 公開鍵
+     * @param S 署名
+     * @return 
+     */
     @Override
     public boolean verify(RSAPublicKey pub, byte[] S) {
-        int k = (pub.getModulus().bitLength() * + 7) / 8;
+        int k = (pub.getModulus().bitLength() + 7) / 8;
         if (S.length != k) {
             throw new SecurityException("invalid signature");
         }

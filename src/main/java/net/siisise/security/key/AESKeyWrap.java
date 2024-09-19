@@ -17,14 +17,17 @@ package net.siisise.security.key;
 
 import net.siisise.lang.Bin;
 import net.siisise.security.block.AES;
+import net.siisise.security.block.Block;
 import net.siisise.security.block.ES;
+import net.siisise.security.mode.GCM;
 
 /**
  * RFC 3394 Advanced Encryption Standard (AES) Key Wrap Algorithm.
+ * RFC 5649 Advanced Encryption Standard (AES) Key Wrap with Padding Algorithm.
  */
 public class AESKeyWrap implements ES {
 
-    AES aes;
+    Block aes;
 //    private byte[] kek;
     
     /**
@@ -36,6 +39,16 @@ public class AESKeyWrap implements ES {
 //        this.kek = kek;
         aes = new AES();
         aes.init(kek);
+    }
+
+    /**
+     * @deprecated 仮
+     * @param kek 
+     */
+    public void init(byte[][] kek) {
+        aes = new GCM(new AES());
+        aes.init(kek);
+        
     }
     
     static long def = 0xa6a6a6a6a6a6a6a6l;

@@ -17,6 +17,13 @@ package net.siisise.security.block;
 
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.lang.Bin;
+import net.siisise.security.mode.CBC;
+import net.siisise.security.mode.CCM;
+import net.siisise.security.mode.CFB;
+import net.siisise.security.mode.ECB;
+import net.siisise.security.mode.GCM;
+import net.siisise.security.mode.OFB;
+import net.siisise.security.mode.PKCS7Padding;
 
 /**
  * Adbanced Encryption Standard.
@@ -39,20 +46,59 @@ public class AES extends IntBlock {
     public static final OBJECTIDENTIFIER aes128_CBC_PAD = AES.sub(2);
     public static final OBJECTIDENTIFIER aes128_OFB = AES.sub(3);
     public static final OBJECTIDENTIFIER aes128_CFB = AES.sub(4);
+    public static final OBJECTIDENTIFIER aes128_wrap = AES.sub(5); // AES key wrap
     public static final OBJECTIDENTIFIER aes128_GCM = AES.sub(6);
     public static final OBJECTIDENTIFIER aes128_CCM = AES.sub(7);
+    public static final OBJECTIDENTIFIER aes128_wrap_pad = AES.sub(8); // AES key wrap with Padding KEK
     public static final OBJECTIDENTIFIER aes192_ECB_PAD = AES.sub(21);
     public static final OBJECTIDENTIFIER aes192_CBC_PAD = AES.sub(22);
     public static final OBJECTIDENTIFIER aes192_OFB = AES.sub(23);
     public static final OBJECTIDENTIFIER aes192_CFB = AES.sub(24);
+    public static final OBJECTIDENTIFIER aes192_wrap = AES.sub(25); // AES key wrap
     public static final OBJECTIDENTIFIER aes192_GCM = AES.sub(26);
     public static final OBJECTIDENTIFIER aes192_CCM = AES.sub(27);
+    public static final OBJECTIDENTIFIER aes192_wrap_pad = AES.sub(28); // AES key wrap with Padding KEK
     public static final OBJECTIDENTIFIER aes256_ECB_PAD = AES.sub(41);
     public static final OBJECTIDENTIFIER aes256_CBC_PAD = AES.sub(42);
     public static final OBJECTIDENTIFIER aes256_OFB = AES.sub(43);
     public static final OBJECTIDENTIFIER aes256_CFB = AES.sub(44);
+    public static final OBJECTIDENTIFIER aes256_wrap = AES.sub(45); // AES key wrap
     public static final OBJECTIDENTIFIER aes256_GCM = AES.sub(46);
     public static final OBJECTIDENTIFIER aes256_CCM = AES.sub(47);
+    public static final OBJECTIDENTIFIER aes256_wrap_pad = AES.sub(48); // AES key wrap with Padding KEK
+
+    /**
+     * OIDから暗号.
+     * @param alg OID
+     * @return 該当しない場合は null
+     */
+    public static Block toBlockPad(OBJECTIDENTIFIER alg) {
+        if ( alg.up().equals(AES)) {
+            int sub = (int)alg.getLast();
+            Block b;
+            switch (sub % 20) {
+                case 0: b = new AES(128);   break;
+                case 1: b = new AES(192);   break;
+                case 2: b = new AES(256);   break;
+                default:
+                    return null;
+            }
+            switch (sub % 20) {
+                case 1: b = new PKCS7Padding(new ECB(b));   break;
+                case 2: b = new PKCS7Padding(new CBC(b));   break;
+                case 3: b = new OFB(b); break;
+                case 4: b = new CFB(b); break;
+                // 5 AES Key Wrap
+                case 6: b = new GCM(b); break;
+                case 7: b = new CCM(b); break;
+                // 8 AES Key Wrap with Padding
+                default:
+                    return null;
+            }
+            return b;
+        }
+        return null;
+    }
 
     /**
      * Rijndael 128～256ビット 32ビット単位

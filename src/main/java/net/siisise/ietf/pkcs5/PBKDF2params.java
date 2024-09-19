@@ -21,13 +21,10 @@ import net.siisise.bind.Rebind;
 import net.siisise.bind.format.TypeFormat;
 import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.iso.asn1.ASN1Tag;
-import net.siisise.iso.asn1.tag.ASN1Convert;
 import net.siisise.iso.asn1.tag.INTEGER;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
 import net.siisise.iso.asn1.tag.SEQUENCE;
-import net.siisise.iso.asn1.tag.SEQUENCEList;
 import net.siisise.iso.asn1.tag.SEQUENCEMap;
-import net.siisise.security.digest.SHA1;
 import net.siisise.security.mac.HMAC;
 
 /**
@@ -86,16 +83,15 @@ public class PBKDF2params {
         if (keyLength != null) {
             seq.put("keyLength", keyLength); // OPTIONAL
         }
-        seq.add(prf.encodeASN1()); // DEFAULT algid-hmacWithSHA1
+        seq.put("prf", prf.encodeASN1()); // DEFAULT algid-hmacWithSHA1
         return seq;
-
     }
 
     /**
      * ASN.1 ベースの汎用出力.
-     * @param <V>
-     * @param format
-     * @return 
+     * @param <V> DER や ASN1Object
+     * @param format 適度な型
+     * @return ASN.1っぽいPBKDF2 のパラメータ
      */
     public <V> V rebind(TypeFormat<V> format) {
         LinkedHashMap<String, Object> params = new LinkedHashMap<>();
@@ -108,26 +104,30 @@ public class PBKDF2params {
         return Rebind.valueOf(params, format);
     }
 
+    /**
+     * パラメータを引き渡してPBKDF2を生成する.
+     * @return PBKDF2
+     */
     public PBKDF2 decode() {
         byte[] tsalt;
         if (this.salt instanceof OCTETSTRING) {
             tsalt = ((OCTETSTRING) salt).getValue();
         } else {
-            AlgorithmIdentifier pbkdf2SaltSources = AlgorithmIdentifier.decode((SEQUENCEList) salt);
+            AlgorithmIdentifier pbkdf2SaltSources = AlgorithmIdentifier.decode((SEQUENCE) salt);
             throw new UnsupportedOperationException();
         }
         int c = iterationCount.intValue();
-        HMAC hprf;
+        PBKDF2 kdf;
         if (prf != null) {
-            hprf = HMAC.decode(prf);
+            HMAC hprf = HMAC.decode(prf);
+            kdf = new PBKDF2(hprf);
         } else {
-            hprf = new HMAC(new SHA1());
+            kdf = new PBKDF2();
         }
-        PBKDF2 kdf = new PBKDF2(hprf);
         if (keyLength != null) {
-            kdf.init(hprf, tsalt, c, keyLength.intValue());
+            kdf.init(tsalt, c, keyLength.intValue());
         } else {
-            kdf.init(hprf, tsalt, c);
+            kdf.init(tsalt, c);
         }
         return kdf;
     }

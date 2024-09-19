@@ -16,7 +16,9 @@
 package net.siisise.security.padding;
 
 import java.security.MessageDigest;
+import net.siisise.ietf.pkcs1.PKCS1;
 import net.siisise.io.PacketA;
+import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.lang.Bin;
 import net.siisise.security.digest.SHA1;
 
@@ -25,6 +27,7 @@ import net.siisise.security.digest.SHA1;
  * RFC 8017 PKCS #1 B.2.1. MGF1
  */
 public class MGF1 implements MGF {
+    public static final OBJECTIDENTIFIER OID = PKCS1.id_mgf1;
 
     /**
      * デフォルト SHA1

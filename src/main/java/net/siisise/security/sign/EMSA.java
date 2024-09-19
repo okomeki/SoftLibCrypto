@@ -37,7 +37,7 @@ public interface EMSA {
     long size();
     
     /**
-     * 署名.
+     * 署名前のコード生成.
      * 事前にupdateでM メッセージが必要
      * @param emLen ビット数またはバイト数 まだ揃えていない
      * @return EM 署名
@@ -45,7 +45,7 @@ public interface EMSA {
     byte[] encode(int emLen);
     
     /**
-     * 署名
+     * 署名前のコード生成.
      * @param M メッセージ
      * @param emLen emBits maximal bit length of the integer
      * @return EM 署名

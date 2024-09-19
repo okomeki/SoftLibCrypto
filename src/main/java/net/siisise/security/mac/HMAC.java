@@ -59,6 +59,8 @@ import net.siisise.security.digest.SHA512256;
  * HMAC-SHA3-384    B  832bit L 384bit
  * HMAC-SHA3-512    B  576bit L 512bit
  * RIPEMD-128/160   B  512bit
+ * 
+ * ハッシュ関数がPRFであればHMACもPRF MD5などはPRFではない
  *
  * FIPS PUB 198-1
  * FIPS 202 7 Conformance SHA-3のHMAC

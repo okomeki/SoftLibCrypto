@@ -15,8 +15,12 @@
  */
 package net.siisise.ietf.pkcs5;
 
+import java.util.LinkedHashMap;
+import net.siisise.bind.Rebind;
+import net.siisise.bind.format.TypeFormat;
 import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.iso.asn1.ASN1Tag;
+import net.siisise.iso.asn1.tag.ASN1Convert;
 import net.siisise.iso.asn1.tag.NULL;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
@@ -24,12 +28,10 @@ import net.siisise.iso.asn1.tag.SEQUENCE;
 import net.siisise.iso.asn1.tag.SEQUENCEMap;
 import net.siisise.security.block.AES;
 import net.siisise.security.block.Block;
+import net.siisise.security.block.DES;
+import net.siisise.security.block.RC2;
+import net.siisise.security.block.TripleDES;
 import net.siisise.security.mode.CBC;
-import net.siisise.security.mode.CCM;
-import net.siisise.security.mode.CFB;
-import net.siisise.security.mode.ECB;
-import net.siisise.security.mode.GCM;
-import net.siisise.security.mode.OFB;
 import net.siisise.security.mode.PKCS7Padding;
 
 /**
@@ -37,7 +39,7 @@ import net.siisise.security.mode.PKCS7Padding;
  * RFC 8018 A.4. PBES2
  */
 public class PBES2params {
-    public AlgorithmIdentifier keyDerivationFunc;
+    public AlgorithmIdentifier keyDerivationFunc; // PBKDF2 OID + PBKDF2params
     public AlgorithmIdentifier encryptionScheme;
 
     public PBES2params() {
@@ -67,7 +69,7 @@ public class PBES2params {
         params.encryptionScheme = AlgorithmIdentifier.decode((SEQUENCE) s.get(1));
         return params;
     }
-    
+
     public PBES2 decode() {
         PBES2 es;
         PBKDF2 kdf;
@@ -87,35 +89,27 @@ public class PBES2params {
     }
     
     public SEQUENCEMap encode() {
-        SEQUENCEMap seq = new SEQUENCEMap();
-        seq.put("keyDerivationFunc", keyDerivationFunc.encodeASN1());
-        seq.put("encryptionScheme", encryptionScheme.encodeASN1());
-        return seq;
+        return (SEQUENCEMap)rebind(new ASN1Convert());
     }
 
     /**
-     * 仮
+     * ASN.1にあわせた出力.
+     * @param <T> SEQUENCEMap 系の想定.
+     * @param format ASN1Convert または ASN1DERFormat など
+     * @return format にあわせた出力
      */
-    static final OBJECTIDENTIFIER AES = new OBJECTIDENTIFIER("2.16.840.1.101.3.4.1");
-    static final OBJECTIDENTIFIER aes128_ECB_PAD = AES.sub(1);
-    static final OBJECTIDENTIFIER aes128_CBC_PAD = AES.sub(2);
-    static final OBJECTIDENTIFIER aes128_OFB = AES.sub(3);
-    static final OBJECTIDENTIFIER aes128_CFB = AES.sub(4);
-    static final OBJECTIDENTIFIER aes128_GCM = AES.sub(6);
-    static final OBJECTIDENTIFIER aes128_CCM = AES.sub(7);
-    static final OBJECTIDENTIFIER aes192_ECB_PAD = AES.sub(21);
-    static final OBJECTIDENTIFIER aes192_CBC_PAD = AES.sub(22);
-    static final OBJECTIDENTIFIER aes192_OFB = AES.sub(23);
-    static final OBJECTIDENTIFIER aes192_CFB = AES.sub(24);
-    static final OBJECTIDENTIFIER aes192_GCM = AES.sub(26);
-    static final OBJECTIDENTIFIER aes192_CCM = AES.sub(27);
-    static final OBJECTIDENTIFIER aes256_ECB_PAD = AES.sub(41);
-    public static final OBJECTIDENTIFIER aes256_CBC_PAD = AES.sub(42);
-    static final OBJECTIDENTIFIER aes256_OFB = AES.sub(43);
-    static final OBJECTIDENTIFIER aes256_CFB = AES.sub(44);
-    static final OBJECTIDENTIFIER aes256_GCM = AES.sub(46);
-    static final OBJECTIDENTIFIER aes256_CCM = AES.sub(47);
-    
+    public <T> T rebind(TypeFormat<T> format) {
+        LinkedHashMap seq = new LinkedHashMap();
+        seq.put("keyDerivationFunc", keyDerivationFunc);
+        seq.put("encryptionScheme", encryptionScheme);
+        return Rebind.valueOf(seq, format);
+    }
+
+//    static final OBJECTIDENTIFIER pkcs = PBKDF2.rsadsi.sub(1);
+//    static final OBJECTIDENTIFIER pkcs_5 = pkcs.sub(5);
+//    static final OBJECTIDENTIFIER digestAlgorithm = PBKDF2.rsadsi.sub(2);
+//    static final OBJECTIDENTIFIER encryptionAlgorithm = PBKDF2.rsadsi.sub(3);
+
     /**
      * RFC 2898 ?.
      * Stream モードがないものにはPKCS7Padding をつける?
@@ -124,44 +118,17 @@ public class PBES2params {
      */
     public static Block getEncryptionScheme(OBJECTIDENTIFIER alg) {
         // どこか
-        if (alg.up().equals(AES)) {
-            if ( aes128_ECB_PAD.equals(alg) ) {
-                return new PKCS7Padding(new ECB(new AES()));
-            } else if ( aes128_CBC_PAD.equals(alg) ) {
-                return new PKCS7Padding(new CBC(new AES()));
-            } else if ( aes128_OFB.equals(alg) ) {
-                return new OFB(new AES());
-            } else if ( aes128_CFB.equals(alg) ) {
-                return new CFB(new AES());
-            } else if ( aes128_GCM.equals(alg) ) {
-                return new GCM(new AES());
-            } else if ( aes128_CCM.equals(alg) ) {
-                return new CCM(new AES());
-            } else if ( aes192_ECB_PAD.equals(alg) ) {
-                return new PKCS7Padding(new ECB(new AES(192)));
-            } else if ( aes192_CBC_PAD.equals(alg) ) {
-                return new PKCS7Padding(new CBC(new AES(192)));
-            } else if ( aes192_OFB.equals(alg) ) {
-                return new OFB(new AES(192));
-            } else if ( aes192_CFB.equals(alg) ) {
-                return new CFB(new AES(192));
-            } else if ( aes192_GCM.equals(alg) ) {
-                return new GCM(new AES(192));
-            } else if ( aes192_CCM.equals(alg) ) {
-                return new CCM(new AES(192));
-            } else if ( aes256_ECB_PAD.equals(alg) ) {
-                return new PKCS7Padding(new ECB(new AES(256)));
-            } else if ( aes256_CBC_PAD.equals(alg) ) {
-                return new PKCS7Padding(new CBC(new AES(256)));
-            } else if ( aes256_OFB.equals(alg) ) {
-                return new OFB(new AES(256));
-            } else if ( aes256_CFB.equals(alg) ) {
-                return new CFB(new AES(256));
-            } else if ( aes256_GCM.equals(alg) ) {
-                return new GCM(new AES(256));
-            } else if ( aes256_CCM.equals(alg) ) {
-                return new CCM(new AES(256));
+        if (alg.up().equals(AES.AES)) {
+            Block b = AES.toBlockPad(alg);
+            if ( b != null ) {
+                return b;
             }
+        } else if (DES.desCBC.equals(alg)) { // des_CBC_PAD
+            return new PKCS7Padding(new CBC(new DES()));
+        } else if (TripleDES.desEDE3_CBC.equals(alg)) {
+            return new PKCS7Padding(new CBC(new TripleDES()));
+        } else if (RC2.rc2CBC.equals(alg)) {
+            return new PKCS7Padding(new CBC(new RC2()));
         }
         // B.2.2. DES-EDE3-CBC-Pad
         // RFC 1423 Padding

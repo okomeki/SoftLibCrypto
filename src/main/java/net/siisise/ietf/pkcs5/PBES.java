@@ -15,10 +15,10 @@
  */
 package net.siisise.ietf.pkcs5;
 
+import net.siisise.security.block.ES;
+
 /**
  * RFC 8018 6. Encryption Schemes
  */
-public interface PBES {
-    byte[] encrypt(byte[] message);
-    byte[] decrypt(byte[] message);
+public interface PBES extends ES {
 }

@@ -18,6 +18,8 @@ package net.siisise.security.block;
 import java.security.MessageDigest;
 import net.siisise.security.digest.SHA1;
 import net.siisise.security.padding.EME_OAEP;
+import net.siisise.security.padding.MGF;
+import net.siisise.security.padding.MGF1;
 
 /**
  * RFC 8017 PKCS #1
@@ -45,7 +47,11 @@ public class RSAES_OAEP extends RSAES {
      * @param mgfMd MGF用 DEFAULT mgf1SHA1
      */
     public RSAES_OAEP(MessageDigest md, MessageDigest mgfMd) {
-        super(new EME_OAEP(mgfMd, md));
+        super(new EME_OAEP(new MGF1(mgfMd), md));
+    }
+    
+    public RSAES_OAEP(MessageDigest md, MGF mgf) {
+        super(new EME_OAEP(mgf, md));
     }
     
     /**

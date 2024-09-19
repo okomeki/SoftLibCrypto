@@ -21,10 +21,12 @@ import java.util.List;
 import net.siisise.bind.Rebind;
 import net.siisise.bind.format.TypeFormat;
 import net.siisise.iso.asn1.ASN1Cls;
+import net.siisise.iso.asn1.ASN1Tag;
 import net.siisise.iso.asn1.tag.INTEGER;
 import net.siisise.iso.asn1.tag.NULL;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
+import net.siisise.iso.asn1.tag.SEQUENCE;
 import net.siisise.iso.asn1.tag.SEQUENCEList;
 import net.siisise.iso.asn1.tag.SEQUENCEMap;
 
@@ -61,6 +63,11 @@ public class PrivateKeyInfo {
         s.put("version", version);
         s.put("privateKeyAlgorithm", privateKeyAlgorithm);
         s.put("privateKey", privateKey);
+        if (attributes != null) {
+            SEQUENCEList atrs = new SEQUENCEList(ASN1Cls.CONTEXT_SPECIFIC, 0);
+            atrs.add((ASN1Tag)Rebind.valueOf(attributes, ASN1Tag.class));
+            s.put("attributes", atrs);
+        }
         return Rebind.valueOf(s,format);
     }
 
@@ -71,20 +78,15 @@ public class PrivateKeyInfo {
         s.put("privateKey", new OCTETSTRING(privateKey));
         if ( attributes != null ) {
             SEQUENCEList atrs = new SEQUENCEList(ASN1Cls.CONTEXT_SPECIFIC, 0);
-            //for ( a : attributes) {
-                
-            //}
             s.put("attributes", atrs);
-            // attributes [0] IMPLICIT Attributes OPTIONAL
-            throw new UnsupportedOperationException();
         }
         return s;
     }
 
-    public static PrivateKeyInfo decode(SEQUENCEList seq) {
+    public static PrivateKeyInfo decode(SEQUENCE seq) {
         INTEGER ver = (INTEGER) seq.get(0);
         if ( ver.getValue().equals(BigInteger.ZERO)) {
-            AlgorithmIdentifier ai = AlgorithmIdentifier.decode((SEQUENCEList) seq.get(1));
+            AlgorithmIdentifier ai = AlgorithmIdentifier.decode((SEQUENCE) seq.get(1));
             if (ai.parameters.equals(new NULL()) ) {
                 PrivateKeyInfo info = new PrivateKeyInfo(ai.algorithm, ((OCTETSTRING)seq.get(2)).getValue());
                 if (seq.size() == 3) {

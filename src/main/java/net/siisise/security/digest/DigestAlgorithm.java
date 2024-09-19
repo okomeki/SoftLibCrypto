@@ -97,6 +97,10 @@ public class DigestAlgorithm extends AlgorithmIdentifier {
         id_sha512_256};
         OAEPPSS = Arrays.asList(oaeppss);
     }
+    
+    public DigestAlgorithm(OBJECTIDENTIFIER oid) {
+        super(oid);
+    }
 
     public static BlockMessageDigest getAlgorithm(OBJECTIDENTIFIER oid) {
         String name;
@@ -123,8 +127,7 @@ public class DigestAlgorithm extends AlgorithmIdentifier {
         if ( md == null ) {
             return null;
         }
-        DigestAlgorithm da = new DigestAlgorithm();
-        da.algorithm = alg.algorithm;
+        DigestAlgorithm da = new DigestAlgorithm(alg.algorithm);
         da.parameters = alg.parameters;
         return da;
     }

@@ -155,13 +155,13 @@ public class RSAMiniPrivateKey implements PrivateKey, java.security.interfaces.R
     }
 
     /**
-     * PKCS#8 ぐらい
+     * PKCS#1 ぐらい
      *
      * @return
      */
     @Override
     public String getFormat() {
-        return "PKCS#8";
+        return "PKCS#1";
     }
 
     /**

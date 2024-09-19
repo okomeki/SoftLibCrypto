@@ -23,7 +23,7 @@ import net.siisise.security.mac.MAC;
  * RFC 8018 7.1. PBMAC1
  */
 public class PBMAC1 implements MAC {
-    static final OBJECTIDENTIFIER id_PBMAC1 = PBKDF2.PKCS5.sub(14);
+    public static final OBJECTIDENTIFIER id_PBMAC1 = PBKDF2.PKCS5.sub(14);
 
     private final PBKDF2 kdf;
     private MAC mac;

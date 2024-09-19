@@ -58,7 +58,7 @@ public abstract class RSASSA implements SignVerify {
      */
     @Override
     public int getKeyLength() {
-        return 2048;
+        return skey.getModulus().bitLength();
     }
 
     /**

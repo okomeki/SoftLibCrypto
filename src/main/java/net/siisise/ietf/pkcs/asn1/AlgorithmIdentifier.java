@@ -3,6 +3,7 @@ package net.siisise.ietf.pkcs.asn1;
 import java.util.LinkedHashMap;
 import net.siisise.bind.format.TypeFormat;
 import net.siisise.iso.asn1.ASN1Tag;
+import net.siisise.iso.asn1.tag.ASN1Convert;
 import net.siisise.iso.asn1.tag.NULL;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.SEQUENCE;
@@ -35,12 +36,7 @@ public class AlgorithmIdentifier {
     }
 
     public SEQUENCEMap encodeASN1() {
-        SEQUENCEMap s = new SEQUENCEMap();
-        s.put("algorithm", algorithm);
-        if ( parameters != null ) {
-            s.put("parameters", parameters);
-        }
-        return s;
+        return (SEQUENCEMap)rebind(new ASN1Convert());
     }
     
     public <T> T rebind(TypeFormat<T> format) {

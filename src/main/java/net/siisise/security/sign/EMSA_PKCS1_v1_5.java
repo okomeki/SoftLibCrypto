@@ -20,23 +20,22 @@ import net.siisise.security.digest.DigestAlgorithm;
 import java.security.MessageDigest;
 import java.util.Arrays;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
-import net.siisise.iso.asn1.tag.SEQUENCE;
-import net.siisise.iso.asn1.tag.SEQUENCEList;
+import net.siisise.iso.asn1.tag.SEQUENCEMap;
 
 /**
  * RFC 8017 PKCS #1
  * Section 9.2. EMSA-PKCS1-v1_5
  */
 public class EMSA_PKCS1_v1_5 implements EMSA {
-    
+
     private final MessageDigest md;
     long len;
-    
+
     EMSA_PKCS1_v1_5(MessageDigest hash) {
         md = hash;
         len = 0;
     }
-    
+
     @Override
     public void update(byte[] M) {
         md.update(M);
@@ -54,29 +53,35 @@ public class EMSA_PKCS1_v1_5 implements EMSA {
         len += buffer.limit() - buffer.position();
         md.update(buffer);
     }
-    
+
     @Override
     public long size() {
         return len;
     }
 
+    /**
+     * 署名前.
+     * アルゴリズムOIDとdigestをASN.1でくるんで整形する
+     * @param emLen 最大出力バイト長限界
+     * @return EM
+     */
     @Override
     public byte[] encode(int emLen) {
         byte[] H = md.digest();
         len = 0;
         // DigestInfo
-        SEQUENCE digestInfo = new SEQUENCEList();
-        DigestAlgorithm alg = new DigestAlgorithm();
-        alg.algorithm = DigestAlgorithm.toOID(md);
-        digestInfo.add(alg.encodeASN1());
-        digestInfo.add(new OCTETSTRING(H));
+        SEQUENCEMap digestInfo = new SEQUENCEMap();
+        DigestAlgorithm alg = new DigestAlgorithm(DigestAlgorithm.toOID(md));
+        digestInfo.put("digestAlgorithm", alg.encodeASN1());
+        digestInfo.put("digest", new OCTETSTRING(H));
         byte[] T = digestInfo.encodeAll();
         if ( emLen < T.length + 11 ) {
             throw new SecurityException("intended encoded message length too short");
         }
+        // EM = 0x00 || 0x01 || PS || 0x00 || T
         byte[] EM = new byte[emLen];
         EM[1] = 1;
-        Arrays.fill(EM, 2, emLen - T.length - 1, (byte)0xff);
+        Arrays.fill(EM, 2, emLen - T.length - 1, (byte)0xff); // PS
         System.arraycopy(T, 0, EM, EM.length - T.length, T.length);
         return EM;
     }
@@ -87,7 +92,7 @@ public class EMSA_PKCS1_v1_5 implements EMSA {
         return verify(EM, emLen);
     }
 
-        @Override
+    @Override
     public boolean verify(byte[] EM, int emLen) {
         byte[] EMd = encode(emLen);
         return Arrays.equals(EM, EMd);

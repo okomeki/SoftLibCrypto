@@ -16,6 +16,7 @@
 package net.siisise.ietf.pkcs5;
 
 import net.siisise.block.ReadableBlock;
+import net.siisise.ietf.pkcs1.PKCS1;
 import net.siisise.io.PacketA;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.security.digest.SHA1;
@@ -23,14 +24,15 @@ import net.siisise.security.mac.HMAC;
 import net.siisise.security.mac.MAC;
 
 /**
- * KDF
+ * PKCS #5 PBKDF2.
+ * 疑似乱数関数 PRF が必要。PBKDF2ではHMACだが、MAC系全般が指定可能。
+ * デフォルトPRFはHMAC-SHA1だがSHA-1が廃止されているので注意。
  * RFC 2898
  * RFC 8018 PKCS #5 v2.1
  */
 public class PBKDF2 implements PBKDF {
 
-    public static final OBJECTIDENTIFIER PKCS = new OBJECTIDENTIFIER("1.2.840.113549.1"); // pkcs
-    public static final OBJECTIDENTIFIER PKCS5 = PKCS.sub(5); // pkcs-5
+    public static final OBJECTIDENTIFIER PKCS5 = PKCS1.PKCS.sub(5); // pkcs-5
     public static final OBJECTIDENTIFIER OID = PKCS5.sub(12); // id-PBKDF2
     
     byte[] salt;
@@ -39,35 +41,38 @@ public class PBKDF2 implements PBKDF {
     private MAC prf;
     
     /**
-     * デフォルトはSHA-1
+     * デフォルトPRFはHMAC-SHA-1
      * @deprecated SHA-1 は廃止
      */
     @Deprecated
     public PBKDF2() {
-        prf = new HMAC(new SHA1()); // デフォルト 非推奨?
+        prf = new HMAC(new SHA1()); // 非推奨
     }
     
     /**
-     * HMAC-SHA-1 など HMAC-いろいろ.
+     * 疑似乱数関数を指定して初期化.
+     * HMAC-SHA-1 など HMAC-いろいろ、KMACも利用可能.
      * RFC 8018 B.1. では
      * SHA-1, SHA-224, SHA-256, SHA-384, SHA-512, SHA-512/224, SHA-512/256 などを想定 
-     * @param m HMAC-SHA-xx
+     * @param prf 疑似乱数関数PRF HMAC-SHA-xx
      */
-    public PBKDF2(MAC m) {
-        prf = m;
+    public PBKDF2(MAC prf) {
+        this.prf = prf;
     }
     
     /**
+     * 疑似乱数関数PRFの設定.
      * 
-     * @param prf 疑似乱数関数 HMACなど
+     * @param prf 疑似乱数関数PRF HMACなど
      */
     public void init(MAC prf) {
         this.prf = prf;
     }
     
     /**
+     * いくつかのパラメータ設定.
      * 
-     * @param prf 疑似乱数関数 HMACなど
+     * @param prf 疑似乱数関数PRF HMACなど
      * @param salt PKCS #5 64bit以上、 アメリカ国立標準技術研究所 128bit 推奨
      * @param c 繰り返し数 4000以上くらい
      */
@@ -77,6 +82,13 @@ public class PBKDF2 implements PBKDF {
         this.c = c;
     }
 
+    /**
+     * いくつかのパラメータ設定.
+     * @param prf 疑似乱数関数PRF HMACなど
+     * @param salt 64bit以上 128bit 推奨
+     * @param c 繰り返し数 4000以上くらい OpenSSL 2000くらい
+     * @param dkLen 
+     */
     public void init(MAC prf, byte[] salt, int c, int dkLen) {
         this.prf = prf;
         this.salt = salt;
@@ -84,11 +96,24 @@ public class PBKDF2 implements PBKDF {
         this.dkLen = dkLen;
     }
 
+    /**
+     * いくつかのパラメータ設定.
+     * 
+     * @param salt 64bit以上 128bit 推奨
+     * @param c 繰り返し数 4000以上くらい OpenSSL 2000くらい
+     */
+    @Override
     public void init(byte[] salt, int c) {
         this.salt = salt;
         this.c = c;
     }
-    
+
+    public void init(byte[] salt, int c, int dkLen) {
+        this.salt = salt;
+        this.c = c;
+        this.dkLen = dkLen;
+    }
+
     /**
      * 派生鍵を生成するよ.
      * @param password HMAC パスワード
@@ -101,7 +126,7 @@ public class PBKDF2 implements PBKDF {
     public byte[] pbkdf(byte[] password, byte[] salt, int c, int dkLen) {
         return pbkdf2(prf, password, salt, c, dkLen);
     }
-    
+
     /**
      * 派生鍵を生成するよ.
      * 他のパラメータは事前に設定すること.

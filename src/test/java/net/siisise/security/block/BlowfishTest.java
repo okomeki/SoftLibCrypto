@@ -63,7 +63,7 @@ public class BlowfishTest {
      */
     @Test
     public void testDecrypt1() {
-        System.out.println("encrypt1");
+        System.out.println("decrypt1");
         byte[] src = Bin.toByteArray("4ef997456198dd78");
         byte[] key = Bin.toByteArray("0000000000000000");
 //        byte[] src = Bin.toByteArray("0000000100000002");
@@ -100,6 +100,25 @@ public class BlowfishTest {
      * Test of decrypt method, of class Blowfish.
      */
     @Test
+    public void testDecrypt2() {
+        System.out.println("decrypt2");
+        byte[] src = Bin.toByteArray("51866fd5b85ecb8a");
+        byte[] key = Bin.toByteArray("ffffffffffffffff");
+//        byte[] src = Bin.toByteArray("0000000100000002");
+//        byte[] key = "TESTKEY".getBytes();
+        int offset = 0;
+        Blowfish instance = new Blowfish();
+        instance.init(key);
+        byte[] expResult = Bin.toByteArray("ffffffffffffffff");
+        byte[] result = instance.decrypt(src, offset);
+        System.out.println(Bin.toHex(result));
+        assertArrayEquals(expResult, result);
+    }
+
+    /**
+     * Test of decrypt method, of class Blowfish.
+     */
+    @Test
     public void testEncrypt3() {
         System.out.println("encrypt3");
         byte[] src = Bin.toByteArray("1000000000000001");
@@ -111,6 +130,25 @@ public class BlowfishTest {
         instance.init(key);
         byte[] expResult = Bin.toByteArray("7d856f9a613063f2");
         byte[] result = instance.encrypt(src, offset);
+        System.out.println(Bin.toHex(result));
+        assertArrayEquals(expResult, result);
+    }
+
+    /**
+     * Test of decrypt method, of class Blowfish.
+     */
+    @Test
+    public void testDecrypt3() {
+        System.out.println("decrypt3");
+        byte[] src = Bin.toByteArray("7d856f9a613063f2");
+        byte[] key = Bin.toByteArray("3000000000000000");
+//        byte[] src = Bin.toByteArray("0000000100000002");
+//        byte[] key = "TESTKEY".getBytes();
+        int offset = 0;
+        Blowfish instance = new Blowfish();
+        instance.init(key);
+        byte[] expResult = Bin.toByteArray("1000000000000001");
+        byte[] result = instance.decrypt(src, offset);
         System.out.println(Bin.toHex(result));
         assertArrayEquals(expResult, result);
     }

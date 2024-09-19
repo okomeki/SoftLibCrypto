@@ -16,18 +16,21 @@
 package net.siisise.security.key;
 
 import java.math.BigInteger;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import net.siisise.bind.format.TypeFormat;
 import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.ietf.pkcs.asn1.PrivateKeyInfo;
 import net.siisise.ietf.pkcs1.PKCS1;
 import net.siisise.ietf.pkcs5.PBES2;
+import net.siisise.ietf.pkcs5.PBES2params;
 import net.siisise.ietf.pkcs5.PBKDF2;
-import net.siisise.iso.asn1.tag.INTEGER;
-import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
+import net.siisise.ietf.pkcs5.PBKDF2params;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
 import net.siisise.iso.asn1.tag.SEQUENCE;
 import net.siisise.iso.asn1.tag.SEQUENCEList;
 import net.siisise.iso.asn1.tag.SEQUENCEMap;
+import net.siisise.security.block.AES;
 import net.siisise.security.mac.HMAC;
 
 /**
@@ -265,26 +268,42 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
      */
     @Deprecated
     public SEQUENCE getRFC5958EncryptedPrivateKeyInfoASN1(byte[] pass) {
-        SEQUENCE s = new SEQUENCEList();
-         SEQUENCE ids = new SEQUENCEList();
-          ids.add(PBES2.id_PBES2);
+        SEQUENCEMap info = new SEQUENCEMap();
+          AlgorithmIdentifier ea = new AlgorithmIdentifier();
+          ea.algorithm = PBES2.id_PBES2;
+
+        byte[] salt = new byte[16];
+        SecureRandom sr;
+        try {
+            sr = SecureRandom.getInstanceStrong();
+        } catch (NoSuchAlgorithmException ex) {
+            throw new IllegalStateException(ex);
+        }
+        sr.nextBytes(salt);
+        int c = 20000;
+
           SEQUENCE s1 = new SEQUENCEList();
-           SEQUENCE s2 = new SEQUENCEList();
-           s2.add(PBKDF2.OID);
-            SEQUENCE s3 = new SEQUENCEList();
-            s3.add(new OCTETSTRING(new byte[8])); // 乱数?
-            s3.add(new INTEGER(2048));
-             AlgorithmIdentifier ai = new AlgorithmIdentifier(HMAC.idhmacWithSHA256); // HMACwithSHA256
-            s3.add(ai.encodeASN1());
-           s2.add(s3);
-          s1.add(s2);
-           s2 = new SEQUENCEList();
-           s2.add(new OBJECTIDENTIFIER("1.2.16.840.1.101.3.4.1.42")); // aes256-CBC-PAD
-           s2.add(new OCTETSTRING(new byte[16])); // パラメータ aes鍵? iv?
-          s1.add(s2);
-         ids.add(s1);
-        s.add(new OCTETSTRING(new byte[1232])); // あんごう
-        return s;
+           AlgorithmIdentifier kdfid = new AlgorithmIdentifier(PBKDF2.OID);
+           PBKDF2params pbkdfp = new PBKDF2params(salt, c);
+           pbkdfp.prf = new AlgorithmIdentifier(HMAC.idhmacWithSHA256);
+           kdfid.parameters = pbkdfp.encodeASN1();
+          s1.add(kdfid.encodeASN1());
+           AlgorithmIdentifier ai = new AlgorithmIdentifier(AES.aes256_CBC_PAD);
+           byte[] iv = new byte[16];
+           sr.nextBytes(iv);
+           ai.parameters = new OCTETSTRING(iv);
+          s1.add(ai.encodeASN1());
+         ea.parameters = s1;
+        
+        info.put("encryptionAlgorithm", ea.encodeASN1());
+        
+        PBES2params esp = PBES2params.decode(s1);
+        PBES2 pbes2 = esp.decode();
+
+        byte[] msg = getPKCS1Encoded();
+        info.put("encryptedData", new OCTETSTRING(pbes2.encrypt(msg))); // あんごう
+        
+        return info;
     }
 
     /**
@@ -296,7 +315,7 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
      */
     public <T> T rebind(TypeFormat<T> format) {
         SEQUENCEMap prv = getPKCS1ASN1();
-        return format.mapFormat(prv);
+        return prv.rebind(format);
     }
 
     /**
@@ -317,7 +336,7 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
     @Override
     public SEQUENCEMap getPKCS1ASN1() {
         SEQUENCEMap prv = new SEQUENCEMap();
-        prv.put("version", 0);
+        prv.put("version", 0); // 0: prime 1: multi 
         prv.put("modulus", modulus);
         prv.put("publicExponent", publicExponent);
         prv.put("privateExponent", privateExponent);

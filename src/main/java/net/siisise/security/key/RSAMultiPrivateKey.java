@@ -17,6 +17,9 @@ package net.siisise.security.key;
 
 import java.io.Serializable;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import net.siisise.bind.format.TypeFormat;
 import net.siisise.iso.asn1.tag.SEQUENCEList;
@@ -51,7 +54,11 @@ public class RSAMultiPrivateKey extends RSAPrivateCrtKey {
         }
         
         public <T> T rebind(TypeFormat<T> format) {
-            return format.mapFormat(encode());
+            LinkedHashMap info = new LinkedHashMap();
+            info.put("prime", prime);
+            info.put("exponent", exponent);
+            info.put("coefficient", coefficient);
+            return format.mapFormat(info);
         }
     }
 
@@ -149,7 +156,20 @@ public class RSAMultiPrivateKey extends RSAPrivateCrtKey {
      */
     @Override
     public <T> T rebind(TypeFormat<T> format) {
-        SEQUENCEMap prv = getPKCS1ASN1();
+        LinkedHashMap prv = new LinkedHashMap();
+        prv.put("version", version);
+        prv.put("modulus", modulus);
+        prv.put("publicExponent", publicExponent);
+        prv.put("privateExponent", privateExponent);
+        prv.put("prime1", prime1);
+        prv.put("prime2", prime2);
+        prv.put("exponent1", exponent1);
+        prv.put("exponent2", exponent2);
+        prv.put("coefficient", coefficient);
+        if ( version > 0 ) {
+            List ots = Arrays.asList(otherPrimeInfos);
+            prv.put("otherPrimeInfos", ots);
+        }
         return format.mapFormat(prv);
     }
 
