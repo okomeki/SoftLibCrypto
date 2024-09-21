@@ -15,11 +15,36 @@
  */
 package net.siisise.security.block;
 
+import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
+import net.siisise.security.mode.CBC;
+import net.siisise.security.mode.CFB;
+import net.siisise.security.mode.OFB;
+
 /**
  *
  */
 public class Blowfish extends IntBlock {
+    private static final OBJECTIDENTIFIER SYMMETRIC_ENCRYPTION = new OBJECTIDENTIFIER("1.3.6.1.4.1.3029.1");
+    public static final OBJECTIDENTIFIER BlowfishECB = SYMMETRIC_ENCRYPTION.sub(1);
+    public static final OBJECTIDENTIFIER BlowfishCBC = SYMMETRIC_ENCRYPTION.sub(2);
+    public static final OBJECTIDENTIFIER BlowfishCFB = SYMMETRIC_ENCRYPTION.sub(3);
+    public static final OBJECTIDENTIFIER BlowfishOFB = SYMMETRIC_ENCRYPTION.sub(4);
 
+    public static Block toBlock(OBJECTIDENTIFIER oid) {
+        if (oid.up().equals(SYMMETRIC_ENCRYPTION)) {
+            if ( BlowfishECB.equals(oid)) {
+                return new Blowfish();
+            } else if (BlowfishCBC.equals(oid)) {
+                return new CBC(new Blowfish());
+            } else if (BlowfishCFB.equals(oid)) {
+                return new CFB(new Blowfish());
+            } else if (BlowfishOFB.equals(oid)) {
+                return new OFB(new Blowfish());
+            }
+        }
+        return null;
+    }
+    
     static final int sBox0[] = {
         0xD1310BA6, 0x98DFB5AC, 0x2FFD72DB, 0xD01ADFB7,
         0xB8E1AFED, 0x6A267E96, 0xBA7C9045, 0xF12C7F99,
@@ -308,7 +333,7 @@ public class Blowfish extends IntBlock {
 
     /**
      *
-     * @param keyandparam 鍵 32bit から 448bit
+     * @param keyandparam 鍵 32bit から 448bit 576bit?
      */
     @Override
     public void init(byte[]... keyandparam) {
@@ -352,7 +377,10 @@ public class Blowfish extends IntBlock {
     }
 
     private int f(int data) {
-        return ( ( S[0][data >>> 24] + S[1][(data >> 16) & 0xff] ) ^ S[2][(data >> 8) & 0xff] ) + S[3][data & 0xff];
+        return (( S[0][data >>> 24]
+                + S[1][(data >> 16) & 0xff] )
+                ^ S[2][(data >>  8) & 0xff] )
+                + S[3][ data        & 0xff];
     }
 
     @Override
@@ -360,11 +388,9 @@ public class Blowfish extends IntBlock {
         int l = src[offset];
         int r = src[offset+1];
         for (int i = 0; i < N; i++) {
-            l ^= P[i];
-            r ^= f(l);
             int t = r;
-            r = l;
-            l = t;
+            r = l ^ P[i];
+            l = t ^ f(r);
         }
         l ^= P[16];
         r ^= P[17];
@@ -373,18 +399,16 @@ public class Blowfish extends IntBlock {
 
     @Override
     public int[] decrypt(int[] src, int offset) {
-        int l = src[offset];
-        int r = src[offset+1];
-        for (int i = 17; i >= 2; i--) {
-            l ^= P[i];
-            r ^= f(l);
-            int t = r;
-            r = l;
-            l = t;
+        int r = src[offset];
+        int l = src[offset+1];
+        r ^= P[17];
+        l ^= P[16];
+        for (int i = 15; i >= 0; i--) {
+            int t = l;
+            l = r ^ P[i];
+            r = t ^ f(r);
         }
-        l ^= P[1];
-        r ^= P[0];
-        return new int[] {r, l};
+        return new int[] {l, r};
     }
 
 }
