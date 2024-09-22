@@ -16,6 +16,7 @@
 package net.siisise.security.block;
 
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
+import net.siisise.lang.Bin;
 import net.siisise.security.mode.CBC;
 import net.siisise.security.mode.CFB;
 import net.siisise.security.mode.OFB;
@@ -24,6 +25,7 @@ import net.siisise.security.mode.OFB;
  *
  */
 public class Blowfish extends IntBlock {
+
     private static final OBJECTIDENTIFIER SYMMETRIC_ENCRYPTION = new OBJECTIDENTIFIER("1.3.6.1.4.1.3029.1");
     public static final OBJECTIDENTIFIER BlowfishECB = SYMMETRIC_ENCRYPTION.sub(1);
     public static final OBJECTIDENTIFIER BlowfishCBC = SYMMETRIC_ENCRYPTION.sub(2);
@@ -32,7 +34,7 @@ public class Blowfish extends IntBlock {
 
     public static Block toBlock(OBJECTIDENTIFIER oid) {
         if (oid.up().equals(SYMMETRIC_ENCRYPTION)) {
-            if ( BlowfishECB.equals(oid)) {
+            if (BlowfishECB.equals(oid)) {
                 return new Blowfish();
             } else if (BlowfishCBC.equals(oid)) {
                 return new CBC(new Blowfish());
@@ -44,7 +46,7 @@ public class Blowfish extends IntBlock {
         }
         return null;
     }
-    
+
     static final int sBox0[] = {
         0xD1310BA6, 0x98DFB5AC, 0x2FFD72DB, 0xD01ADFB7,
         0xB8E1AFED, 0x6A267E96, 0xBA7C9045, 0xF12C7F99,
@@ -320,11 +322,11 @@ public class Blowfish extends IntBlock {
         0xC0AC29B7, 0xC97C50DD, 0x3F84D5B5, 0xB5470917,
         0x9216D5D9, 0x8979FB1B
     };
-    
+
     private final int N = 16; // rounds
 
-    private int[] P;
-    private int[][] S;
+    protected int[] P;
+    protected int[][] S;
 
     @Override
     public int getBlockLength() {
@@ -332,38 +334,80 @@ public class Blowfish extends IntBlock {
     }
 
     /**
+     * 標準初期化.
      *
      * @param keyandparam 鍵 32bit から 448bit 576bit?
      */
     @Override
     public void init(byte[]... keyandparam) {
+        initCipher();
+
+        // 3.1.2
+        byte[] K = keyandparam[0];
+//        if ( K.length < 4 ) {
+//            throw new IllegalStateException();
+//        }
+
+        expandKey(K);
+    }
+
+    /**
+     * Bcrypt 用初期化
+     *
+     * @param cost 4 - 31
+     * @param salt 128bit
+     * @param key password 72文字まで有効 \0 有り
+     */
+    public void initBcrypt(int cost, byte[] salt, byte[] key) {
+        if (cost < 4) {
+            cost = 4;
+        }
+        if (cost > 31) {
+            throw new IllegalStateException();
+        }
+
+        initCipher();
+
+        expandKey(salt, key);
+
+        long rounds = 1l << cost;
+        for (long l = 0; l < rounds; l++) {
+            expandKey(key); // saltなしなので標準を利用.
+            expandKey(salt);
+        }
+    }
+
+    void initCipher() {
         P = pArray.clone();
         S = new int[4][];
         S[0] = sBox0.clone();
         S[1] = sBox1.clone();
         S[2] = sBox2.clone();
         S[3] = sBox3.clone();
+    }
 
-        // 3.1.2
-        byte[] K = keyandparam[0];
-
+    /**
+     * 鍵拡張.
+     * @param K key
+     */
+    void expandKey(byte[] key) {
         // setting up the P-array
         int keyIndex = 0;
         for (int i = 0; i < N + 2; i++) {
             int value = 0;
             for (int j = 0; j < 4; j++) { // draft の間違い?
-                value = (value << 8) | (K[keyIndex++] & 0xff);
-                keyIndex %= K.length;
+                value = (value << 8) | (key[keyIndex++] & 0xff);
+                keyIndex %= key.length;
             }
             P[i] ^= value;
         }
-        
+
         // data
-        int[] d = new int[]{0, 0};
+        int[] d = new int[2];
         for (int i = 0; i < N + 2; i += 2) {
             d = encrypt(d);
-            P[ i ] = d[0]; // high32( data );
-            P[ i + 1 ] = d[1]; // low32( data );
+            P[i] = d[0]; // high32( data );
+            P[i + 1] = d[1]; // low32( data );
         }
 
         // 3.1.3 Setting up the S-boxes
@@ -376,17 +420,57 @@ public class Blowfish extends IntBlock {
         }
     }
 
+    /**
+     * 鍵拡張bcrypt用salt付き.
+     * password 256バイト越えの場合は2aと2bの結果が違うのかも
+     *
+     * @param byteSalt 128bit 16 byte 4int
+     * @param K password 72文字まで有効
+     */
+    void expandKey(byte[] byteSalt, byte[] key) {
+        int[] salt = Bin.btoi(byteSalt); // int[4]
+        
+        // setting up the P-array
+        int keyIndex = 0;
+        for (int i = 0; i < N + 2; i++) {
+            int value = 0;
+            for (int j = 0; j < 4; j++) { // draft の間違い?
+                value = (value << 8) | (key[keyIndex++] & 0xff);
+                keyIndex %= key.length; // 2aまでは lengthがバイト?
+            }
+            P[i] ^= value;
+        }
+
+        int[] d = new int[2];
+        for (int i = 0; i < N + 2; i += 2) {
+            Bin.xorl(d, salt, (i % 4), 2);
+            d = encrypt(d);
+            P[i] = d[0];
+            P[i + 1] = d[1];
+        }
+
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 256; j += 2) {
+                // Pでsaltを奇数個使用したので後ろから使う
+                Bin.xorl(d, salt, ((j + 2) % 4), 2);
+                d = encrypt(d);
+                S[i][j] = d[0];
+                S[i][j + 1] = d[1];
+            }
+        }
+    }
+
     private int f(int data) {
-        return (( S[0][data >>> 24]
-                + S[1][(data >> 16) & 0xff] )
-                ^ S[2][(data >>  8) & 0xff] )
-                + S[3][ data        & 0xff];
+        return ((S[0][data >>> 24]
+                + S[1][(data >> 16) & 0xff])
+                ^ S[2][(data >> 8) & 0xff])
+                + S[3][data & 0xff];
     }
 
     @Override
     public int[] encrypt(int[] src, int offset) {
         int l = src[offset];
-        int r = src[offset+1];
+        int r = src[offset + 1];
         for (int i = 0; i < N; i++) {
             int t = r;
             r = l ^ P[i];
@@ -394,13 +478,13 @@ public class Blowfish extends IntBlock {
         }
         l ^= P[16];
         r ^= P[17];
-        return new int[] {r, l};
+        return new int[]{r, l};
     }
 
     @Override
     public int[] decrypt(int[] src, int offset) {
         int r = src[offset];
-        int l = src[offset+1];
+        int l = src[offset + 1];
         r ^= P[17];
         l ^= P[16];
         for (int i = 15; i >= 0; i--) {
@@ -408,7 +492,7 @@ public class Blowfish extends IntBlock {
             l = r ^ P[i];
             r = t ^ f(r);
         }
-        return new int[] {l, r};
+        return new int[]{l, r};
     }
 
 }
