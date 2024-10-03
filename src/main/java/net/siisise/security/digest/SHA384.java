@@ -15,12 +15,14 @@
  */
 package net.siisise.security.digest;
 
+import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
+
 /**
  * RFC 6234 SHA-2
  */
 public class SHA384 extends SHA512 {
 
-    public static final String OBJECTIDENTIFIER = "2.16.840.1.101.3.4.2.2";
+    public static final OBJECTIDENTIFIER OID = SHA256.hashAlgs.sub(2);
 
     static final long[] IV384 = {
         0xcbbb9d5dc1059ed8l,

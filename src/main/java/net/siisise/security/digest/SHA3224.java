@@ -15,12 +15,14 @@
  */
 package net.siisise.security.digest;
 
+import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
+
 /**
  * SHA3-224
  */
 public class SHA3224 extends SHA3 {
     
-    static final String OID = hashAlgs + ".7";
+    static final OBJECTIDENTIFIER OID = hashAlgs.sub(7);
     
     public SHA3224() {
         super(224);

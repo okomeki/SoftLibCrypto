@@ -15,6 +15,8 @@
  */
 package net.siisise.security.digest;
 
+import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
+
 /**
  * SHA-224.
  * FIPS PUB 180-2
@@ -22,7 +24,7 @@ package net.siisise.security.digest;
  */
 public class SHA224 extends SHA256 {
 
-    public static final String OBJECTIDENTIFIER = SHA256.nistAlgorithm + ".2.4";
+    public static final OBJECTIDENTIFIER OID = SHA256.hashAlgs.sub(4);
 
     static int[] IV224 = {
         0xc1059ed8,

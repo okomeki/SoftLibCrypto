@@ -15,12 +15,16 @@
  */
 package net.siisise.security.digest;
 
+import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
+
 /**
  * NIST FIPS PUB 180-4.
  * SHA-512/224
  */
 public class SHA512224 extends SHA512 {
 
+    public static final OBJECTIDENTIFIER OID = SHA256.hashAlgs.sub(5);
+    
     public SHA512224() {
         super(224);
     }

@@ -15,6 +15,8 @@
  */
 package net.siisise.security.digest;
 
+import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
+
 /**
  * SHA-3 Standard: Permutation-Based Hash and Extendable-Output Functions (FIPS PUB 202).
  * Secure Hash Algorithm-3 (SHA-3) family.
@@ -24,7 +26,7 @@ package net.siisise.security.digest;
  */
 public class SHA3 extends Keccak {
 
-    static final String hashAlgs = SHA256.nistAlgorithm + ".2";
+    static final OBJECTIDENTIFIER hashAlgs = SHA256.hashAlgs;
 
     /**
      * r は 1152,1088,832,576

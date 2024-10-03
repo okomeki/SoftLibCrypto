@@ -15,6 +15,7 @@
  */
 package net.siisise.security.digest;
 
+import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.lang.Bin;
 import net.siisise.security.io.BlockOutputStream;
 
@@ -26,8 +27,36 @@ import net.siisise.security.io.BlockOutputStream;
  */
 public class SHA256 extends BlockMessageDigest {
 
-    public static final String nistAlgorithm = "2.16.840.1.101.3.4";
-    public static final String OBJECTIDENTIFIER = nistAlgorithm + ".2.1";
+    public static final OBJECTIDENTIFIER nistAlgorithm = new OBJECTIDENTIFIER("2.16.840.1.101.3.4");
+    /**
+     * hashAlgs :== nistAlgorithm 2
+     * 
+     * 1 sha-256
+     * 2 sha-384
+     * 3 sha-512
+     * 4 sha-224
+     * 5 sha-512/224
+     * 6 sha-512/256
+     * 7 sha3-224
+     * 8 sha3-256
+     * 9 sha3-384
+     * 10 sha3-512
+     * 11 shake128
+     * 12 shake256
+     * 13 hmacWithSHA3-224
+     * 14 hmacWithSHA3-256
+     * 15 hmacWithSHA3-384
+     * 16 hmacWithSHA3-512
+     * 17 shake128-len length INTEGER
+     * 18 shake256-len length INTEGER
+     * 19 KMACWithSHAKE128 length INTEGER default 256, customizationString OCTETSTRING
+     * 20 KMACWithSHAKE256 length INTEGER default 512, customizationString OCTETSTRING
+     * 21 KMAC128
+     * 22 KMAC256
+     * 
+     */
+    public static final OBJECTIDENTIFIER hashAlgs = nistAlgorithm.sub(2);
+    public static final OBJECTIDENTIFIER OID = hashAlgs.sub(1 );
 
     static final int[] IV256 = {
         0x6a09e667,

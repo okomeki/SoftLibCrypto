@@ -19,6 +19,7 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
+import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.lang.Bin;
 import net.siisise.security.io.BlockOutputStream;
 
@@ -29,7 +30,7 @@ import net.siisise.security.io.BlockOutputStream;
  */
 public class SHA512 extends BlockMessageDigest {
 
-    public static String OBJECTIDENTIFIER = "2.16.840.1.101.3.4.2.3";
+    public static final OBJECTIDENTIFIER OID = SHA256.hashAlgs.sub(3);
 
     static final long[] K = {
         0x428a2f98d728ae22l, 0x7137449123ef65cdl, 0xb5c0fbcfec4d3b2fl, 0xe9b5dba58189dbbcl,

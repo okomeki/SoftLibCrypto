@@ -15,12 +15,14 @@
  */
 package net.siisise.security.digest;
 
+import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
+
 /**
  * SHA3-512
  */
 public class SHA3512 extends SHA3 {
 
-    static final String OID = hashAlgs + ".10";
+    static final OBJECTIDENTIFIER OID = hashAlgs.sub(10);
 
     public SHA3512() {
         super(512);

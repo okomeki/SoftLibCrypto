@@ -15,6 +15,8 @@
  */
 package net.siisise.security.digest;
 
+import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
+
 /**
  * FIPS PUB 202
  * Secure Hash Algorithm KECCAK 256
@@ -24,11 +26,31 @@ package net.siisise.security.digest;
  */
 public class SHAKE256 extends SHAKE {
 
-    static final String OID = SHA3.hashAlgs + ".12";
-    static final String OIDlen = SHA3.hashAlgs + ".18";
+    /**
+     * 512bit 固定長OID.
+     * RFC 8702 id-shake256
+     */
+    static final OBJECTIDENTIFIER OID = SHA3.hashAlgs.sub(12);
+
+    /**
+     * 可変長OID.
+     * RFC 8702 draft 07まで
+     * 
+     * https://csrc.nist.gov/projects/computer-security-objects-register/algorithm-registration
+     * パラメータ
+     * ShakeOutputLen :== INTEGER -- Output length in bits
+     */
+    static final OBJECTIDENTIFIER OIDlen = SHA3.hashAlgs.sub(18);
 
     public SHAKE256(int d) {
         super(256, d);
+    }
+    
+    /**
+     * X.509, CMSで利用される初期値512で利用する.
+     */
+    public SHAKE256() {
+        this(512);
     }
 
 }
