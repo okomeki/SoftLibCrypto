@@ -325,8 +325,12 @@ public class Blowfish extends IntBlock {
 
     private final int N = 16; // rounds
 
-    protected int[] P;
-    protected int[][] S;
+    private int[] P;
+    private final int[][] S = new int[4][];
+    private int[] S1;
+    private int[] S2;
+    private int[] S3;
+    private int[] S4;
 
     @Override
     public int getBlockLength() {
@@ -379,11 +383,11 @@ public class Blowfish extends IntBlock {
 
     void initCipher() {
         P = pArray.clone();
-        S = new int[4][];
-        S[0] = sBox0.clone();
-        S[1] = sBox1.clone();
-        S[2] = sBox2.clone();
-        S[3] = sBox3.clone();
+//        S = new int[4][];
+        S[0] = S1 = sBox0.clone();
+        S[1] = S2 = sBox1.clone();
+        S[2] = S3 = sBox2.clone();
+        S[3] = S4 = sBox3.clone();
     }
 
     /**
@@ -405,7 +409,7 @@ public class Blowfish extends IntBlock {
         // data
         int[] d = new int[2];
         for (int i = 0; i < N + 2; i += 2) {
-            d = encrypt(d);
+            d = encrypt(d, 0);
             P[i] = d[0]; // high32( data );
             P[i + 1] = d[1]; // low32( data );
         }
@@ -413,7 +417,7 @@ public class Blowfish extends IntBlock {
         // 3.1.3 Setting up the S-boxes
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 256; j += 2) {
-                d = encrypt(d);
+                d = encrypt(d, 0);
                 S[i][j] = d[0];
                 S[i][j + 1] = d[1];
             }
@@ -443,8 +447,8 @@ public class Blowfish extends IntBlock {
 
         int[] d = new int[2];
         for (int i = 0; i < N + 2; i += 2) {
-            Bin.xorl(d, salt, (i % 4), 2);
-            d = encrypt(d);
+            Bin.xorl(d, salt, i % 4, 2);
+            d = encrypt(d, 0);
             P[i] = d[0];
             P[i + 1] = d[1];
         }
@@ -452,8 +456,8 @@ public class Blowfish extends IntBlock {
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 256; j += 2) {
                 // Pでsaltを奇数個使用したので後ろから使う
-                Bin.xorl(d, salt, ((j + 2) % 4), 2);
-                d = encrypt(d);
+                Bin.xorl(d, salt, (j + 2) % 4, 2);
+                d = encrypt(d, 0);
                 S[i][j] = d[0];
                 S[i][j + 1] = d[1];
             }
@@ -461,10 +465,10 @@ public class Blowfish extends IntBlock {
     }
 
     private int f(int data) {
-        return ((S[0][data >>> 24]
-                + S[1][(data >> 16) & 0xff])
-                ^ S[2][(data >> 8) & 0xff])
-                + S[3][data & 0xff];
+        return ((S1[data >>> 24        ]
+               + S2[(data >> 16) & 0xff])
+               ^ S3[(data >>  8) & 0xff])
+               + S4[data         & 0xff];
     }
 
     @Override

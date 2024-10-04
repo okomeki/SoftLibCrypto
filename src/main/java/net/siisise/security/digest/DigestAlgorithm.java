@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
+import net.siisise.ietf.pkcs1.PKCS1;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.SEQUENCE;
 
@@ -28,7 +29,7 @@ import net.siisise.iso.asn1.tag.SEQUENCE;
  * RFC 8017 PKCS #1 A. と C.
  */
 public class DigestAlgorithm extends AlgorithmIdentifier {
-    public static final OBJECTIDENTIFIER rsadsi = new OBJECTIDENTIFIER("1.2.840.113549");
+    public static final OBJECTIDENTIFIER rsadsi = PKCS1.rsadsi; //new OBJECTIDENTIFIER("1.2.840.113549");
     public static final OBJECTIDENTIFIER DIGESTALGORITHM = rsadsi.sub(2);
     /**
      * @deprecated 
@@ -52,7 +53,10 @@ public class DigestAlgorithm extends AlgorithmIdentifier {
      */
     @Deprecated
     public static final OBJECTIDENTIFIER id_sha1 = algorithms.sub(26);
-    // joint-iso-itu-t(2) country(16) us(840) organization(1) gov(101) csor(3) nistalgorithm(4) hashAlgs(2)
+    /**
+     * RFC 8017 B.1 Hash Functions
+     * joint-iso-itu-t(2) country(16) us(840) organization(1) gov(101) csor(3) nistalgorithm(4) hashAlgs(2)
+     */
     public static final OBJECTIDENTIFIER HASHALGS = new OBJECTIDENTIFIER("2.16.840.1.101.3.4.2");
     public static final OBJECTIDENTIFIER id_sha256 = HASHALGS.sub(1);
     public static final OBJECTIDENTIFIER id_sha384 = HASHALGS.sub(2);
@@ -60,11 +64,17 @@ public class DigestAlgorithm extends AlgorithmIdentifier {
     public static final OBJECTIDENTIFIER id_sha224 = HASHALGS.sub(4);
     public static final OBJECTIDENTIFIER id_sha512_224 = HASHALGS.sub(5);
     public static final OBJECTIDENTIFIER id_sha512_256 = HASHALGS.sub(6);
-    
+
+    // RFCどこ X.509 および CMSでは利用できないのでSHAKE128/SHAKE256を使う
     public static final OBJECTIDENTIFIER id_sha3_224 = HASHALGS.sub(7);
     public static final OBJECTIDENTIFIER id_sha3_256 = HASHALGS.sub(8);
     public static final OBJECTIDENTIFIER id_sha3_384 = HASHALGS.sub(9);
     public static final OBJECTIDENTIFIER id_sha3_512 = HASHALGS.sub(10);
+
+    // RFC 8702 SHAKE128は256bit, SHAKE256は512bit
+    // RFC 9481
+    public static final OBJECTIDENTIFIER id_shake128 = HASHALGS.sub(11);
+    public static final OBJECTIDENTIFIER id_shake256 = HASHALGS.sub(12);
 
     static final Map<OBJECTIDENTIFIER,String> NAMES = new HashMap<>();
     static final List<OBJECTIDENTIFIER> OAEPPSS;
@@ -102,6 +112,11 @@ public class DigestAlgorithm extends AlgorithmIdentifier {
         super(oid);
     }
 
+    /**
+     * OBJECT IDENTIFIERからHashを取得する.
+     * @param oid OBJECT IDENTIFIER
+     * @return Hash
+     */
     public static BlockMessageDigest getAlgorithm(OBJECTIDENTIFIER oid) {
         String name;
         name = NAMES.get(oid);
@@ -111,8 +126,8 @@ public class DigestAlgorithm extends AlgorithmIdentifier {
     
     /**
      * EME-OAEP, EMSA-PSS で使えるアルゴリズム
-     * @param oid
-     * @return 
+     * @param oid OBJECT IDENTIFIER
+     * @return Hash
      */
     public static BlockMessageDigest getOAEPPSSAlgorithm(OBJECTIDENTIFIER oid) {
         if (OAEPPSS.contains(oid)) {
@@ -120,7 +135,12 @@ public class DigestAlgorithm extends AlgorithmIdentifier {
         }
         return null;
     }
-    
+
+    /**
+     * SEQUENCE からDigestAlgorithm を生成.
+     * @param s AlgorithmIdentifier の SEQUENCE
+     * @return 
+     */
     public static DigestAlgorithm decode(SEQUENCE s) {
         AlgorithmIdentifier alg = AlgorithmIdentifier.decode(s);
         BlockMessageDigest md = getAlgorithm(alg.algorithm);

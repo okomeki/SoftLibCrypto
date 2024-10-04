@@ -17,21 +17,11 @@ package net.siisise.security.key;
 
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import net.siisise.bind.format.TypeFormat;
-import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
-import net.siisise.ietf.pkcs.asn1.PrivateKeyInfo;
 import net.siisise.ietf.pkcs1.PKCS1;
-import net.siisise.ietf.pkcs5.PBES2;
-import net.siisise.ietf.pkcs5.PBES2params;
-import net.siisise.ietf.pkcs5.PBKDF2;
-import net.siisise.ietf.pkcs5.PBKDF2params;
-import net.siisise.iso.asn1.tag.OCTETSTRING;
-import net.siisise.iso.asn1.tag.SEQUENCE;
-import net.siisise.iso.asn1.tag.SEQUENCEList;
+import net.siisise.ietf.pkcs8.PrivateKeyInfo;
+import net.siisise.ietf.pkcs8.RFC5958;
 import net.siisise.iso.asn1.tag.SEQUENCEMap;
-import net.siisise.security.block.AES;
-import net.siisise.security.mac.HMAC;
 
 /**
  * RFC 8017 PKCS #1 3.2. RSA Private Key.
@@ -203,6 +193,11 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
         return getPKCS8Encoded(); // PRIVATE KEY
     }
 
+    /**
+     * RFc 5208 PKCS 8 information
+     * RFC 5958 2. Asymmetric Key Package CMS Content Type
+     * @return 
+     */
     public byte[] getPKCS8Encoded() {
         return getPKCS8PrivateKeyInfo().encodeASN1().encodeAll();
     }
@@ -236,74 +231,20 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
         return new PrivateKeyInfo(PKCS1.rsaEncryption, body);
     }
 
-    static class EncryptedPrivateKeyInfo {
-        
-    }
-
     /**
-     * RFC 5208 6. Encrypted Private-Key Information Syntax
-     * @deprecated まだ / 使わないから要らない?
-     * @return EncryptedPrivateKeyInfo
+     * RFC 5958 版 PKCS #8 後継符号化.
+     * PKCS #5 PBES2 で暗号化 
+     * @param pass パスワード
+     * @return 暗号化した
      */
-    @Deprecated
-    public SEQUENCE getEncryptedPrivateKeyInfoASN1() {
-        SEQUENCE s = new SEQUENCEList(); // EncryptedPrivateKeyInfo
-        AlgorithmIdentifier aid = new AlgorithmIdentifier(""); // PKCS #5 PBES1の
-        SEQUENCEMap ids = aid.encodeASN1(); // AlgorithmIdentifier
-        s.add(ids); // encryptionAlgorithm EncryptionAlgorithmIdentifier
-        
-        throw new UnsupportedOperationException();
-//        byte[] enc = 
-//        s.add(new OCTETSTRING(enc)); // EncryptedData
-        
-//        return s;
-    }
-    
-    /**
-     * RFC 5958 版
-     * PKCS #5 PBES2 を使ってみる版
-     * @param pass
-     * @deprecated まだ
-     * @return 
-     */
-    @Deprecated
-    public SEQUENCE getRFC5958EncryptedPrivateKeyInfoASN1(byte[] pass) {
-        SEQUENCEMap info = new SEQUENCEMap();
-          AlgorithmIdentifier ea = new AlgorithmIdentifier();
-          ea.algorithm = PBES2.id_PBES2;
+    public SEQUENCEMap getRFC5958EncryptedPrivateKeyInfoASN1(byte[] pass) {
 
-        byte[] salt = new byte[16];
-        SecureRandom sr;
         try {
-            sr = SecureRandom.getInstanceStrong();
+            RFC5958 p8 = new RFC5958();
+            return p8.encryptedPrivateKeyInfoASN1(getPKCS8PrivateKeyInfo(), pass);
         } catch (NoSuchAlgorithmException ex) {
             throw new IllegalStateException(ex);
         }
-        sr.nextBytes(salt);
-        int c = 20000;
-
-          SEQUENCE s1 = new SEQUENCEList();
-           AlgorithmIdentifier kdfid = new AlgorithmIdentifier(PBKDF2.OID);
-           PBKDF2params pbkdfp = new PBKDF2params(salt, c);
-           pbkdfp.prf = new AlgorithmIdentifier(HMAC.idhmacWithSHA256);
-           kdfid.parameters = pbkdfp.encodeASN1();
-          s1.add(kdfid.encodeASN1());
-           AlgorithmIdentifier ai = new AlgorithmIdentifier(AES.aes256_CBC_PAD);
-           byte[] iv = new byte[16];
-           sr.nextBytes(iv);
-           ai.parameters = new OCTETSTRING(iv);
-          s1.add(ai.encodeASN1());
-         ea.parameters = s1;
-        
-        info.put("encryptionAlgorithm", ea.encodeASN1());
-        
-        PBES2params esp = PBES2params.decode(s1);
-        PBES2 pbes2 = esp.decode();
-
-        byte[] msg = getPKCS1Encoded();
-        info.put("encryptedData", new OCTETSTRING(pbes2.encrypt(msg))); // あんごう
-        
-        return info;
     }
 
     /**
@@ -315,7 +256,7 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
      */
     public <T> T rebind(TypeFormat<T> format) {
         SEQUENCEMap prv = getPKCS1ASN1();
-        return prv.rebind(format);
+        return (T)prv.rebind(format);
     }
 
     /**

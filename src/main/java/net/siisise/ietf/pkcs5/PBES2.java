@@ -27,7 +27,7 @@ import net.siisise.security.mac.MAC;
  */
 public class PBES2 implements PBES {
     public static final OBJECTIDENTIFIER id_PBES2 = PBKDF2.PKCS5.sub(13);
-    private final PBKDF2 kdf;
+    private PBKDF2 kdf;
     private Block block;
     // 1つなので仮
     private byte[][] params;
@@ -67,21 +67,30 @@ public class PBES2 implements PBES {
      * @return 
      */
     public Block init(Block block, byte[] password, byte[] salt, int c) {
-//        digest.getDigestLength();
+        kdf.init(salt, c);
+        return init(block, password, kdf);
+    }
+
+    /**
+     * 
+     * @param block
+     * @param password
+     * @param kdf hmac, salt, c 設定済み PBKDF2
+     * @return 
+     */
+    public Block init(Block block, byte[] password, PBKDF2 kdf) {
+        this.kdf = kdf;
         int[] nlen = block.getParamLength();
-        int[] blen = new int[nlen.length];
-        for (int i = 0; i < nlen.length; i++ ) {
-            blen[i] = (nlen[i] + 7) / 8;
+        int[] dkLens = new int[nlen.length];
+        for (int i = 0; i < nlen.length; i++) {
+            dkLens[i] = (nlen[i] + 7) / 8;
         }
-        
-        kdf.init(salt,c);
-//        kdf.init(hmac);
-        byte[][] dk = kdf.pbkdf(password, blen);
-        block.init(dk); // k, iv
+
+        byte[][] dk = kdf.pbkdf(password, dkLens);
+        block.init(dk);
         this.block = block;
         return block;
     }
-
     /*
      * saltをIVに使用する想定の仮.
      * @param block
@@ -187,13 +196,13 @@ public class PBES2 implements PBES {
     }
 
     /**
-     * 
-     * @param message 暗号
+     * 復号
+     * @param c 暗号
      * @return 元メッセージ
      */
     @Override
-    public byte[] decrypt(byte[] message) {
-        return block.doFinalDecrypt(message);
+    public byte[] decrypt(byte[] c) {
+        return block.doFinalDecrypt(c);
     }
 
     void setBlock(Block encryptionScheme) {

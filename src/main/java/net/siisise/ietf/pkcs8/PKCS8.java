@@ -16,11 +16,9 @@
 package net.siisise.ietf.pkcs8;
 
 import java.io.IOException;
-import net.siisise.ietf.pkcs.asn1.PrivateKeyInfo;
 import net.siisise.iso.asn1.ASN1Util;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.SEQUENCE;
-import net.siisise.iso.asn1.tag.SEQUENCEList;
 import net.siisise.iso.asn1.tag.SEQUENCEMap;
 import net.siisise.security.key.RSAPrivateCrtKey;
 import net.siisise.security.key.RSAKeyGen;
@@ -58,7 +56,7 @@ public class PKCS8 {
      * @throws IOException 
      */
     public static RSAPrivateCrtKey setPrivateKeyInfo(byte[] src) throws IOException {
-        PrivateKeyInfo info = PrivateKeyInfo.decode((SEQUENCEList) ASN1Util.toASN1(src));
+        PrivateKeyInfo info = PrivateKeyInfo.decode((SEQUENCE) ASN1Util.toASN1(src));
         if ( info.version == 0 && rsaEncryption.equals(info.privateKeyAlgorithm.algorithm) ) {
             return RSAKeyGen.decodeSecret1(info.privateKey);
         }
@@ -72,6 +70,7 @@ public class PKCS8 {
      * @return 
      */
     public static SEQUENCE getEncryptedPrivateKeyInfo(RSAPrivateCrtKey key, byte[] pass) {
+        
         throw new UnsupportedOperationException();
     } 
     

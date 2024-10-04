@@ -17,11 +17,12 @@ package net.siisise.security.key;
 
 import java.io.Serializable;
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import net.siisise.bind.format.TypeFormat;
+import net.siisise.iso.asn1.tag.INTEGER;
+import net.siisise.iso.asn1.tag.SEQUENCE;
 import net.siisise.iso.asn1.tag.SEQUENCEList;
 import net.siisise.iso.asn1.tag.SEQUENCEMap;
 
@@ -44,6 +45,12 @@ public class RSAMultiPrivateKey extends RSAPrivateCrtKey {
         public BigInteger prime;        // r
         public BigInteger exponent;     // d
         public BigInteger coefficient;  // t
+        
+        void decode(SEQUENCE seq) {
+            prime = ((INTEGER)seq.get(0)).getValue();
+            exponent = ((INTEGER)seq.get(1)).getValue();
+            coefficient = ((INTEGER)seq.get(2)).getValue();
+        }
         
         SEQUENCEMap encode() {
             SEQUENCEMap info = new SEQUENCEMap();

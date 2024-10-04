@@ -16,6 +16,8 @@
 package net.siisise.security.sign;
 
 import java.security.MessageDigest;
+import net.siisise.ietf.pkcs1.PKCS1;
+import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.security.digest.XOF;
 import net.siisise.security.key.RSAMiniPrivateKey;
 import net.siisise.security.key.RSAPublicKey;
@@ -31,12 +33,14 @@ import net.siisise.security.padding.MGFXOF;
  * RFC 8702
  */
 public class RSASSA_PSS extends RSASSA {
-    
+
+    public static final OBJECTIDENTIFIER OID = PKCS1.id_RSASSA_PSS;
+
     // RFC 8692 8702
-    static final String SHAKE128 = "1.3.6.1.5.5.7.6.30";
-    static final String SHAKE256 = "1.3.6.1.5.5.7.6.31";
-    static final String ecdsaWithShake128 = "1.3.6.1.5.5.7.6.32";
-    static final String ecdsaWithShake256 = "1.3.6.1.5.5.7.6.33";
+    static final OBJECTIDENTIFIER SHAKE128 = new OBJECTIDENTIFIER("1.3.6.1.5.5.7.6.30");
+    static final OBJECTIDENTIFIER SHAKE256 = new OBJECTIDENTIFIER("1.3.6.1.5.5.7.6.31");
+    static final OBJECTIDENTIFIER ecdsaWithShake128 = new OBJECTIDENTIFIER("1.3.6.1.5.5.7.6.32");
+    static final OBJECTIDENTIFIER ecdsaWithShake256 = new OBJECTIDENTIFIER("1.3.6.1.5.5.7.6.33");
     
     /**
      * とりあえずinitの代わり

@@ -22,6 +22,7 @@ import net.siisise.bind.format.TypeFormat;
 import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.iso.asn1.ASN1Tag;
 import net.siisise.iso.asn1.tag.INTEGER;
+import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
 import net.siisise.iso.asn1.tag.SEQUENCE;
 import net.siisise.iso.asn1.tag.SEQUENCEMap;
@@ -46,6 +47,20 @@ public class PBKDF2params {
     public PBKDF2params(byte[] salt, long iterationCount) {
         this.salt = new OCTETSTRING(salt);
         this.iterationCount = BigInteger.valueOf(iterationCount);
+    }
+
+    /**
+     * PBKDF2パラメータ
+     * @param salt 塩
+     * @param iterationCount ストレッチ数 繰り返し
+     * @param prfOID HMAC OID
+     */
+    public PBKDF2params(byte[] salt, long iterationCount, OBJECTIDENTIFIER prfOID) {
+        this.salt = new OCTETSTRING(salt);
+        this.iterationCount = BigInteger.valueOf(iterationCount);
+        if (prfOID != null) {
+            prf = new AlgorithmIdentifier(prfOID);
+        }
     }
 
     PBKDF2params() {

@@ -50,7 +50,7 @@ public class PBES2params {
      * 
      * @param kp KDF OID と パラメータ (PBKDF2 固定)
      * @param eid 暗号OID
-     * @param salt 
+     * @param salt block暗号のivになるかもしれない
      */
     public PBES2params(PBKDF2params kp, OBJECTIDENTIFIER eid, byte[] salt) {
         keyDerivationFunc = new AlgorithmIdentifier(PBKDF2.OID, kp.encodeASN1());
@@ -72,9 +72,8 @@ public class PBES2params {
 
     public PBES2 decode() {
         PBES2 es;
-        PBKDF2 kdf;
         if ( keyDerivationFunc.algorithm.equals(PBKDF2.OID)) {
-            kdf = PBKDF2params.decode((SEQUENCE) keyDerivationFunc.parameters).decode();
+            PBKDF2 kdf = PBKDF2params.decode((SEQUENCE) keyDerivationFunc.parameters).decode();
             es = new PBES2(kdf);
         } else {
             throw new UnsupportedOperationException(keyDerivationFunc.algorithm.toString());

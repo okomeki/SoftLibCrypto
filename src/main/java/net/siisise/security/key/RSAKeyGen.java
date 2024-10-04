@@ -172,22 +172,25 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
             }
             return pkey;
         } else if ( v == 1 ) {
-            List<RSAMultiPrivateKey.OtherPrimeInfo> op = new ArrayList<>();
-            List<ASN1Tag> apis = ((SEQUENCE) rsa.get(9)).getValue();
-            for ( ASN1Tag api : apis ) {
-                SEQUENCE mp = (SEQUENCE) api;
+            List<RSAMultiPrivateKey.OtherPrimeInfo> ops = new ArrayList<>();
+            SEQUENCEList<SEQUENCE> apis = (SEQUENCEList) rsa.get(9);
+            for ( SEQUENCE mp : apis ) {
                 RSAMultiPrivateKey.OtherPrimeInfo pi = new RSAMultiPrivateKey.OtherPrimeInfo();
-                pi.prime = ((INTEGER)mp.get(0)).getValue();
-                pi.exponent = ((INTEGER)mp.get(1)).getValue();
-                pi.coefficient = ((INTEGER)mp.get(2)).getValue();
-                op.add(pi);
+                pi.decode(mp);
+                ops.add(pi);
             }
-            RSAMultiPrivateKey pkey = new RSAMultiPrivateKey(n, e, d, p, q, dP, dQ, c, op);
+            RSAMultiPrivateKey pkey = new RSAMultiPrivateKey(n, e, d, p, q, dP, dQ, c, ops);
             return pkey;
         }
         throw new SecurityException("Invalid RSA Private Key");
     }
     
+    /**
+     * 非公式.
+     * @param pub
+     * @return 
+     */
+    @Deprecated
     public static SEQUENCE encodePublic8(RSAPublicKey pub) {
         return pub.getPKCS8ASN1();
     }

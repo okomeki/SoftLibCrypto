@@ -19,8 +19,6 @@ import java.nio.ByteBuffer;
 import net.siisise.security.digest.DigestAlgorithm;
 import java.security.MessageDigest;
 import java.util.Arrays;
-import net.siisise.iso.asn1.tag.OCTETSTRING;
-import net.siisise.iso.asn1.tag.SEQUENCEMap;
 
 /**
  * RFC 8017 PKCS #1
@@ -70,11 +68,9 @@ public class EMSA_PKCS1_v1_5 implements EMSA {
         byte[] H = md.digest();
         len = 0;
         // DigestInfo
-        SEQUENCEMap digestInfo = new SEQUENCEMap();
         DigestAlgorithm alg = new DigestAlgorithm(DigestAlgorithm.toOID(md));
-        digestInfo.put("digestAlgorithm", alg.encodeASN1());
-        digestInfo.put("digest", new OCTETSTRING(H));
-        byte[] T = digestInfo.encodeAll();
+        DigestInfo info = new DigestInfo(alg, H);
+        byte[] T = info.encodeASN1().encodeAll();
         if ( emLen < T.length + 11 ) {
             throw new SecurityException("intended encoded message length too short");
         }

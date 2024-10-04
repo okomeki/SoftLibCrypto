@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.siisise.security.key;
+package net.siisise.security.key.mcf;
 
 import net.siisise.io.BASE64;
 import org.junit.jupiter.api.Test;
@@ -33,7 +33,7 @@ public class BCryptTest {
     @Test
     public void testGen() throws Exception {
         System.out.println("gen");
-        int cost = 12;
+        int cost = BCrypt.DEFAULT_COST;
         String pass = "test";
         BCrypt instance = new BCrypt();
         String expResult = "";
@@ -48,7 +48,7 @@ public class BCryptTest {
     @Test
     public void testEncode() {
         System.out.println("encode");
-        int cost = 12;
+        int cost = BCrypt.DEFAULT_COST;
         BASE64 m = new BASE64(BASE64.BCRYPT,0);
         byte[] salt = m.decode("GhvMmNVjRW29ulnudl.Lbu");
         String pass = "password";
@@ -61,7 +61,7 @@ public class BCryptTest {
     }
 
     /**
-     * Test of veryfy method, of class BCrypt.
+     * Test of verify method, of class BCrypt.
      */
     @Test
     public void testVeryfy() {
@@ -69,9 +69,9 @@ public class BCryptTest {
         String pass = "password";
         String code = "$2b$12$GhvMmNVjRW29ulnudl.LbuAnUtN/LRfe1JsBm1Xu6LE3059z5Tr8m";
         BCrypt instance = new BCrypt();
-        boolean expResult = false;
-        boolean result = instance.veryfy(pass, code);
-//        assertEquals(expResult, result);
+        boolean expResult = true;
+        boolean result = instance.verify(pass, code);
+        assertEquals(expResult, result);
     }
     
 }

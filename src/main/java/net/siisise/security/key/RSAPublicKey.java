@@ -21,8 +21,6 @@ import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.ietf.pkcs1.PKCS1;
 import net.siisise.iso.asn1.tag.BITSTRING;
 import net.siisise.iso.asn1.tag.INTEGER;
-import net.siisise.iso.asn1.tag.NULL;
-import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
 import net.siisise.iso.asn1.tag.SEQUENCE;
 import net.siisise.iso.asn1.tag.SEQUENCEList;
@@ -137,24 +135,31 @@ public class RSAPublicKey implements java.security.interfaces.RSAPublicKey {
     }
     
     /**
-     * PKCS #8 PUBLIC KEY
+     * PKCS #8 PUBLIC KEY 非公式.
      * bit string のパターン
      * @return PKCS #8 DER
      */
+    @Deprecated
     public byte[] getPKCS8Encoded() {
         return getPKCS8ASN1().encodeAll();
     }
 
+    /**
+     * rsaEncryption BITSTRINGのパターン.
+     * PKCS #8など 非公式
+     * @return OID + BITSTRING
+     */
+    @Deprecated
     public SEQUENCE getPKCS8ASN1() {
         SEQUENCE s = new SEQUENCEList();
-        AlgorithmIdentifier aid = new AlgorithmIdentifier("1.2.840.113549.1.1.1");
+        AlgorithmIdentifier aid = new AlgorithmIdentifier(PKCS1.rsaEncryption);
         s.add(aid.encodeASN1());
         s.add(new BITSTRING(getPKCS1Encoded()));
         return s;
     }
 
     /**
-     * X.509 証明書形式が一般的かな
+     * rsaEncryption X.509 証明書形式が一般的かな
      * OCTET STRING のパターン.
      * @deprecated まだ
      * @return 
@@ -163,10 +168,8 @@ public class RSAPublicKey implements java.security.interfaces.RSAPublicKey {
     public byte[] getRawEncoded() {
         SEQUENCE s = new SEQUENCEList();
         s.add(new INTEGER(0));
-        SEQUENCE v = new SEQUENCEList();
-        v.add(new OBJECTIDENTIFIER("")); // ToDo: 不明
-        v.add(new NULL());
-        s.add(v);
+        AlgorithmIdentifier aid = new AlgorithmIdentifier(PKCS1.rsaEncryption);
+        s.add(aid.encodeASN1());
         s.add(new OCTETSTRING(getPKCS1Encoded()));
         return s.encodeAll();
     }

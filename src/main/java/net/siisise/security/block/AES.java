@@ -41,7 +41,18 @@ import net.siisise.security.mode.PKCS7Padding;
  */
 public class AES extends IntBlock {
 
-    public static final OBJECTIDENTIFIER AES = new OBJECTIDENTIFIER("2.16.840.1.101.3.4.1");
+    /**
+     * joint-iso-ccitt(2) country(16) us(840) organization(1) gov(101) csor(3) nistAlgorithm(4)
+     * https://csrc.nist.gov/Projects/computer-security-objects-register/algorithm-registration
+     */
+    public static final OBJECTIDENTIFIER nistAlgorithms = new OBJECTIDENTIFIER("2.16.840.1.101.3.4");
+    
+    // modules
+    public static final OBJECTIDENTIFIER csorModules = nistAlgorithms.sub(0);
+    // modules aes
+    public static final OBJECTIDENTIFIER aesModule1 = csorModules.sub(1);
+    
+    public static final OBJECTIDENTIFIER AES = nistAlgorithms.sub(1);
     public static final OBJECTIDENTIFIER aes128_ECB_PAD = AES.sub(1);
     public static final OBJECTIDENTIFIER aes128_CBC_PAD = AES.sub(2);
     public static final OBJECTIDENTIFIER aes128_OFB = AES.sub(3);
