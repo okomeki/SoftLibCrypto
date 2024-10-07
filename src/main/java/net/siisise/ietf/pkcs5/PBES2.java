@@ -159,27 +159,40 @@ public class PBES2 implements PBES {
 
     /**
      * PBES2Paramからの生成想定.
+     * iv 設定済みの場合はkeyのみ設定.
      * @param password パスワード
      */
     public void init(byte[] password) {
         int[] ps = block.getParamLength();
-        int[] bs = new int[ps.length];
-        if ( params == null ) {
+        if ( params == null ) { // ivの初期値がないとき
             params = new byte[0][];
         }
-        int s = 0;
-        for (int i = 0; i < ps.length - params.length; i++) {
-            s += (ps[i] + 7) / 8;
+        int genCount = ps.length - params.length;
+
+        // 一括生成のパターン
+//        int genLen = 0;
+//        for (int i = 0; i < genCount; i++) {
+//            genLen += (ps[i] + 7) / 8;
+//        }
+//        byte[] genCode1 = kdf.kdf(password, genLen);
+//        int s = (ps[0] + 7) / 8;
+//        byte[] key = Arrays.copyOfRange(genCode1, 0, s);
+
+        // 分割生成のパターン
+        int[] gs = new int[genCount];
+        for ( int i = 0; i < genCount; i++) {
+            gs[i] = (ps[i] + 7) / 8;
         }
-        byte[] ll = kdf.kdf(password, s);
-        s = (ps[0] + 7) / 8;
-        byte[] key = Arrays.copyOfRange(ll, 0, s);
+        byte[][] genCode = kdf.pbkdf(password, gs);
+
         byte[][] prs = new byte[ps.length][];
-        prs[0] = Arrays.copyOfRange(key, 0, s);
+//        prs[0] = Arrays.copyOfRange(key, 0, s);
+        System.arraycopy(genCode, 0, prs, 0, genCode.length);
         if ( params.length >= 1) {
-            prs[1] = params[0];
+            System.arraycopy(params, 0, prs, genCount, params.length);
+//            prs[1] = params[0];
         } else {
-            prs[1] = Arrays.copyOfRange(ll, s, s + (ps[1] + 7) / 8);
+//            prs[1] = Arrays.copyOfRange(ll, s, s + (ps[1] + 7) / 8);
         }
         block.init(prs);
     }

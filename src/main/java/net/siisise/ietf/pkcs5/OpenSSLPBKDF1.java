@@ -26,14 +26,6 @@ import net.siisise.security.digest.MD5;
  */
 public class OpenSSLPBKDF1 extends PBKDF1 {
     
-//    private final MessageDigest md;
-
-    /**
-     * 長さ固定されてないsalt
-     */
-//    private byte[] salt;
-//    int c;
-    
     public OpenSSLPBKDF1() {
         super(new MD5());
     }
@@ -75,7 +67,7 @@ public class OpenSSLPBKDF1 extends PBKDF1 {
     /**
      * PBKDF1と互換の長さ
      * @param password
-     * @return 256bit
+     * @return 128bit
      */
     @Override
     public byte[] kdf(byte[] password) {

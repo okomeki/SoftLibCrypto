@@ -15,9 +15,9 @@
  */
 package net.siisise.ietf.pkcs5;
 
+import java.util.Arrays;
 import net.siisise.block.ReadableBlock;
 import net.siisise.ietf.pkcs1.PKCS1;
-import net.siisise.io.PacketA;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.security.digest.SHA1;
 import net.siisise.security.mac.HMAC;
@@ -34,44 +34,46 @@ public class PBKDF2 implements PBKDF {
 
     public static final OBJECTIDENTIFIER PKCS5 = PKCS1.PKCS.sub(5); // pkcs-5
     public static final OBJECTIDENTIFIER OID = PKCS5.sub(12); // id-PBKDF2
-    
+
     byte[] salt;
     int c;
     int dkLen;
     private MAC prf;
-    
+
     /**
      * デフォルトPRFはHMAC-SHA-1
+     *
      * @deprecated SHA-1 は廃止
      */
     @Deprecated
     public PBKDF2() {
         prf = new HMAC(new SHA1()); // 非推奨
     }
-    
+
     /**
      * 疑似乱数関数を指定して初期化.
      * HMAC-SHA-1 など HMAC-いろいろ、KMACも利用可能.
      * RFC 8018 B.1. では
-     * SHA-1, SHA-224, SHA-256, SHA-384, SHA-512, SHA-512/224, SHA-512/256 などを想定 
+     * SHA-1, SHA-224, SHA-256, SHA-384, SHA-512, SHA-512/224, SHA-512/256 などを想定
+     *
      * @param prf 疑似乱数関数PRF HMAC-SHA-xx
      */
     public PBKDF2(MAC prf) {
         this.prf = prf;
     }
-    
+
     /**
      * 疑似乱数関数PRFの設定.
-     * 
+     *
      * @param prf 疑似乱数関数PRF HMACなど
      */
     public void init(MAC prf) {
         this.prf = prf;
     }
-    
+
     /**
      * いくつかのパラメータ設定.
-     * 
+     *
      * @param prf 疑似乱数関数PRF HMACなど
      * @param salt PKCS #5 64bit以上、 アメリカ国立標準技術研究所 128bit 推奨
      * @param c 繰り返し数 4000以上くらい
@@ -84,10 +86,11 @@ public class PBKDF2 implements PBKDF {
 
     /**
      * いくつかのパラメータ設定.
+     *
      * @param prf 疑似乱数関数PRF HMACなど
      * @param salt 64bit以上 128bit 推奨
      * @param c 繰り返し数 4000以上くらい OpenSSL 2000くらい
-     * @param dkLen 
+     * @param dkLen
      */
     public void init(MAC prf, byte[] salt, int c, int dkLen) {
         this.prf = prf;
@@ -98,7 +101,7 @@ public class PBKDF2 implements PBKDF {
 
     /**
      * いくつかのパラメータ設定.
-     * 
+     *
      * @param salt 64bit以上 128bit 推奨
      * @param c 繰り返し数 4000以上くらい OpenSSL 2000くらい
      */
@@ -116,6 +119,7 @@ public class PBKDF2 implements PBKDF {
 
     /**
      * 派生鍵を生成するよ.
+     *
      * @param password HMAC パスワード
      * @param salt ソルト
      * @param c 繰り返す数 1000以上ぐらい
@@ -130,6 +134,7 @@ public class PBKDF2 implements PBKDF {
     /**
      * 派生鍵を生成するよ.
      * 他のパラメータは事前に設定すること.
+     *
      * @param password HMAC パスワード
      * @param dkLen 派生鍵の長さ
      * @return DK 派生鍵
@@ -142,6 +147,7 @@ public class PBKDF2 implements PBKDF {
     /**
      * 派生鍵を生成するよ.
      * 他のパラメータは事前に設定すること.
+     *
      * @param password HMAC パスワード
      * @return DK 派生鍵
      */
@@ -152,56 +158,59 @@ public class PBKDF2 implements PBKDF {
 
     /**
      * 複数パラメータを生成する.
+     *
      * @param password
      * @param dkLens
-     * @return 
+     * @return
      */
     public byte[][] pbkdf(byte[] password, int... dkLens) {
         int sum = 0;
-        for ( int i = 0; i < dkLens.length; i++) {
+        for (int i = 0; i < dkLens.length; i++) {
             sum += dkLens[i];
         }
-        
+
         byte[] dkbase = kdf(password, sum);
         ReadableBlock dk = ReadableBlock.wrap(dkbase);
         byte[][] dks = new byte[dkLens.length][];
-        for (int i = 0; i < dkLens.length; i++ ) {
+        for (int i = 0; i < dkLens.length; i++) {
             dks[i] = new byte[dkLens[i]];
             dk.read(dks[i]);
         }
         return dks;
     }
-    
+
     /**
      * PBKDF2 本体.
      * HMAC以外も使えるようにしてある
+     *
      * @param prf MACアルゴリズム
      * @param password HMAC用パスワード
      * @param salt ソルト
      * @param c 繰り返す数
      * @param dkLen 戻り長さ (バイト)
-     * @return 
+     * @return
      */
     public static byte[] pbkdf2(MAC prf, byte[] password, byte[] salt, int c, int dkLen) {
         int hLen = prf.getMacLength();
         // 1.
-        if ( dkLen > 0xffffffffl * hLen ) { // Javaの配列長の範囲外
+        if (dkLen > 0xffffffffl * hLen) { // Javaの配列長の範囲外
             throw new IllegalStateException("derived key too long");
         }
         prf.init(password);
-        int l = (int)(((long)dkLen + hLen - 1) / hLen); // dkLenに必要なブロック数
-//        int r = dkLen % hLen;
-        PacketA pac = new PacketA();
-        for (int i = 1; i <= l; i++) {
-            pac.dwrite(f(prf, salt, c, i));
+        int l = (int) (((long) dkLen + hLen - 1) / hLen); // dkLenに必要なブロック数
+        byte[] dk = new byte[l * hLen];
+        for (int i = 0; i < l; i++) {
+            System.arraycopy(f(prf, salt, c, i + 1), 0, dk, i * hLen, hLen);
         }
-        byte[] dk = new byte[dkLen];
-        pac.read(dk);
+        if (dkLen % hLen != 0) {
+            return Arrays.copyOf(dk, dkLen);
+        }
         return dk;
     }
 
     /**
      * パスワードはHMACで保持できるので省略した
+     *
      * @param prf HMAC アルゴリズム パスワード設定済み
      * @param salt ソルト
      * @param c ループ回数
@@ -210,17 +219,17 @@ public class PBKDF2 implements PBKDF {
      */
     private static byte[] f(MAC prf, byte[] salt, int c, int i) {
         prf.update(salt);
-        byte[] key = new byte[4];
-        key[0] = (byte)(i >>> 24);
-        key[1] = (byte)((i >> 16) & 0xff);
-        key[2] = (byte)((i >> 8) & 0xff);
-        key[3] = (byte)(i  & 0xff);
-        byte[] u = prf.doFinal(key);
+        byte[] u = new byte[4];
+        u[0] = (byte) (i >>> 24);
+        u[1] = (byte) ((i >> 16) & 0xff);
+        u[2] = (byte) ((i >> 8) & 0xff);
+        u[3] = (byte) (i & 0xff);
+        u = prf.doFinal(u);
         byte[] f = u;
         int len = u.length;
-        for (int j = 1; j < c; j++ ) {
+        for (int j = 1; j < c; j++) {
             u = prf.doFinal(u);
-            for ( int k = 0; k < len; k++) {
+            for (int k = 0; k < len; k++) {
                 f[k] ^= u[k];
             }
         }

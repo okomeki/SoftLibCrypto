@@ -19,7 +19,9 @@ import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 
 /**
  * RFC 5208
+ * @deprecated AlgorithmIdentifier にまとめ
  */
+@Deprecated
 public class PrivateKeyAlgorithmIdentifier extends AlgorithmIdentifier {
     public PrivateKeyAlgorithmIdentifier(OBJECTIDENTIFIER oid) {
         super(oid);

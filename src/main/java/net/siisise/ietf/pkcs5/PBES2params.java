@@ -62,7 +62,12 @@ public class PBES2params {
         }
         encryptionScheme = new AlgorithmIdentifier(eid, opt );
     }
-    
+
+    /**
+     * ASN.1から復元.
+     * @param s ASN.1 PBES2params SEQUENCE
+     * @return 
+     */
     public static PBES2params decode(SEQUENCE s) {
         PBES2params params = new PBES2params();
         params.keyDerivationFunc = AlgorithmIdentifier.decode((SEQUENCE) s.get(0));

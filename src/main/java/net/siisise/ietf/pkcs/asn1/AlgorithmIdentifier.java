@@ -37,6 +37,14 @@ public class AlgorithmIdentifier {
 
     public SEQUENCEMap encodeASN1() {
         return (SEQUENCEMap)rebind(new ASN1Convert());
+/*
+        SEQUENCEMap seq = new SEQUENCEMap();
+        seq.put("algorithm", algorithm);
+        if (parameters != null) {
+            seq.put("parameters", parameters);
+        }
+        return seq;
+*/
     }
     
     public <T> T rebind(TypeFormat<T> format) {
@@ -51,7 +59,16 @@ public class AlgorithmIdentifier {
     public static AlgorithmIdentifier decode(SEQUENCE s) {
         AlgorithmIdentifier id = new AlgorithmIdentifier();
         id.algorithm = (OBJECTIDENTIFIER) s.get(0);
-        id.parameters = s.get(1);
+        switch (s.size()) {
+            case 1:
+                id.parameters = null;
+                break;
+            case 2:
+                id.parameters = s.get(1);
+                break;
+            default:
+                throw new IllegalStateException();
+        }
         return id;
     }
 }

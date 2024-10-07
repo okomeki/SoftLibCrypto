@@ -22,6 +22,7 @@ module net.siisise.crypto {
     requires net.siisise.abnf;
     requires net.siisise.abnf.rfc;
     requires net.siisise.rebind;
+    exports net.siisise.ietf.pkcs.asn1;
     exports net.siisise.security.block;
     exports net.siisise.security.digest;
     exports net.siisise.security.key;
