@@ -19,9 +19,8 @@ package net.siisise.security.digest;
  * RawSHAKE128(J,d) = KECCAK[256](J||11,d)
  */
 public class RawSHAKE128 extends Keccak {
-    
+
     public RawSHAKE128(int d) {
-        super("RawSHAKE128(J,"+d+")",256,d,(byte)0x07);
+        super("RawSHAKE128(J," + d + ")", 256, d, (byte) 0x07);
     }
-    
 }

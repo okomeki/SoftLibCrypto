@@ -19,8 +19,8 @@ package net.siisise.security.digest;
  * RawSHAKE256(J,d) = KECCAK[512](J||11,d)
  */
 public class RawSHAKE256 extends Keccak {
-    
+
     public RawSHAKE256(int d) {
-        super("RawSHAKE256(J,"+d+")",512,d,(byte)0x07);
+        super("RawSHAKE256(J," + d + ")", 512, d, (byte) 0x07);
     }
 }

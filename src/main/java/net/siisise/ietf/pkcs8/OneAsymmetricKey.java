@@ -16,7 +16,6 @@
 package net.siisise.ietf.pkcs8;
 
 import java.util.LinkedHashMap;
-import java.util.List;
 import net.siisise.bind.Rebind;
 import net.siisise.bind.format.TypeFormat;
 import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
@@ -79,6 +78,10 @@ public class OneAsymmetricKey extends PrivateKeyInfo {
     public OneAsymmetricKey(OBJECTIDENTIFIER oid, byte[] privateKey) {
         super(oid, privateKey);
     }
+    
+    public OneAsymmetricKey(AlgorithmIdentifier ai, byte[] privateKey) {
+        super(ai, privateKey);
+    }
 
 //    public OBJECTIDENTIFIER privateKeyAlgorithm;
 //    public OCTETSTRING privateKey;
@@ -110,6 +113,7 @@ public class OneAsymmetricKey extends PrivateKeyInfo {
      * @param format
      * @return
      */
+    @Override
     public <V> V rebind(TypeFormat<V> format) {
         LinkedHashMap map = new LinkedHashMap();
         map.put("version", version);
@@ -125,7 +129,7 @@ public class OneAsymmetricKey extends PrivateKeyInfo {
             ASN1Prefixed pre1 = new ASN1Prefixed(1, publicKey);
             map.put("publicKey", pre1);
         }
-        return Rebind.valueOf(map, format);
+        return format.mapFormat(map); //Rebind.valueOf(map, format);
     }
 
     /**
@@ -133,12 +137,18 @@ public class OneAsymmetricKey extends PrivateKeyInfo {
      * @param s
      * @return 
      */
-    public static OneAsymmetricKey decodeASN1(SEQUENCE s) {
-        OneAsymmetricKey key = new OneAsymmetricKey();
-        key.version = ((INTEGER) s.get(0)).intValue();
-        key.privateKeyAlgorithm = AlgorithmIdentifier.decode( (SEQUENCE) s.get(1));
-        key.privateKey = ((OCTETSTRING) s.get(2)).getValue();
-
-        return key;
+    public static PrivateKeyInfo decode(SEQUENCE s) {
+        INTEGER ver = (INTEGER)s.get(0);
+        long longVer = ver.longValue();
+        if ( longVer == 1 ) {
+            OneAsymmetricKey key = new OneAsymmetricKey();
+            key.version = ver.intValueExact();
+            key.privateKeyAlgorithm = AlgorithmIdentifier.decode( (SEQUENCE) s.get(1));
+            key.privateKey = ((OCTETSTRING) s.get(2)).getValue();
+            key.publicKey = (BITSTRING) s.getContextSpecific(0);
+            return key;
+        } else {
+            return PrivateKeyInfo.decode(s);
+        }
     }
 }

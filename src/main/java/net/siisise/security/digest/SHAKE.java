@@ -16,7 +16,8 @@
 package net.siisise.security.digest;
 
 /**
- *
+ * SHAKE128 / SHAKE256.
+ * FIPS PUB 202
  */
 public class SHAKE extends Keccak implements XOF {
     
@@ -28,5 +29,12 @@ public class SHAKE extends Keccak implements XOF {
     public SHAKE(int c, int d) {
         super("SHAKE" + c, c*2, d, (byte)0x1f);
     }
-    
+
+    /**
+     * 固定長出力.
+     * @param c 128 または 256
+     */
+    public SHAKE(int c) {
+        this(c, c*2);
+    }
 }

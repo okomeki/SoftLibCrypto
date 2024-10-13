@@ -19,6 +19,7 @@ import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import net.siisise.bind.format.TypeFormat;
 import net.siisise.ietf.pkcs1.PKCS1;
+import net.siisise.ietf.pkcs8.EncryptedPrivateKeyInfo;
 import net.siisise.ietf.pkcs8.PrivateKeyInfo;
 import net.siisise.ietf.pkcs8.RFC5958;
 import net.siisise.iso.asn1.tag.SEQUENCEMap;
@@ -203,7 +204,7 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
     }
 
     /**
-     * PKCS #8 DER ぐらい.
+     * PKCS #8 PrivateKeyInfo.
      * OpenSSL PRIVATE KEY
      * OBJECTIDENTIFIER が判別する容器に梱包したもの
      * RFC 5208 5. Private-Key Information Syntax
@@ -237,11 +238,11 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
      * @param pass パスワード
      * @return 暗号化した
      */
-    public SEQUENCEMap getRFC5958EncryptedPrivateKeyInfoASN1(byte[] pass) {
+    public EncryptedPrivateKeyInfo getRFC5958EncryptedPrivateKeyInfo(byte[] pass) {
 
         try {
             RFC5958 p8 = new RFC5958();
-            return p8.encryptedPrivateKeyInfoASN1(getPKCS8PrivateKeyInfo(), pass);
+            return p8.encryptedPrivateKeyInfo(getPKCS8PrivateKeyInfo(), pass);
         } catch (NoSuchAlgorithmException ex) {
             throw new IllegalStateException(ex);
         }

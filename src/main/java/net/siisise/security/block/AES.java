@@ -87,7 +87,7 @@ public class AES extends IntBlock {
         if ( alg.up().equals(AES)) {
             int sub = (int)alg.getLast();
             Block b;
-            switch (sub % 20) {
+            switch (sub / 20) {
                 case 0: b = new AES(128);   break;
                 case 1: b = new AES(192);   break;
                 case 2: b = new AES(256);   break;
