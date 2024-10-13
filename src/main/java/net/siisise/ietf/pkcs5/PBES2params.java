@@ -37,6 +37,9 @@ import net.siisise.security.mode.PKCS7Padding;
 /**
  * PKCS #5
  * RFC 8018 A.4. PBES2
+ * 暗号利用モード CBC-PADが標準の対応 CFB,OFBも可。
+ * OpenSSL PKCS #8ではECBでも使えるがCTR, AEAD(GCM)などは使えなかった。
+ * ECBの符号化にも仮対応しておく。
  */
 public class PBES2params {
     public AlgorithmIdentifier keyDerivationFunc; // PBKDF2 OID + PBKDF2params
@@ -75,18 +78,31 @@ public class PBES2params {
         return params;
     }
 
+    /**
+     * KDF と 暗号から
+     * 暗号は IV などをパラメータとして持っているので初期化時に共通鍵以外を設定済みにしておける。
+     * 暗号化モードの設定による。
+     * @return 
+     */
     public PBES2 decode() {
         PBES2 es;
+        // keyDerivationFunc
+        // RFC 8018 では PBKDF2 のみ
         if ( keyDerivationFunc.algorithm.equals(PBKDF2.OID)) {
             PBKDF2 kdf = PBKDF2params.decode((SEQUENCE) keyDerivationFunc.parameters).decode();
             es = new PBES2(kdf);
         } else {
             throw new UnsupportedOperationException(keyDerivationFunc.algorithm.toString());
         }
+        // encryptionScheme
         Block block = getEncryptionScheme(encryptionScheme.algorithm);
         if (encryptionScheme.parameters instanceof OCTETSTRING) {
-            byte[] iv = ((OCTETSTRING)encryptionScheme.parameters).getValue();
-            es.setParam(iv);
+            byte[] iv = ((OCTETSTRING)encryptionScheme.parameters).getValue(); // 仕様では salt 実質 IV
+            if (iv.length > 0) { // CBC, CFB, OFB対応 ECBモードのsaltの長さ0　CTR AEAD(GCM) 未サポート
+                es.setParam(iv);
+            }
+        } else {
+            throw new UnsupportedOperationException("省略形は?");
         }
         es.setBlock(block);
         return es;
