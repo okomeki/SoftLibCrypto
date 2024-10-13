@@ -26,9 +26,8 @@ import net.siisise.iso.asn1.ASN1Util;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
 import net.siisise.iso.asn1.tag.SEQUENCE;
-import net.siisise.iso.asn1.tag.SEQUENCEMap;
 import net.siisise.security.block.AES;
-import net.siisise.security.key.RSAPrivateCrtKey;
+import net.siisise.security.block.Block;
 import net.siisise.security.mac.HMAC;
 
 /**
@@ -38,71 +37,58 @@ import net.siisise.security.mac.HMAC;
  */
 public class RFC5958 extends PKCS8 {
 
-    OBJECTIDENTIFIER hmac = HMAC.idhmacWithSHA256;
-    OBJECTIDENTIFIER block = AES.aes256_CBC_PAD;
-    int iterationCount = 2048;
-    
     /**
-     * RFC 5958 3.
-     *
-     * @param key RSA鍵
-     * @param pass password
-     * @return EncryptedPrivateKeyInfo
-     * @throws NoSuchAlgorithmException
+     * PBKDF2で使用する乱数生成器のOBJECTIDENTIFIER.
+     * HMACが標準、他のMACも設定は可能
      */
-    public SEQUENCEMap encryptedPrivateKeyInfoASN1(RSAPrivateCrtKey key, byte[] pass) throws NoSuchAlgorithmException {
-        return encryptedPrivateKeyInfoASN1(key.getPKCS8PrivateKeyInfo(), pass);
-    }
-
+    public OBJECTIDENTIFIER prf = HMAC.idhmacWithSHA256;
     /**
-     * PrivateKeyInfo暗号化.
-     *
-     * @param info PKCS #8 PrivateKeyInfo
-     * @param pass password
-     * @return encryptedPrivateKeyInfo
-     * @throws NoSuchAlgorithmException
+     * PBES2で使用する暗号アルゴリズム。
      */
-    public SEQUENCEMap encryptedPrivateKeyInfoASN1(PrivateKeyInfo info, byte[] pass) throws NoSuchAlgorithmException {
-        return encryptPrivateKeyInfo(info.encodeASN1().encodeAll(), pass);
-    }
+    public OBJECTIDENTIFIER block = AES.aes256_CBC_PAD;
+    /**
+     * ストレッチ回数。
+     */
+    public int iterationCount = 2048;
 
     /**
      * PrivateKeyInfo 暗号付きASN.1符号化.
      *
-     * @param key PKCS #8 PrivateKeyInfo
+     * @param keyInfo PKCS #8 PrivateKeyInfo
      * @param pass パスワード
      * @return 暗号化 EncryptedPrivateKeyInfo
      * @throws NoSuchAlgorithmException
      */
-    SEQUENCEMap encryptPrivateKeyInfo(byte[] key, byte[] pass) throws NoSuchAlgorithmException {
+    @Override
+    EncryptedPrivateKeyInfo encryptPrivateKeyInfo(byte[] keyInfo, byte[] pass) throws NoSuchAlgorithmException {
+
         SecureRandom srnd = SecureRandom.getInstanceStrong();
-        byte[] salt = new byte[16];
-        srnd.nextBytes(salt);
-        byte[] iv = new byte[16];
-        srnd.nextBytes(iv);
-        PBKDF2params kdf2para = new PBKDF2params(salt, iterationCount, hmac);
-        PBES2params es2para = new PBES2params(kdf2para, block, iv);
+        byte[] kdfSalt = new byte[16];
+        srnd.nextBytes(kdfSalt);
+
+        Block preBlock = PBES2params.getEncryptionScheme(block);
+        byte[] esSalt = null;
+        int[] plen = preBlock.getParamLength();
+        switch ( plen.length ) { // 1つまで対応可能
+            case 1:
+                break;
+            case 2:
+                esSalt = new byte[(plen[1] + 7) / 8]; // IV ブロックサイズに合わせて生成
+                srnd.nextBytes(esSalt);
+                break;
+            default:
+                throw new UnsupportedOperationException();
+        }
+
+        PBKDF2params kdf2para = new PBKDF2params(kdfSalt, iterationCount, prf);
+        PBES2params es2para = new PBES2params(kdf2para, block, esSalt);
 
         PBES2 es = es2para.decode();
         es.init(pass);
-        byte[] encdData = es.encrypt(key);
+        byte[] encdData = es.encrypt(keyInfo);
 
         AlgorithmIdentifier es2 = new AlgorithmIdentifier(PBES2.id_PBES2, es2para.encode());
-        SEQUENCEMap s = new SEQUENCEMap();
-        s.put("encryptionAlgorithm", es2.encodeASN1());
-        s.put("encryptedData", new OCTETSTRING(encdData)); // あんごう
-        return s;
-    }
-
-    /**
-     * PrivateKeyInfo decode
-     * @param src EncryptedPrivateKeyInfo
-     * @param pass password
-     * @return PKCS #8 PrivateKeyInfo
-     */
-    public static PrivateKeyInfo decryptPrivateKeyInfo(byte[] src, byte[] pass) {
-        SEQUENCE s = (SEQUENCE) ASN1Util.toASN1(src);
-        return decryptPrivateKeyInfo(s, pass);
+        return new EncryptedPrivateKeyInfo(es2, new OCTETSTRING(encdData));
     }
 
     /**
@@ -117,16 +103,23 @@ public class RFC5958 extends PKCS8 {
      * @return PKCS #8 PrivateKeyInfo
      * @throws IOException
      */
-    public static PrivateKeyInfo decryptPrivateKeyInfo(SEQUENCE s, byte[] pass) {
-        AlgorithmIdentifier alg = AlgorithmIdentifier.decode((SEQUENCE) s.get(0));
-        if (alg.algorithm.equals(PBES2.id_PBES2)) {
-            PBES2params pbes2params = PBES2params.decode((SEQUENCE) alg.parameters);
+    @Override
+    public PrivateKeyInfo decryptPrivateKeyInfo(EncryptedPrivateKeyInfo encdInfo, byte[] pass) {
+        if (encdInfo.encryptionAlgorithm.algorithm.equals(PBES2.id_PBES2)) {
+            PBES2params pbes2params = PBES2params.decode((SEQUENCE) encdInfo.encryptionAlgorithm.parameters);
             PBES2 es = pbes2params.decode();
-            byte[] encryptedData = ((OCTETSTRING) s.get(1)).getValue();
             es.init(pass);
+            byte[] encryptedData = encdInfo.encryptedData.getValue();
             byte[] key = es.decrypt(encryptedData);
-            SEQUENCE seq = (SEQUENCE) ASN1Util.toASN1(key);
-            return PrivateKeyInfo.decode(seq);
+            SEQUENCE info = (SEQUENCE) ASN1Util.toASN1(key);
+/*
+            try {
+                System.out.println(ASN1Util.toXMLString(info));
+            } catch (Exception ex) {
+                throw new IllegalStateException(ex);
+            }
+*/
+            return OneAsymmetricKey.decode(info);
         }
         throw new UnsupportedOperationException();
     }

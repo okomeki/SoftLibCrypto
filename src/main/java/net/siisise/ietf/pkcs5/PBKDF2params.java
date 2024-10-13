@@ -30,6 +30,17 @@ import net.siisise.security.mac.HMAC;
 
 /**
  * RFC 8018 A.2. PBKDF2
+ * 
+ * PBKDF2-params ::= SEQUENCE {
+ *     salt CHOICE {
+ *         specified OCTET STRING,
+ *         otherSource AlgorithmIdentifier {{PBKDF2-SaltSource}}
+ *     },
+ *     iterationCount INTEGER (1..MAX),
+ *     keyLength INTEGER (1..MAX) OPTIONAL,
+ *     prf AlgorithmIdentifier {{PBKDF2-PRFs}} DEFAULT
+ *     algid-hmacWithSHA1 }
+ * {
  */
 public class PBKDF2params {
 
@@ -131,7 +142,7 @@ public class PBKDF2params {
             AlgorithmIdentifier pbkdf2SaltSources = AlgorithmIdentifier.decode((SEQUENCE) salt);
             throw new UnsupportedOperationException();
         }
-        int c = iterationCount.intValue();
+        int c = iterationCount.intValueExact(); // 仮int
         PBKDF2 kdf;
         if (prf != null) {
             HMAC hprf = HMAC.decode(prf);
@@ -140,7 +151,7 @@ public class PBKDF2params {
             kdf = new PBKDF2();
         }
         if (keyLength != null) {
-            kdf.init(tsalt, c, keyLength.intValue());
+            kdf.init(tsalt, c, keyLength.intValueExact());
         } else {
             kdf.init(tsalt, c);
         }

@@ -24,7 +24,7 @@ import net.siisise.security.mac.HMAC;
 import net.siisise.security.mac.MAC;
 
 /**
- * PKCS #5 PBKDF2.
+ * PKCS #5 PBKDF2 パスワードによる鍵導出関数.
  * 疑似乱数関数 PRF が必要。PBKDF2ではHMACだが、MAC系全般が指定可能。
  * デフォルトPRFはHMAC-SHA1だがSHA-1が廃止されているので注意。
  * RFC 2898
@@ -36,6 +36,9 @@ public class PBKDF2 implements PBKDF {
     public static final OBJECTIDENTIFIER OID = PKCS5.sub(12); // id-PBKDF2
 
     byte[] salt;
+    /**
+     * iterationCount
+     */
     int c;
     int dkLen;
     private MAC prf;
@@ -72,11 +75,12 @@ public class PBKDF2 implements PBKDF {
     }
 
     /**
+     * 初期値設定.
      * いくつかのパラメータ設定.
      *
      * @param prf 疑似乱数関数PRF HMACなど
      * @param salt PKCS #5 64bit以上、 アメリカ国立標準技術研究所 128bit 推奨
-     * @param c 繰り返し数 4000以上くらい
+     * @param c iterationCount 繰り返し数 4000以上くらい
      */
     public void init(MAC prf, byte[] salt, int c) {
         this.prf = prf;
@@ -85,12 +89,13 @@ public class PBKDF2 implements PBKDF {
     }
 
     /**
+     * 初期値設定.
      * いくつかのパラメータ設定.
      *
      * @param prf 疑似乱数関数PRF HMACなど
      * @param salt 64bit以上 128bit 推奨
-     * @param c 繰り返し数 4000以上くらい OpenSSL 2000くらい
-     * @param dkLen
+     * @param c iterationCount 繰り返し数 4000以上くらい OpenSSL 2000くらい
+     * @param dkLen 派生鍵出力長
      */
     public void init(MAC prf, byte[] salt, int c, int dkLen) {
         this.prf = prf;
@@ -100,10 +105,11 @@ public class PBKDF2 implements PBKDF {
     }
 
     /**
+     * 初期値設定.
      * いくつかのパラメータ設定.
      *
      * @param salt 64bit以上 128bit 推奨
-     * @param c 繰り返し数 4000以上くらい OpenSSL 2000くらい
+     * @param c iterationCount 繰り返し数 4000以上くらい OpenSSL 2000くらい
      */
     @Override
     public void init(byte[] salt, int c) {
@@ -111,6 +117,13 @@ public class PBKDF2 implements PBKDF {
         this.c = c;
     }
 
+    /**
+     * 初期値設定.
+     * 
+     * @param salt 64bit以上 128bit 推奨
+     * @param c iterationCount 繰り返し数 4000以上くらい OpenSSL 2000くらい
+     * @param dkLen 派生鍵出力長
+     */
     public void init(byte[] salt, int c, int dkLen) {
         this.salt = salt;
         this.c = c;
@@ -123,7 +136,7 @@ public class PBKDF2 implements PBKDF {
      * @param password HMAC パスワード
      * @param salt ソルト
      * @param c 繰り返す数 1000以上ぐらい
-     * @param dkLen 派生鍵の長さ
+     * @param dkLen 派生鍵出力長
      * @return DK 派生鍵
      */
     @Override
@@ -136,7 +149,7 @@ public class PBKDF2 implements PBKDF {
      * 他のパラメータは事前に設定すること.
      *
      * @param password HMAC パスワード
-     * @param dkLen 派生鍵の長さ
+     * @param dkLen 派生鍵出力長
      * @return DK 派生鍵
      */
     @Override
@@ -158,10 +171,11 @@ public class PBKDF2 implements PBKDF {
 
     /**
      * 複数パラメータを生成する.
+     * 一括生成した派生鍵を複数に分割する
      *
-     * @param password
-     * @param dkLens
-     * @return
+     * @param password パスワード
+     * @param dkLens 派生鍵出力長 複数指定可能
+     * @return 派生鍵
      */
     public byte[][] pbkdf(byte[] password, int... dkLens) {
         int sum = 0;
@@ -183,12 +197,12 @@ public class PBKDF2 implements PBKDF {
      * PBKDF2 本体.
      * HMAC以外も使えるようにしてある
      *
-     * @param prf MACアルゴリズム
+     * @param prf 擬似乱数生成器 MACアルゴリズム
      * @param password HMAC用パスワード
      * @param salt ソルト
      * @param c 繰り返す数
-     * @param dkLen 戻り長さ (バイト)
-     * @return
+     * @param dkLen 派生鍵長さ (バイト)
+     * @return　派生鍵
      */
     public static byte[] pbkdf2(MAC prf, byte[] password, byte[] salt, int c, int dkLen) {
         int hLen = prf.getMacLength();
@@ -209,12 +223,14 @@ public class PBKDF2 implements PBKDF {
     }
 
     /**
+     * 内部関数f.
+     * 
      * パスワードはHMACで保持できるので省略した
      *
      * @param prf HMAC アルゴリズム パスワード設定済み
      * @param salt ソルト
-     * @param c ループ回数
-     * @param i カウント
+     * @param c iterationCount ストレッチ回数
+     * @param i カウント 長さ由来
      * @return 1回分
      */
     private static byte[] f(MAC prf, byte[] salt, int c, int i) {

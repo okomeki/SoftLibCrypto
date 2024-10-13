@@ -16,6 +16,7 @@
 package net.siisise.ietf.pkcs8;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import net.siisise.iso.asn1.ASN1Util;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.SEQUENCE;
@@ -64,18 +65,52 @@ public class PKCS8 {
     }
 
     /**
-     * 
-     * @param key
-     * @param pass
-     * @return 
+     * RFC 5958 3.
+     *
+     * @deprecated 鍵別に移動
+     * @param key RSA鍵
+     * @param pass password
+     * @return EncryptedPrivateKeyInfo
+     * @throws NoSuchAlgorithmException
      */
-    public static SEQUENCE getEncryptedPrivateKeyInfo(RSAPrivateCrtKey key, byte[] pass) {
-        
-        throw new UnsupportedOperationException();
-    } 
-    
-    public static RSAPrivateCrtKey getDecryptedPrivateKeyInfo(byte[] src, byte[] pass) {
-        throw new UnsupportedOperationException();
+    @Deprecated
+    public SEQUENCEMap encryptedPrivateKeyInfoASN1(RSAPrivateCrtKey key, byte[] pass) throws NoSuchAlgorithmException {
+        return encryptedPrivateKeyInfo(key.getPKCS8PrivateKeyInfo(), pass).decode();
+    }
+
+    /**
+     * PrivateKeyInfo暗号化.
+     *
+     * @param info PKCS #8 PrivateKeyInfo
+     * @param pass password
+     * @return encryptedPrivateKeyInfo
+     * @throws NoSuchAlgorithmException
+     */
+    public EncryptedPrivateKeyInfo encryptedPrivateKeyInfo(PrivateKeyInfo info, byte[] pass) throws NoSuchAlgorithmException {
+        return encryptPrivateKeyInfo(info.encodeASN1().encodeAll(), pass);
     }
     
+    EncryptedPrivateKeyInfo encryptPrivateKeyInfo(byte[] keyInfo, byte[] pass) throws NoSuchAlgorithmException {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * PrivateKeyInfo decode
+     *
+     * @param src EncryptedPrivateKeyInfo
+     * @param pass password
+     * @return PKCS #8 PrivateKeyInfo
+     */
+    public PrivateKeyInfo decryptPrivateKeyInfo(byte[] src, byte[] pass) {
+        SEQUENCE s = (SEQUENCE) ASN1Util.toASN1(src);
+        return decryptPrivateKeyInfo(s, pass);
+    }
+
+    public PrivateKeyInfo decryptPrivateKeyInfo(SEQUENCE src, byte[] pass) {
+        return decryptPrivateKeyInfo(EncryptedPrivateKeyInfo.decode(src), pass);
+    }
+
+    public PrivateKeyInfo decryptPrivateKeyInfo(EncryptedPrivateKeyInfo info, byte[] pass) {
+        throw new UnsupportedOperationException();
+    }
 }
