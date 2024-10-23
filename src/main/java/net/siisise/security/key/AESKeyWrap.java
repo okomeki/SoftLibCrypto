@@ -15,11 +15,11 @@
  */
 package net.siisise.security.key;
 
+import java.util.Arrays;
 import net.siisise.lang.Bin;
 import net.siisise.security.block.AES;
 import net.siisise.security.block.Block;
 import net.siisise.security.block.ES;
-import net.siisise.security.mode.GCM;
 
 /**
  * RFC 3394 Advanced Encryption Standard (AES) Key Wrap Algorithm.
@@ -27,48 +27,66 @@ import net.siisise.security.mode.GCM;
  */
 public class AESKeyWrap implements ES {
 
+    // RFC 3394
+    final long def = 0xa6a6a6a6a6a6a6a6l;
+    // RFC 5649
+    final long aiv = 0xa65959a600000000l;
+
+    boolean padding;
     Block aes;
-//    private byte[] kek;
-    
-    /**
-     * 初期設定.
-     * 
-     * @param kek 鍵暗号化鍵 コピーしないので注意.
-     */
-    public void init(byte[] kek) {
-//        this.kek = kek;
+
+    long a;
+
+    public AESKeyWrap(AES a) {
+        aes = a;
+    }
+
+    public AESKeyWrap() {
         aes = new AES();
-        aes.init(kek);
     }
 
     /**
-     * @deprecated 仮
+     * 初期設定.
+     * RFC 3394
+     * @param kek 鍵暗号化鍵 コピーしないので注意.
+     */
+    public void init(byte[] kek) {
+        aes.init(kek);
+        padding = false;
+    }
+
+    /**
+     * RFC 5649 with Padding
      * @param kek 
      */
-    public void init(byte[][] kek) {
-        aes = new GCM(new AES());
+    public void initWithPadding(byte[] kek) {
         aes.init(kek);
-        
+        padding = true;
     }
-    
-    static long def = 0xa6a6a6a6a6a6a6a6l;
-    
+
     /**
-     * 
+     *
      * @param plain 64bit block x n
-     * @return 
+     * @return ciphertext 64bit x (n+1)
      */
     @Override
     public byte[] encrypt(byte[] plain) {
-        long a = def; // new long[1]; // IV ? See 2.2.3.
+//        long a = def; // new long[1]; // IV ? See 2.2.3.
+        if (padding) {
+            a = aiv | ((long) plain.length) & 0xffffffffl;
+            plain = Arrays.copyOf(plain, (plain.length + 7) & 0xfffffff8);
+        } else {
+            a = def;
+        }
+
         long[] p = Bin.btol(plain);
         long[] r = new long[p.length + 1];
         System.arraycopy(p, 0, r, 1, p.length);
 
         long[] src = new long[2];
-        
-        for ( int j = 0; j <= 5; j++ ) {
-            for ( int i = 1; i <= p.length; i++ ) {
+
+        for (int j = 0; j <= 5; j++) {
+            for (int i = 1; i <= p.length; i++) {
                 src[0] = a;
                 src[1] = r[i];
                 long[] b = aes.encrypt(src);
@@ -79,14 +97,14 @@ public class AESKeyWrap implements ES {
         r[0] = a;
         return Bin.ltob(r);
     }
-    
+
     @Override
     public byte[] decrypt(byte[] ciphertext) {
         long[] c = Bin.btol(ciphertext);
-        long a = c[0];
+        a = c[0];
         long[] r = new long[c.length - 1];
         long[] b = new long[2];
-        for ( int j = 5; j >= 0; j--) {
+        for (int j = 5; j >= 0; j--) {
             for (int i = r.length; i > 0; i--) {
                 b[0] = a ^ (r.length * j + i);
                 b[1] = c[i];
@@ -95,10 +113,17 @@ public class AESKeyWrap implements ES {
                 c[i] = src[1];
             }
         }
-        if ( a != def ) {
+        byte[] plaintext = Bin.ltob(c, 1, r.length);
+        if (padding) {
+            int len = (int) (a & 0xffffffff);
+            int rlen = r.length * 8;
+            if ((a >>> 32) != (aiv >>> 32) || (len > rlen) || (len < rlen - 7)) {
+                throw new IllegalStateException();
+            }
+            plaintext = Arrays.copyOf(plaintext, len);
+        } else if (a != def) {
             throw new IllegalStateException();
         }
-        System.arraycopy(c, 1, r, 0, r.length);
-        return Bin.ltob(r);
+        return plaintext;
     }
 }

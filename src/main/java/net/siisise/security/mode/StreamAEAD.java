@@ -34,6 +34,12 @@ import net.siisise.security.stream.Stream;
 public interface StreamAEAD extends Stream {
 
     /**
+     * 必要なパラメータ長の確認.
+     * 
+     * @return 
+     */
+    int[] getParamLength();
+    /**
      * パラメータ受け渡し
      * @param params key, iv, aad の3つで受け付ける
      */
