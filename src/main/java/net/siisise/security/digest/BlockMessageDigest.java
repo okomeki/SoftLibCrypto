@@ -52,6 +52,8 @@ public abstract class BlockMessageDigest extends MessageDigest implements BlockL
             alg = alg.toUpperCase();
             if (alg.startsWith("SHA3-")) {
                 md = new SHA3(Integer.parseInt(alg.substring(5)));
+            } else if (alg.startsWith("SHAKE")) {
+                md = new SHAKE(Integer.parseInt(alg.substring(5)));
             } else if (alg.startsWith("SHA-512/")) { // HMACで可変仕様の存在は知らない
                 md = new SHA512(Integer.parseInt(alg.substring(8)));
             } else if (alg.startsWith("SHA512/")) { // HMACで可変仕様の存在は知らない

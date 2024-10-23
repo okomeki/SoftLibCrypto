@@ -70,7 +70,7 @@ public class EME_OAEP implements EME {
     }
 
     /**
-     * 
+     * MGF に SHAKE128 / SHAKE256 を使う場合
      * @param mgfXof MGF用 XOF
      * @param md L用
      */

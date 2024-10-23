@@ -21,8 +21,19 @@ package net.siisise.security.padding;
 public interface EME {
 
     int maxLength(int k);
+    /**
+     * RSA暗号の前処理 padding等.
+     * @param k 出力長
+     * @param m データ
+     * @return 暗号前Padding文 EM
+     */
     byte[] encoding(int k, byte[] m);
     void decodeCheck(int k, byte[] c);
+    /**
+     * EM からPadding等を除いてMにする
+     * @param em Padding文
+     * @return M メッセージ
+     */
     byte[] decode(byte[] em);
     
 }

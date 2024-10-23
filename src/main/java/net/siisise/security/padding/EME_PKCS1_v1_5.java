@@ -60,7 +60,7 @@ public class EME_PKCS1_v1_5 implements EME {
      * RFC 8017 7.2.1.
      * @param k
      * @param M
-     * @return 
+     * @return EM
      */
     @Override
     public byte[] encoding(int k, byte[] M) {

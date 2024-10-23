@@ -18,8 +18,10 @@ package net.siisise.security.padding;
 import net.siisise.security.digest.XOF;
 
 /**
- * XOFかなにかを使ったMGF
+ * XOFをMGFに変換するだけ.
  * RFC 8702
+ * SHAKE128 d = 256
+ * SHAKE256 d = 512
  */
 public class MGFXOF implements MGF {
 

@@ -20,10 +20,10 @@ import net.siisise.iso.asn1.tag.INTEGER;
 import net.siisise.security.digest.BlockMessageDigest;
 import net.siisise.security.digest.DigestAlgorithm;
 import net.siisise.security.digest.SHA1;
-import net.siisise.security.padding.MGF;
 
 /**
- *
+ * RSASSA_PSS のパラメータ.
+ * SHAKE128 / SHAKE256 の場合は使わない
  */
 public class RSASSA_PSS_params {
     

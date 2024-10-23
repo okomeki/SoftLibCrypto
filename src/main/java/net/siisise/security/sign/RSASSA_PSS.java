@@ -34,14 +34,22 @@ import net.siisise.security.padding.MGFXOF;
  */
 public class RSASSA_PSS extends RSASSA {
 
+    /**
+     * 4056 2.1. 証明書識別子 パラメータなし または RSASSA-PSS-params
+     * 4056 2.2. 署名識別子　RSASSA-PSS-paraMS 必須
+     */
     public static final OBJECTIDENTIFIER OID = PKCS1.id_RSASSA_PSS;
-
     // RFC 8692 8702
-    static final OBJECTIDENTIFIER SHAKE128 = new OBJECTIDENTIFIER("1.3.6.1.5.5.7.6.30");
-    static final OBJECTIDENTIFIER SHAKE256 = new OBJECTIDENTIFIER("1.3.6.1.5.5.7.6.31");
+    // 署名, 公開鍵 パラメータなし
+    // 出力 SHAKE128 32バイト SHAKE256 64バイト
+    public static final OBJECTIDENTIFIER RSASSA_PSS_SHAKE128 = new OBJECTIDENTIFIER("1.3.6.1.5.5.7.6.30");
+    public static final OBJECTIDENTIFIER RSASSA_PSS_SHAKE256 = new OBJECTIDENTIFIER("1.3.6.1.5.5.7.6.31");
+
+    // RFC 8692 ECDSA署名 RSASSA-PSSとは関係ないかも
     static final OBJECTIDENTIFIER ecdsaWithShake128 = new OBJECTIDENTIFIER("1.3.6.1.5.5.7.6.32");
     static final OBJECTIDENTIFIER ecdsaWithShake256 = new OBJECTIDENTIFIER("1.3.6.1.5.5.7.6.33");
     
+
     /**
      * とりあえずinitの代わり
      * @param hash hash function

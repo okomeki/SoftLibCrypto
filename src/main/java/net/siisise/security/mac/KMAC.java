@@ -15,6 +15,7 @@
  */
 package net.siisise.security.mac;
 
+import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.security.digest.SHA3Derived;
 import net.siisise.security.digest.cSHAKE;
 
@@ -26,6 +27,10 @@ import net.siisise.security.digest.cSHAKE;
 public abstract class KMAC implements MAC {
     private cSHAKE cshake;
     protected long L;
+
+    // RFC 8702
+    public static final OBJECTIDENTIFIER KmacWithSHAKE128 = new OBJECTIDENTIFIER("2.16.840.1.101.3.4.2.19");
+    public static final OBJECTIDENTIFIER KmacWithSHAKE256 = new OBJECTIDENTIFIER("2.16.840.1.101.3.4.2.20");
 
     /**
      * 初期化要素.

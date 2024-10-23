@@ -95,6 +95,8 @@ public class DigestAlgorithm extends AlgorithmIdentifier {
         NAMES.put(id_sha3_256, "SHA3-256");
         NAMES.put(id_sha3_384, "SHA3-384");
         NAMES.put(id_sha3_512, "SHA3-512");
+        NAMES.put(id_shake128, "SHAKE128");
+        NAMES.put(id_shake256, "SHAKE256");
         for ( Map.Entry<OBJECTIDENTIFIER, String> e : NAMES.entrySet() ) {
             OIDS.put(e.getValue(), e.getKey());
         }
@@ -104,7 +106,9 @@ public class DigestAlgorithm extends AlgorithmIdentifier {
         id_sha384,
         id_sha512,
         id_sha512_224,
-        id_sha512_256};
+        id_sha512_256,
+        id_shake128,
+        id_shake256};
         OAEPPSS = Arrays.asList(oaeppss);
     }
     
