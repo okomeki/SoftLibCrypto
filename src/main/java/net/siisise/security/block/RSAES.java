@@ -71,7 +71,12 @@ public class RSAES implements ES {
         byte[] EM = eme.encoding(k, m);
         return pub.rsaep(EM, k);
     }
-    
+
+    /**
+     * ブロック暗号の作法
+     * @param m
+     * @return 
+     */
     @Override
     public byte[] encrypt(byte[] m) {
         return encrypt(pub,m);

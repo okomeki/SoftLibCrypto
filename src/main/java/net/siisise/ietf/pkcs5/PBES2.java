@@ -15,7 +15,6 @@
  */
 package net.siisise.ietf.pkcs5;
 
-import java.util.Arrays;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.security.block.Block;
 import net.siisise.security.mac.MAC;

@@ -17,9 +17,11 @@ package net.siisise.security.block;
 
 import java.security.MessageDigest;
 import net.siisise.security.digest.SHA1;
+import net.siisise.security.digest.XOF;
 import net.siisise.security.padding.EME_OAEP;
 import net.siisise.security.padding.MGF;
 import net.siisise.security.padding.MGF1;
+import net.siisise.security.padding.MGFXOF;
 
 /**
  * RFC 8017 PKCS #1
@@ -49,9 +51,19 @@ public class RSAES_OAEP extends RSAES {
     public RSAES_OAEP(MessageDigest md, MessageDigest mgfMd) {
         super(new EME_OAEP(new MGF1(mgfMd), md));
     }
-    
+
     public RSAES_OAEP(MessageDigest md, MGF mgf) {
         super(new EME_OAEP(mgf, md));
+    }
+
+    /**
+     * SHAKE128 / SHAKE256 を使う.
+     * mdとxofは同じアルゴリズムであること.
+     * @param md SHAKE128 / SHAKE256
+     * @param xof SHAKE128 / SHAKE256 
+     */
+    public RSAES_OAEP(MessageDigest md, XOF xof) {
+        super(new EME_OAEP(new MGFXOF(xof), md));
     }
     
     /**

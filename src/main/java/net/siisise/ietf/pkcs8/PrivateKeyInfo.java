@@ -36,25 +36,40 @@ import net.siisise.iso.asn1.tag.SEQUENCEMap;
  * RFC 5208 PKCS #8 5. Private-Key Information Syntax
  * RFC 5958
  * 
+ * RSA, ECDSA など
+ * 
  */
 public class PrivateKeyInfo {
 //    static class Version extends INTEGER {}
     
 //    static class Attributes extends SEQUENCEList {}
-    
+
+    /**
+     * version Version
+     * 
+     * Version ::= INTEGER
+     */
     public int version;
 
     /**
-     * 鍵種別、オプション
+     * privateKeyAlgorithm PrivateKeyAlgorithmIdentifier
+     * 鍵種別、オプション。
+     * OIDは秘密鍵用がないので公開鍵のものが使われる
+     * PrivateKeyAlgorithmIdentifier ::= AlgorithmIdentifier
      */
     public AlgorithmIdentifier privateKeyAlgorithm;
 
     /**
+     * privateKey PrivateKey
      * 秘密鍵.
-     * ASN.1 OCTETSTRING
+     * PrivateKey ::= OCTET STRING
      */
     public byte[] privateKey;
-    List attributes; // [0] Attributes OPTIONAL
+    /**
+     * attributes [0] IMPLICIT Attributes OPTIONAL
+     * Attributes ::= SET OF Attribute
+     */
+    List attributes;
 
     public PrivateKeyInfo() {
     }
@@ -93,8 +108,8 @@ public class PrivateKeyInfo {
         s.put("privateKeyAlgorithm", privateKeyAlgorithm);
         s.put("privateKey", privateKey);
         if (attributes != null) {
-            SEQUENCEList atrs = new SEQUENCEList(ASN1Cls.CONTEXT_SPECIFIC, 0);
-            atrs.add((ASN1Tag)Rebind.valueOf(attributes, ASN1Tag.class));
+            SEQUENCEList atrs = new SEQUENCEList(ASN1Cls.CONTEXT_SPECIFIC, 0); // SET OF
+            atrs.addAll(Rebind.valueOf(attributes, ASN1Tag.class));
             s.put("attributes", atrs);
         }
         return Rebind.valueOf(s,format);
@@ -110,7 +125,8 @@ public class PrivateKeyInfo {
         s.put("privateKeyAlgorithm", privateKeyAlgorithm.encodeASN1());
         s.put("privateKey", new OCTETSTRING(privateKey));
         if ( attributes != null ) {
-            SEQUENCEList atrs = new SEQUENCEList(ASN1Cls.CONTEXT_SPECIFIC, 0);
+            SEQUENCEList atrs = new SEQUENCEList(ASN1Cls.CONTEXT_SPECIFIC, 0); // SET OF
+            atrs.addAll(Rebind.valueOf(attributes, ASN1Tag.class));
             s.put("attributes", atrs);
         }
         return s;
@@ -119,15 +135,16 @@ public class PrivateKeyInfo {
     /**
      * ASN.1型の読み込み.
      * version=0 想定.
+     * version=1はOneAsymmetricKey
      * algorithm と privateKey を持つ.
      * @param seq　ASN.1型
      * @return PrivateKeyInfo
      */
     public static PrivateKeyInfo decode(SEQUENCE seq) {
         INTEGER ver = (INTEGER) seq.get(0);
-        AlgorithmIdentifier ai = AlgorithmIdentifier.decode((SEQUENCE) seq.get(1));
+        AlgorithmIdentifier privateKeyAlg = AlgorithmIdentifier.decode((SEQUENCE) seq.get(1));
         if ( ver.getValue().equals(BigInteger.ZERO)) {
-            PrivateKeyInfo info = new PrivateKeyInfo(ai, ((OCTETSTRING)seq.get(2)).getValue());
+            PrivateKeyInfo info = new PrivateKeyInfo(privateKeyAlg, ((OCTETSTRING)seq.get(2)).getValue());
             if (seq.size() == 3) {
                 return info;
             }

@@ -19,6 +19,7 @@ import java.util.LinkedHashMap;
 import net.siisise.bind.Rebind;
 import net.siisise.bind.format.TypeFormat;
 import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
+import net.siisise.iso.asn1.ASN1;
 import net.siisise.iso.asn1.tag.ASN1Convert;
 import net.siisise.iso.asn1.tag.ASN1Prefixed;
 import net.siisise.iso.asn1.tag.BITSTRING;
@@ -30,6 +31,7 @@ import net.siisise.iso.asn1.tag.SEQUENCEMap;
 
 /**
  * RFC 5958 OneAsymmetricKey [v2].
+ * 
  * OneAsymmetricKey ::= SEQUENCE {
  *   version Version,
  *   privateKeyAlgorithm PrivateKeyAlgorithmIdentifier,
@@ -50,7 +52,7 @@ import net.siisise.iso.asn1.tag.SEQUENCEMap;
  * RFC 5208 PrivateKeyInfo [v1]
  */
 public class OneAsymmetricKey extends PrivateKeyInfo {
-    
+
     public static final OBJECTIDENTIFIER id_ct_KP_aKeyPackage = new OBJECTIDENTIFIER("2.16.840.1.101.2.1.2.78.5");
 
     static enum Version {
@@ -66,42 +68,52 @@ public class OneAsymmetricKey extends PrivateKeyInfo {
             return n;
         }
     }
-    
+
     public OneAsymmetricKey() {
     }
-    
+
     /**
-     * 
-     * @param oid Object Identifier
+     *
+     * @param oid Object Identifier RFC 8410 9295
      * @param privateKey 秘密鍵
      */
     public OneAsymmetricKey(OBJECTIDENTIFIER oid, byte[] privateKey) {
         super(oid, privateKey);
     }
-    
+
     public OneAsymmetricKey(AlgorithmIdentifier ai, byte[] privateKey) {
         super(ai, privateKey);
     }
 
-//    public OBJECTIDENTIFIER privateKeyAlgorithm;
-//    public OCTETSTRING privateKey;
-//    public List attributes; // [0] Attributes OPTIONAL
-    public BITSTRING publicKey; // [1] PublicKey OPTIONAL
+    /**
+     * 公開鍵.
+     */
+    public byte[] publicKey; // [1] PublicKey OPTIONAL
 
+    /**
+     * version 指定を優先、公開鍵がない場合はv1固定。
+     *
+     * @return
+     */
     @Override
     public SEQUENCEMap encodeASN1() {
         SEQUENCEMap one = new SEQUENCEMap();
-        one.put("version", version);
+        // version 0: 秘密鍵のみ　version 1: 公開鍵込み
+        if (publicKey == null) {
+            one.put("version", Version.v1.value());
+        } else {
+            one.put("version", version);
+        }
         one.put("privateKeyAlgorithm", privateKeyAlgorithm.encodeASN1());
         one.put("privateKey", privateKey);
-        if ( attributes != null ) {
+        if (attributes != null) {
             //ASN1Prefixed pre0 = new ASN1Prefixed(0, Rebind.valueOf(attributes, new ASN1Convert()));
             SEQUENCE pre0 = (SEQUENCE) Rebind.valueOf(attributes, new ASN1Convert());
             pre0.setContextSpecific(0);
             one.put("attributes", pre0);
         }
-        if (publicKey != null && version > 0) {
-            ASN1Prefixed pre1 = new ASN1Prefixed(1, publicKey);
+        if (publicKey != null && version > 0) { // IMPLICIT
+            BITSTRING pre1 = new BITSTRING( 1,publicKey);
             one.put("publicKey", pre1);
         }
         return one;
@@ -125,8 +137,8 @@ public class OneAsymmetricKey extends PrivateKeyInfo {
             map.put("attributes", pre1);
         }
 
-        if (publicKey != null && version >= 1) {
-            ASN1Prefixed pre1 = new ASN1Prefixed(1, publicKey);
+        if (publicKey != null && version >= 1) { // IMPLICIT
+            BITSTRING pre1 = new BITSTRING(1, publicKey);
             map.put("publicKey", pre1);
         }
         return format.mapFormat(map); //Rebind.valueOf(map, format);
@@ -134,18 +146,19 @@ public class OneAsymmetricKey extends PrivateKeyInfo {
 
     /**
      * ToDo: overflow
+     *
      * @param s
-     * @return 
+     * @return
      */
     public static PrivateKeyInfo decode(SEQUENCE s) {
-        INTEGER ver = (INTEGER)s.get(0);
+        INTEGER ver = (INTEGER) s.get(0);
         long longVer = ver.longValue();
-        if ( longVer == 1 ) {
+        if (longVer == 1) {
             OneAsymmetricKey key = new OneAsymmetricKey();
             key.version = ver.intValueExact();
-            key.privateKeyAlgorithm = AlgorithmIdentifier.decode( (SEQUENCE) s.get(1));
+            key.privateKeyAlgorithm = AlgorithmIdentifier.decode((SEQUENCE) s.get(1));
             key.privateKey = ((OCTETSTRING) s.get(2)).getValue();
-            key.publicKey = (BITSTRING) s.getContextSpecific(0);
+            key.publicKey = ((BITSTRING) s.getContextSpecific(0, ASN1.BITSTRING)).getValue();
             return key;
         } else {
             return PrivateKeyInfo.decode(s);

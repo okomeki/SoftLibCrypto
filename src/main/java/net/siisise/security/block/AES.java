@@ -249,15 +249,22 @@ public class AES extends IntBlock {
     private long[] ldw;
 
     public AES() {
-        keyLength = 128;
+        keyLength = 0;
     }
     
     public AES(int bit) {
         keyLength = bit;
     }
-    
+
+    /**
+     * 必要なパラメータサイズ
+     * @return 
+     */
     @Override
     public int[] getParamLength() {
+        if (keyLength == 0) {
+            return new int[] {128};
+        }
         return new int[] {keyLength};
     }
     
@@ -272,7 +279,11 @@ public class AES extends IntBlock {
     public void init(byte[]... keys) {
         byte[] key = keys[0];
 
-        if (key.length != 16 && key.length != 24 && key.length != 32) {
+        if (keyLength == 0) {
+            if (key.length != 16 && key.length != 24 && key.length != 32) {
+                throw new SecurityException("key length (" + key.length + ")");
+            }
+        } else if (key.length * 8 != keyLength) {
             throw new SecurityException("key length (" + key.length + ")");
         }
 

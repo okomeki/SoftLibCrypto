@@ -18,6 +18,7 @@ package net.siisise.security.block;
 import net.siisise.bind.format.TypeFormat;
 import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.ietf.pkcs1.PKCS1;
+import net.siisise.iso.asn1.ASN1;
 import net.siisise.iso.asn1.tag.ASN1Prefixed;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
 import net.siisise.iso.asn1.tag.SEQUENCE;
@@ -28,7 +29,7 @@ import net.siisise.security.digest.SHA1;
 import net.siisise.security.padding.MGF1;
 
 /**
- *
+ * RFC 8017 A.2.1
  */
 public class RSAES_OAEP_params {
 
@@ -55,19 +56,19 @@ public class RSAES_OAEP_params {
     }
 
     public void decode(SEQUENCE seq) {
-        SEQUENCE s = (SEQUENCE) seq.getContextSpecific(0);
+        SEQUENCE s = (SEQUENCE) seq.getContextSpecific(0, ASN1.SEQUENCE);
         if (s != null) {
             hashAlgorithm = AlgorithmIdentifier.decode(s);
         } else {
             hashAlgorithm = new AlgorithmIdentifier(SHA1.OBJECTIDENTIFIER);
         }
-        s = (SEQUENCE) seq.getContextSpecific(1);
+        s = (SEQUENCE) seq.getContextSpecific(1, ASN1.SEQUENCE);
         if (s != null) {
             maskGenAlgorithm = AlgorithmIdentifier.decode(s);
         } else {
             maskGenAlgorithm = new AlgorithmIdentifier(MGF1.OID);
         }
-        s = (SEQUENCE) seq.getContextSpecific(2);
+        s = (SEQUENCE) seq.getContextSpecific(2, ASN1.SEQUENCE);
         if ( s != null) {
             pSourceAlgorithm = AlgorithmIdentifier.decode(s);
         } else {
