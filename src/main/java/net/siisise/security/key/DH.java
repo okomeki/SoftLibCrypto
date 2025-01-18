@@ -18,8 +18,6 @@ package net.siisise.security.key;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * DHの基本形.
@@ -28,9 +26,13 @@ import java.util.logging.Logger;
  * RFC 2631 などで拡張してあったり
  * 
  * P 大きな素数
+ * q 大きな素数
  * g 種
  * xaとxbは秘密
  * yaとybは公開鍵
+ * 
+ * h 任意の整数 1 &lt; h &lt; p-1 h{(p-1)/q} mod p &gt; 1
+ * g = h^{(p-1)/q} mod p
  * 
  * ya = g^xa mod P
  * yb = g^xb mod P
@@ -44,15 +46,15 @@ import java.util.logging.Logger;
  */
 public class DH {
     static SecureRandom srnd;
-    
+
     static {
         try {
             srnd = SecureRandom.getInstanceStrong();
         } catch (NoSuchAlgorithmException ex) {
-            Logger.getLogger(DH.class.getName()).log(Level.SEVERE, null, ex);
+            throw new IllegalStateException(ex);
         }
     }
-    
+
     /**
      * 共通の要素を生成
      * @param plen 素数のビット長
@@ -64,7 +66,7 @@ public class DH {
         BigInteger g = BigInteger.probablePrime(glen, srnd); // 仮に素数
         return new DH(p, g);
     }
-    
+
     public static DH genSSHDH() {
         throw new UnsupportedOperationException();
 //        return new DH(null,BigInteger.valueOf(2));
@@ -138,12 +140,22 @@ public class DH {
     
     /**
      * 共通鍵の取得.
+     * 2.1.1.
      * @param middle 中間鍵
      * @return 共通鍵 common key
      */
     public BigInteger genZZKey(BigInteger middle) {
         return middle.modPow(prv, p);
     }
+
+    /*
+     * RFC 2631 2.1.2.
+     */
+    /*
+    void genKeyingMaterial(BigInteger zz, ) {
+        
+    }
+    */
     
     
     boolean publicKeyValidation() {

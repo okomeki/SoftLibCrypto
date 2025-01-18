@@ -25,5 +25,5 @@ import net.siisise.iso.asn1.tag.OCTETSTRING;
  */
 public class KeySpecificInfo {
     OBJECTIDENTIFIER algorithm;
-    OCTETSTRING counter; // (4..4)
+    OCTETSTRING counter; // SIZE (4..4)
 }

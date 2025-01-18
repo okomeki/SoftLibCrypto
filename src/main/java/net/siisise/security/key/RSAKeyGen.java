@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import net.siisise.iso.asn1.ASN1Tag;
 import net.siisise.iso.asn1.ASN1Util;
 import net.siisise.iso.asn1.tag.INTEGER;
 import net.siisise.iso.asn1.tag.SEQUENCE;
@@ -46,11 +45,20 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
 
     private int keysize;
     private SecureRandom srnd;
+    private boolean strong = false;
 
     @Override
     public void initialize(int keysize, SecureRandom random) {
         this.keysize = keysize;
         srnd = random;
+    }
+
+    /**
+     * 強暗号.
+     * @param strong 
+     */
+    public void setStrong(boolean strong) {
+        this.strong = strong;
     }
 
     /**
@@ -60,7 +68,12 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
      */
     @Override
     public KeyPair generateKeyPair() {
-        RSAPrivateCrtKey fkey = generatePrivateKey(keysize, srnd, 2);
+        RSAPrivateCrtKey fkey;
+        if ( strong ) {
+            fkey = generateStrongPrivateKey(keysize, srnd, 2);
+        } else {
+            fkey = generatePrivateKey(keysize, srnd, 2);
+        }
         return new KeyPair(fkey.getPublicKey(), fkey.getPrivateKey());
     }
 
@@ -76,22 +89,46 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
     }
 
     /**
+     * 一般暗号鍵生成.
+     * @return 
+     */
+    static RSAPrivateCrtKey generatePrivateKey(int len, SecureRandom srnd, int u) {
+        BigInteger e; // publicExponent
+        e = BigInteger.valueOf(65537);
+        return generatePrivateKey(len, srnd, u, e);
+    }
+
+    /**
+     * 強暗号鍵生成.
+     * eを多少ランダムにしたもの.
+     * @param len
+     * @param srnd
+     * @param u
+     * @return 
+     */
+    static RSAPrivateCrtKey generateStrongPrivateKey(int len, SecureRandom srnd, int u) {
+        BigInteger e; // publicExponent
+        e = BigInteger.probablePrime(17, srnd);
+        return generatePrivateKey(len, srnd, u, e);
+    }
+
+    /**
      * 秘密鍵生成.
      * マルチプライムRSA 対応.
      * @param len 鍵長 (ビット)
      * @param u 2 または 3以上 まるちぷらいむ
      * @return 全要素入り.
      */
-    static RSAPrivateCrtKey generatePrivateKey(int len, SecureRandom srnd, int u) {
+    static RSAPrivateCrtKey generatePrivateKey(int len, SecureRandom srnd, int u, BigInteger e) {
         //RSAFullPrivateKey key = new RSAPrivateCrtKey();
         BigInteger lambda;
         BigInteger n; // modulus
-        BigInteger e; // publicExponent
+//        BigInteger e; // publicExponent
 
         int pbit = len % u;
 //        do {
         srnd.nextBytes(new byte[srnd.nextInt() & 0x7ff]); // てきとー
-        e = BigInteger.probablePrime(17, srnd); // e = 3 から n - 1 , GCD(e, \lambda(n)) = 1
+//        e = BigInteger.probablePrime(17, srnd); // e = 3 から n - 1 , GCD(e, \lambda(n)) = 1
 //        } while ( key.publicExponent.compareTo(BigInteger.valueOf(2)) <= 0 );
         Set<BigInteger> primes = new HashSet<>();
         List<OtherPrimeInfo> pis = new ArrayList<>();

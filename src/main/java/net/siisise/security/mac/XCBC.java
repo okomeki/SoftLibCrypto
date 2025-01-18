@@ -57,7 +57,7 @@ public class XCBC implements MAC {
     }
 
     /**
-     * 
+     * 鍵1つを3つに拡張する.
      * @param key AES-XCBC-MAC-96では128bitのみ
      */
     @Override
@@ -73,6 +73,10 @@ public class XCBC implements MAC {
         init(block.encrypt(k1),block.encrypt(k2),block.encrypt(k3));
     }
     
+    /**
+     * 鍵拡張済みの場合.
+     * @param keys K1, K2, K3 
+     */
     public void init(byte[]... keys) {
         k1 = keys[0];
         block.init(k1);

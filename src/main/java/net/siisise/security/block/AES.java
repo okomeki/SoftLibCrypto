@@ -53,30 +53,30 @@ public class AES extends IntBlock {
     public static final OBJECTIDENTIFIER aesModule1 = csorModules.sub(1);
     
     public static final OBJECTIDENTIFIER AES = nistAlgorithms.sub(1);
-    public static final OBJECTIDENTIFIER aes128_ECB_PAD = AES.sub(1);
-    public static final OBJECTIDENTIFIER aes128_CBC_PAD = AES.sub(2);
-    public static final OBJECTIDENTIFIER aes128_OFB = AES.sub(3);
-    public static final OBJECTIDENTIFIER aes128_CFB = AES.sub(4);
-    public static final OBJECTIDENTIFIER aes128_wrap = AES.sub(5); // AES key wrap
-    public static final OBJECTIDENTIFIER aes128_GCM = AES.sub(6);
-    public static final OBJECTIDENTIFIER aes128_CCM = AES.sub(7);
-    public static final OBJECTIDENTIFIER aes128_wrap_pad = AES.sub(8); // AES key wrap with Padding KEK
-    public static final OBJECTIDENTIFIER aes192_ECB_PAD = AES.sub(21);
-    public static final OBJECTIDENTIFIER aes192_CBC_PAD = AES.sub(22);
-    public static final OBJECTIDENTIFIER aes192_OFB = AES.sub(23);
-    public static final OBJECTIDENTIFIER aes192_CFB = AES.sub(24);
-    public static final OBJECTIDENTIFIER aes192_wrap = AES.sub(25); // AES key wrap
-    public static final OBJECTIDENTIFIER aes192_GCM = AES.sub(26);
-    public static final OBJECTIDENTIFIER aes192_CCM = AES.sub(27);
-    public static final OBJECTIDENTIFIER aes192_wrap_pad = AES.sub(28); // AES key wrap with Padding KEK
-    public static final OBJECTIDENTIFIER aes256_ECB_PAD = AES.sub(41);
-    public static final OBJECTIDENTIFIER aes256_CBC_PAD = AES.sub(42);
-    public static final OBJECTIDENTIFIER aes256_OFB = AES.sub(43);
-    public static final OBJECTIDENTIFIER aes256_CFB = AES.sub(44);
-    public static final OBJECTIDENTIFIER aes256_wrap = AES.sub(45); // AES key wrap
-    public static final OBJECTIDENTIFIER aes256_GCM = AES.sub(46);
-    public static final OBJECTIDENTIFIER aes256_CCM = AES.sub(47);
-    public static final OBJECTIDENTIFIER aes256_wrap_pad = AES.sub(48); // AES key wrap with Padding KEK
+    public static final OBJECTIDENTIFIER AES128_ECB_PAD = AES.sub(1);
+    public static final OBJECTIDENTIFIER AES128_CBC_PAD = AES.sub(2);
+    public static final OBJECTIDENTIFIER AES128_OFB = AES.sub(3);
+    public static final OBJECTIDENTIFIER AES128_CFB = AES.sub(4);
+    public static final OBJECTIDENTIFIER AES128_wrap = AES.sub(5); // RFC 3394 AES key wrap
+    public static final OBJECTIDENTIFIER AES128_GCM = AES.sub(6);
+    public static final OBJECTIDENTIFIER AES128_CCM = AES.sub(7);
+    public static final OBJECTIDENTIFIER AES128_wrap_pad = AES.sub(8); // RFC 5649 AES key wrap with Padding KEK
+    public static final OBJECTIDENTIFIER AES192_ECB_PAD = AES.sub(21);
+    public static final OBJECTIDENTIFIER AES192_CBC_PAD = AES.sub(22);
+    public static final OBJECTIDENTIFIER AES192_OFB = AES.sub(23);
+    public static final OBJECTIDENTIFIER AES192_CFB = AES.sub(24);
+    public static final OBJECTIDENTIFIER AES192_wrap = AES.sub(25); // AES key wrap
+    public static final OBJECTIDENTIFIER AES192_GCM = AES.sub(26);
+    public static final OBJECTIDENTIFIER AES192_CCM = AES.sub(27);
+    public static final OBJECTIDENTIFIER AES192_wrap_pad = AES.sub(28); // AES key wrap with Padding KEK
+    public static final OBJECTIDENTIFIER AES256_ECB_PAD = AES.sub(41);
+    public static final OBJECTIDENTIFIER AES256_CBC_PAD = AES.sub(42);
+    public static final OBJECTIDENTIFIER AES256_OFB = AES.sub(43);
+    public static final OBJECTIDENTIFIER AES256_CFB = AES.sub(44);
+    public static final OBJECTIDENTIFIER AES256_wrap = AES.sub(45); // AES key wrap
+    public static final OBJECTIDENTIFIER AES256_GCM = AES.sub(46);
+    public static final OBJECTIDENTIFIER AES256_CCM = AES.sub(47);
+    public static final OBJECTIDENTIFIER AES256_wrap_pad = AES.sub(48); // AES key wrap with Padding KEK
 
     /**
      * OIDから暗号.

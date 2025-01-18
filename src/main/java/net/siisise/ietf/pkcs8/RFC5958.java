@@ -45,7 +45,7 @@ public class RFC5958 extends PKCS8 {
     /**
      * PBES2で使用する暗号アルゴリズム。
      */
-    public OBJECTIDENTIFIER block = AES.aes256_CBC_PAD;
+    public OBJECTIDENTIFIER block = AES.AES256_CBC_PAD;
     /**
      * ストレッチ回数。
      */
