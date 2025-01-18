@@ -37,7 +37,7 @@ public interface MAC extends SignVerify {
     /**
      * バイト単位の出力長
      *
-     * @return
+     * @return バイト長
      */
     int getMacLength();
     

@@ -29,6 +29,7 @@ import net.siisise.security.block.Block;
 public class CBCMAC implements MAC {
 
     Block block;
+    /** ブロック出力なしMACのみ */
     MacCBC cbc;
 
     public CBCMAC(Block block) {
@@ -53,8 +54,7 @@ public class CBCMAC implements MAC {
 
     @Override
     public byte[] sign() {
-        cbc.vector();
-        throw new UnsupportedOperationException("Not supported yet.");
+        return cbc.vector();
     }
 
     @Override

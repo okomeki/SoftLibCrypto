@@ -18,7 +18,7 @@ package net.siisise.security.block;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.lang.Bin;
 import net.siisise.security.mode.CBC;
-import net.siisise.security.mode.CCM;
+//import net.siisise.security.mode.CCM;
 import net.siisise.security.mode.CFB;
 import net.siisise.security.mode.ECB;
 import net.siisise.security.mode.GCM;
@@ -99,10 +99,10 @@ public class AES extends IntBlock {
                 case 2: b = new PKCS7Padding(new CBC(b));   break;
                 case 3: b = new OFB(b); break;
                 case 4: b = new CFB(b); break;
-                // 5 AES Key Wrap
+                //case 5: AES Key Wrap
                 case 6: b = new GCM(b); break;
-                case 7: b = new CCM(b); break;
-                // 8 AES Key Wrap with Padding
+                //case 7: b = new CCM(b); break;
+                //case 8: AES Key Wrap with Padding
                 default:
                     return null;
             }

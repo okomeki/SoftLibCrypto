@@ -21,7 +21,7 @@ import net.siisise.security.block.Block;
 /**
  * ハッシュ用に出力を外したCBC
  */
-public class MacCBC {
+public class MacCBC implements MAC {
 
     private final Block block;
     private long[] vector;
@@ -37,12 +37,27 @@ public class MacCBC {
     }
 
     /**
+     * 
+     * @return バイト長
+     */
+    @Override
+    public int getMacLength() {
+        return block.getBlockLength() / 8;
+    }
+
+    @Override
+    public void init(byte[] key) {
+        block.init(key);
+    }
+
+    /**
      * ブロック単位
      * @param src メッセージ
      * @param offset 位置
      * @param length サイズ(ブロックサイズの整数倍)
      */
-    void update(byte[] src, int offset, int length) {
+    @Override
+    public void update(byte[] src, int offset, int length) {
         int last = offset + length;
         while (offset + blen <= last) {
             Bin.xorl(vector, src, offset, vl);
@@ -57,5 +72,10 @@ public class MacCBC {
      */
     public byte[] vector() {
         return Bin.ltob(vector);
+    }
+
+    @Override
+    public byte[] sign() {
+        return vector();
     }
 }
