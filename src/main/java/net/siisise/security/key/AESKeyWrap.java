@@ -63,6 +63,15 @@ public class AESKeyWrap implements ES {
         aes.init(kek);
         padding = true;
     }
+    
+    /**
+     * 仮に最低ブロックの長さ.
+     * @return 8
+     */
+    @Override
+    public int getBlockLength() {
+        return 8;
+    }
 
     /**
      *

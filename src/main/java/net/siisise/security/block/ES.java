@@ -17,13 +17,20 @@ package net.siisise.security.block;
 
 /**
  * Encryption Schemas.
- * RSAESのさらに汎用.
+ * RSAESとPBESのさらに汎用.
  * RSAなど長文ではない暗号用.
  * Block暗号 Stream暗号と分けておく?
  * 仮.
  * 暗号文と平文で長さは異なる前提.
  */
 public interface ES {
+    
+    /**
+     * ブロック長または中の最大長(仮).
+     * 未設定では-1くらいでもいい(未定)
+     * @return オクテット
+     */
+    int getBlockLength();
 
     /**
      * 暗号化.

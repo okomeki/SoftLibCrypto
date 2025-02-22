@@ -24,16 +24,18 @@ import net.siisise.security.padding.EME;
  * RFC 8017 PKCS #1
  * Section 7 暗号化スキーム Encryption Schemes とりあえずまとめ.
  * modulus より短いデータのPadding と署名
- * 
+ *
  * RSAESの枠組み と EME に分けて実装してあるだけ.
- * 
+ *
  * IEEE 1363
  */
 public class RSAES implements ES {
+
     final EME eme;
-    
+
     private RSAPublicKey pub;
     private RSAMiniPrivateKey prv;
+    private int k;
 
     public RSAES(EME eme) {
         this.eme = eme;
@@ -41,27 +43,41 @@ public class RSAES implements ES {
 
     /**
      * 暗号化用鍵.
-     * @param pubKey 公開鍵 
+     *
+     * @param pubKey 公開鍵
      */
     public void init(RSAPublicKey pubKey) {
         pub = pubKey;
+        k = (pub.getModulus().bitLength() + 7) / 8;
     }
 
     /**
-     * 暗号、復号用鍵.
-     * フル鍵の場合は暗号化も可能
+     * 暗号、復号用鍵. フル鍵の場合は暗号化も可能
+     *
      * @param prvKey 秘密鍵
      */
     public void init(RSAMiniPrivateKey prvKey) {
         prv = prvKey;
-        if ( prvKey instanceof RSAPrivateCrtKey ) {
-            pub = ((RSAPrivateCrtKey)prvKey).getPublicKey();
+        k = (prvKey.getModulus().bitLength() + 7) / 8;
+        if (prvKey instanceof RSAPrivateCrtKey) {
+            pub = ((RSAPrivateCrtKey) prvKey).getPublicKey();
         }
     }
 
     /**
-     * RSAES-XXXX-ENCRYPT
+     * 符号化可能データ長(1ブロックのみ).
+     *
+     * @return オクテット
+     */
+    @Override
+    public int getBlockLength() {
+        return eme.maxLength(k);
+    }
+
+    /**
+     * RSAES-XXXX-ENCRYPT.
      * RFC 8017 7.1.1. 7.2.1. Encryption Operation をまとめたもの
+     *
      * @param pub PublicKey 受信者のRSA公開鍵 k modulus nの長さ
      * @param m メッセージ mLen 長さ
      * @return C ciphertext 暗号文
@@ -74,20 +90,24 @@ public class RSAES implements ES {
 
     /**
      * ブロック暗号の作法
+     *
      * @param m
-     * @return 
+     * @return
      */
     @Override
     public byte[] encrypt(byte[] m) {
-        return encrypt(pub,m);
+        byte[] EM = eme.encoding(k, m);
+        return pub.rsaep(EM, k);
+//        return encrypt(pub,m);
     }
 
     /**
-     * RSAES-XXXX-DECRYPT
+     * RSAES-XXXX-DECRYPT.
      * RFC 8017 7.1.2. 7.2.2. Decription Operation をまとめたもの
+     *
      * @param prv 秘密鍵
      * @param c ciphertext 暗号文
-     * @return メッセージ 
+     * @return メッセージ
      */
     public byte[] decrypt(RSAMiniPrivateKey prv, byte[] c) {
         int k = (prv.getModulus().bitLength() + 7) / 8;
@@ -95,13 +115,20 @@ public class RSAES implements ES {
             eme.decodeCheck(k, c);
             byte[] EM = prv.rsadp(c, k);
             return eme.decode(EM);
-        } catch ( SecurityException e) { // ばれないように一カ所で再度発する.
+        } catch (SecurityException e) { // ばれないように一カ所で再度発する.
             throw new SecurityException("decryption error");
         }
     }
 
     @Override
-    public byte[] decrypt(byte[] m) {
-        return decrypt(prv,m);
+    public byte[] decrypt(byte[] c) {
+        try {
+            eme.decodeCheck(k, c);
+            byte[] EM = prv.rsadp(c, k);
+            return eme.decode(EM);
+        } catch (SecurityException e) { // ばれないように一カ所で再度発する.
+            throw new SecurityException("decryption error");
+        }
+//        return decrypt(prv,c);
     }
 }

@@ -48,8 +48,8 @@ public class EME_PKCS1_v1_5 implements EME {
     
     /**
      * PS は 8オクテット以上
-     * @param k
-     * @return k - 11
+     * @param k 鍵長
+     * @return データ長 k - 11
      */
     @Override
     public int maxLength(int k) {

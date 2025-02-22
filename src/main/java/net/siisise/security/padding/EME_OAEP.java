@@ -93,7 +93,7 @@ public class EME_OAEP implements EME {
      * 2.EME-OAEP encoding
      * MessageDigest と L はコンストラクタで指定する
      * 長さチェックは省略している.
-     * @param k
+     * @param k 出力長
      * @param m message
      * @return c cyphertext
      */

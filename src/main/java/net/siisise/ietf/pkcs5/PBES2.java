@@ -197,6 +197,15 @@ public class PBES2 implements PBES {
     }
 
     /**
+     * ブロック長.
+     * @return 
+     */
+    @Override
+    public int getBlockLength() {
+        return block.getBlockLength();
+    }
+
+    /**
      * メッセージ1つを暗号化する.
      * 
      * @param message 

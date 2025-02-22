@@ -128,6 +128,11 @@ public class PBES1 implements PBES {
         block.init(k,iv);
     }
     
+    @Override
+    public int getBlockLength() {
+        return block.getBlockLength();
+    }
+
     /**
      * 基本1回のみ。2回目以降初期化せずに使えるかもしれない
      * 毎回padding付き

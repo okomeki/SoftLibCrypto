@@ -20,10 +20,15 @@ package net.siisise.security.padding;
  */
 public interface EME {
 
+    /**
+     * 最大符号化可能長.
+     * @param k 鍵長
+     * @return データ長
+     */
     int maxLength(int k);
     /**
      * RSA暗号の前処理 padding等.
-     * @param k 出力長
+     * @param k 鍵長(バイト)
      * @param m データ
      * @return 暗号前Padding文 EM
      */
