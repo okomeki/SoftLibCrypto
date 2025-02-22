@@ -30,7 +30,6 @@ PKCS #1 ぜんぶ RSA系
   - EME-PKCS1_v1_5
 - RSASSA-PSS
 - RSASSA-PKCS1_v1_5
-
 など
 
 ## 共通鍵 Block 暗号
@@ -38,6 +37,7 @@ PKCS #1 ぜんぶ RSA系
 - DES(DEA)
 - TripleDES(TDEA)
 - RC2
+- Blowfish
 
 など
 
@@ -51,8 +51,10 @@ PKCS #1 ぜんぶ RSA系
 
 暗号との組み合わせは自由
 
+認証付き
+
 - GCM 1.0.3くらいから スレッド対応
-- CCM
+- CCM 1.0.7くらい
 
 # padding
 - PKCS7Padding
@@ -166,7 +168,7 @@ JDK11以降用 module対応っぽい版
 <dependency>
     <groupId>net.siisise</groupId>
     <artifactId>softlib-crypto.module</artifactId>
-    <version>1.0.6</version>
+    <version>1.0.7</version>
     <type>jar</type>
 </dependency>
 ~~~
@@ -175,11 +177,11 @@ JDK8用
 <dependency>
     <groupId>net.siisise</groupId>
     <artifactId>softlib-crypto</artifactId>
-    <version>1.0.6</version>
+    <version>1.0.7</version>
     <type>jar</type>
 </dependency>
 ~~~
-バージョンは 1.0.6 です。
-開発版は1.0.7-SNAPSHOTかも。
+バージョンは 1.0.7 です。
+開発版は1.0.8-SNAPSHOTかも。
 
 

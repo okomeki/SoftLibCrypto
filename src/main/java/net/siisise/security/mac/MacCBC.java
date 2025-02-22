@@ -19,9 +19,10 @@ import net.siisise.lang.Bin;
 import net.siisise.security.block.Block;
 
 /**
+ * ブロック単位 CBC-MAC.
  * ハッシュ用に出力を外したCBC
  */
-public class MacCBC implements MAC {
+public class MacCBC {
 
     private final Block block;
     private long[] vector;
@@ -40,12 +41,10 @@ public class MacCBC implements MAC {
      * 
      * @return バイト長
      */
-    @Override
     public int getMacLength() {
         return block.getBlockLength() / 8;
     }
 
-    @Override
     public void init(byte[] key) {
         block.init(key);
     }
@@ -56,7 +55,6 @@ public class MacCBC implements MAC {
      * @param offset 位置
      * @param length サイズ(ブロックサイズの整数倍)
      */
-    @Override
     public void update(byte[] src, int offset, int length) {
         int last = offset + length;
         while (offset + blen <= last) {
@@ -74,7 +72,6 @@ public class MacCBC implements MAC {
         return Bin.ltob(vector);
     }
 
-    @Override
     public byte[] sign() {
         return vector();
     }
