@@ -34,7 +34,7 @@ public class cSHAKE extends Keccak {
      * @param N 関数名のビット文字列
      * @param S 任意の文字列
      */
-    public cSHAKE(int c, int d, String N, String S) {
+    public cSHAKE(int c, long d, String N, String S) {
         super("cSHAKE" + c + "(" + d + ")", 2 * c, d, (((N != null && !N.isEmpty()) || (S != null && !S.isEmpty())) ? (byte) 0x04 : (byte) 0x1f));
         if (N == null) {
             N = "";

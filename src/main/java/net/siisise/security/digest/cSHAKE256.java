@@ -23,6 +23,18 @@ public class cSHAKE256 extends cSHAKE implements XOF {
      * @param N 関数名
      * @param S カスタマイズ名
      */
+    public cSHAKE256(long d, String N, String S) {
+        super(256,d,N,S);
+    }
+
+    /**
+     * cSHAKE256.
+     * @param d 出力長 標準512bitくらい
+     * @param N 関数名
+     * @param S カスタマイズ名
+     * @deprecated 
+     */
+    @Deprecated
     public cSHAKE256(int d, String N, String S) {
         super(256,d,N,S);
     }

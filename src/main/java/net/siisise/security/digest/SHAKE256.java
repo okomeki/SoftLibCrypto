@@ -42,10 +42,24 @@ public class SHAKE256 extends SHAKE {
      */
     static final OBJECTIDENTIFIER OIDlen = SHA3.hashAlgs.sub(18);
 
+    /**
+     * 出力ビット指定.
+     * @param d 出力ビット長
+     * @deprecated 
+     */
+    @Deprecated
     public SHAKE256(int d) {
         super(256, d);
     }
     
+    /**
+     * 出力ビット指定.
+     * @param d 出力ビット長
+     */
+    public SHAKE256(long d) {
+        super(256, d);
+    }
+
     /**
      * X.509, CMSで利用される初期値512で利用する.
      */

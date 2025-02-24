@@ -19,7 +19,7 @@ import java.util.Arrays;
 import net.siisise.security.mac.KMAC;
 
 /**
- * NIST SP 800-108 4.4.
+ * NIST SP 800-108 4.4. KDF Using KMAC
  * とりあえず使えるだけ。他のものより安全ではない。
  */
 public class KMACKDF implements KDF {
@@ -32,19 +32,42 @@ public class KMACKDF implements KDF {
 
     /**
      * KとLのみ指定する初期化.
-     * @param K
-     * @param L 
+     * @param K 鍵導出鍵 Kin, the key-derivation key.
+     * @param L 出力ビット
      */
-    public void init(byte[] K, int L) {
+    public void init(byte[] K, long L) {
         init(K,L,"KDF");
     }
     
     /**
+     * KとLのみ指定する初期化.
+     * @param K 鍵導出鍵 Kin, the key-derivation key.
+     * @param L 出力ビット
+     * @deprecated 
+     */
+    @Deprecated
+    public void init(byte[] K, int L) {
+        init(K,L,"KDF");
+    }
+
+    /**
      *
-     * @param K key
+     * @param K 鍵導出鍵
      * @param L output bit length
      * @param S KDF or KDF4X
      */
+    public void init(byte[] K, long L, String S) {
+        mac.init(K, L, S);
+    }
+
+    /**
+     *
+     * @param K 鍵導出鍵
+     * @param L output bit length
+     * @param S KDF or KDF4X
+     * @deprecated 
+     */
+    @Deprecated
     public void init(byte[] K, int L, String S) {
         mac.init(K, L, S);
     }

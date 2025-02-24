@@ -16,6 +16,7 @@
 package net.siisise.security.digest;
 
 import java.util.Arrays;
+import net.siisise.io.Output;
 import net.siisise.security.io.BlockOutputStream;
 
 /**
@@ -38,7 +39,7 @@ public class Keccak extends BlockMessageDigest {
     private final long[] a = new long[5 * 5];
 
     // 出力ビット長
-    private int d;
+    private long d;
 
     // 入出力分割ビット数?
     private int r;
@@ -76,7 +77,7 @@ public class Keccak extends BlockMessageDigest {
      * @param c キャパシティ b まで
      * @param d 出力ビット長
      */
-    public Keccak(int c, int d) {
+    public Keccak(int c, long d) {
         this("Keccak[" + c + "](N," + d + ")", c, d, (byte) 0x01);
     }
 
@@ -89,10 +90,10 @@ public class Keccak extends BlockMessageDigest {
      *
      * @param name
      * @param c キャパシティ 2*d か d か固定
-     * @param d 出力長
+     * @param d 出力長 bit
      * @param suffix paddingの前に付加するビット列 とKeccak padding先頭1ビットをまとめた値  頭ビットは下位
      */
-    protected Keccak(String name, int c, int d, byte suffix) {
+    protected Keccak(String name, int c, long d, byte suffix) {
         super(name + d);
         this.d = d;
         r = 5 * 5 * w - c; // 1600-c 1152(448),1088(512),832(768),576(1024) 1344(256) 1088(512) 
@@ -103,7 +104,7 @@ public class Keccak extends BlockMessageDigest {
 
     @Override
     protected int engineGetDigestLength() {
-        return d / 8;
+        return (int)((d + 7) / 8);
     }
 
     /**
@@ -252,11 +253,11 @@ public class Keccak extends BlockMessageDigest {
      * @param d 出力長 bit
      * @return dサイズになったn
      */
-    private byte[] sponge(int d) {
+    private byte[] sponge(long d) {
         byte[] pad = pad10x1();
         pac.write(pad);
         
-        byte[] ret = new byte[(d + 7) / 8];
+        byte[] ret = new byte[(int)((d + 7) / 8)];
         int offset = 0;
         while ( d - offset*8 > r ) {
             toB(a, ret, offset, r);
@@ -265,6 +266,22 @@ public class Keccak extends BlockMessageDigest {
         }
         toB(a, ret, offset, d - offset*8);
         return ret;
+    }
+    
+    private void sponge(Output out, long d) {
+        byte[] pad = pad10x1();
+        out.write(pad);
+        
+        byte[] outb = new byte[r/8];
+        long offset = 0;
+        while ( d - offset > r ) {
+            toB(a, outb, 0, r);
+            out.write(outb);
+            offset += r;
+            keccak_f(a);
+        }
+        toB(a, outb, 0, d - offset);
+        out.write(outb,0, (int)(((d - offset) + 7) / 8));
     }
 
     /**
@@ -288,9 +305,9 @@ public class Keccak extends BlockMessageDigest {
      * @param len
      * @return
      */
-    static void toB(long[] src, byte[] ret, int offset, int len) {
-        int blen = (len + 7) / 8;
-        int nlen = len % 8;
+    static void toB(long[] src, byte[] ret, int offset, long len) {
+        int blen = (int)((len + 7) / 8);
+        int nlen = (int)(len % 8);
 //        byte[] ret = new byte[blen];
         for (int i = 0; i < blen; i++) {
             ret[offset + i] = (byte) (src[i / 8] >>> ((i % 8) * 8));
@@ -306,5 +323,16 @@ public class Keccak extends BlockMessageDigest {
 
         engineReset();
         return digest;
+    }
+
+    /**
+     * 長出力用拡張.
+     * 
+     * @param out 出力先
+     */
+    public void digest(Output out) {
+        sponge(out, d);
+        
+        engineReset();
     }
 }

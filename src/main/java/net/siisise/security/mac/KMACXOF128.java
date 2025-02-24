@@ -27,9 +27,22 @@ public class KMACXOF128 extends KMAC128 {
      * @param S オプションで設定可能な空文字列を含む可変長文字列. optional customization bit string of any length, including zero. len(S) &lt; 2^2040
      */
     @Override
-    public void init(byte[] key, int length, String S) {
+    public void init(byte[] key, long length, String S) {
         super.init(key, length, S);
         L = 0;
     }
 
+    /**
+     * 初期値.
+     * @param key 鍵
+     * @param length XOF出力サイズ 0 &lt;= L &lt; 2^2040 bit
+     * @param S オプションで設定可能な空文字列を含む可変長文字列. optional customization bit string of any length, including zero. len(S) &lt; 2^2040
+     * @deprecated 
+     */
+    @Deprecated
+    @Override
+    public void init(byte[] key, int length, String S) {
+        super.init(key, length, S);
+        L = 0;
+    }
 }

@@ -25,7 +25,7 @@ import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
  * SHAKE128
  */
 public class SHAKE128 extends SHAKE {
-    
+
     /**
      * 256bit 固定長 OID.
      * RFC 8702 id-shake128
@@ -36,7 +36,7 @@ public class SHAKE128 extends SHAKE {
     /**
      * 可変長OID.
      * RFC 8702 draft 07まで
-     * 
+     *
      * https://csrc.nist.gov/projects/computer-security-objects-register/algorithm-registration
      * パラメータ
      * ShakeOutputLen :== INTEGER -- Output length in bits
@@ -44,12 +44,23 @@ public class SHAKE128 extends SHAKE {
     static final OBJECTIDENTIFIER OIDlen = SHA3.hashAlgs.sub(17);
 
     /**
-     * 
+     * 出力ビット指定.
      * @param d ビット数
+     * @deprecated
      */
+    @Deprecated
     public SHAKE128(int d) {
         // M || 1111
-        super(128,d);
+        super(128, d);
+    }
+
+    /**
+     * 出力ビット指定.
+     * @param d ビット数
+     */
+    public SHAKE128(long d) {
+        // M || 1111
+        super(128, d);
     }
 
     /**

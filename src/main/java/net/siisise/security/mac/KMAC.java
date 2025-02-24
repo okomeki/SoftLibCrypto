@@ -39,7 +39,7 @@ public abstract class KMAC implements MAC {
      * @param length XOF出力サイズ bit
      * @param S オプションで設定可能な空文字列を含む可変長文字列. optional customization bit string of any length, including zero.
      */
-    protected void init(int c, byte[] key, int length, String S) {
+    protected void init(int c, byte[] key, long length, String S) {
         L = length;
         cshake = new cSHAKE(c,length, "KMAC", S);
         byte[] newX = SHA3Derived.bytepad(SHA3Derived.encode_string(key), cshake.getBitBlockLength() / 8 );
@@ -53,6 +53,8 @@ public abstract class KMAC implements MAC {
      * @param L 出力bitサイズ
      * @param S オプション可変長文字列
      */
+    public abstract void init(byte[] K, long L, String S);
+    @Deprecated
     public abstract void init(byte[] K, int L, String S);
 
     @Override
