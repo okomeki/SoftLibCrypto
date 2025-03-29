@@ -18,18 +18,18 @@ package net.siisise.security.mac;
 import net.siisise.security.sign.SignVerify;
 
 /**
- * Message Authentication Code
+ * Message Authentication Code.
  * Mac のどこでも使える版
  */
 public interface MAC extends SignVerify {
 
     void init(byte[] key);
-    
+
     default byte[] doFinal(byte[] src) {
         update(src);
         return sign();
     }
-    
+
     default byte[] doFinal() {
         return sign();
     }
@@ -40,9 +40,10 @@ public interface MAC extends SignVerify {
      * @return バイト長
      */
     int getMacLength();
-    
+
     /**
      * 鍵生成用長さ.
+     *
      * @return 鍵バイト長
      */
     @Override

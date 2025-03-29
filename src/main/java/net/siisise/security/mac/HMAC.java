@@ -92,22 +92,21 @@ public class HMAC implements MAC {
     /**
      * 鍵をあとにする初期化.
      * ブロック長 512ビット または Spec対応用.
-     * @param md 
+     * @param prf 擬似乱数関数
      */
-    public HMAC(MessageDigest md) {
-//        spi = new HMACSpi();
-        setMD(md);
+    public HMAC(MessageDigest prf) {
+        setPRF(prf);
     }
     
     /**
      * ブロック長 512ビット または Spec対応用.
      *
      * @param md MD5, SHA-1, SHA-256 など(汎用)512bitブロックのもの または
-     * MessageDigestSpec対応版
+     * MessageDigestSpec対応版 擬似乱数関数
      * @param key 鍵 ブロック長 512bitのもの.
      */
     public HMAC(MessageDigest md, byte[] key) {
-        setMD(md);
+        setPRF(md);
         init(key);
     }
 
@@ -163,15 +162,16 @@ public class HMAC implements MAC {
             throw new java.lang.UnsupportedOperationException();
         }
 
-        setMD(md);
+        setPRF(md);
         init(key.getEncoded());
     }
     
     /**
+     * 擬似乱数関数.
      * BlockMessageDigest以外はブロック長 512bit 固定想定 MD5, SHA1, SHA-244, SHA-256 くらいなら使える.
      * @param md 正確なLとBがほしいのでBlockMessageDigest がいい
      */
-    private void setMD(MessageDigest md) {
+    private void setPRF(MessageDigest md) {
         this.md = md;
         if ( md instanceof BlockMessageDigest) {
             blockLength = ((BlockMessageDigest)md).getBitBlockLength();
@@ -237,6 +237,11 @@ public class HMAC implements MAC {
         return r;
     }
 
+    /**
+     * RFC 8018 など.
+     * @param ai OBJECTIDENTIFIERなど含む構造
+     * @return HMAC
+     */
     public static HMAC decode(AlgorithmIdentifier ai) {
         if ( ai.parameters != null && !(ai.parameters instanceof NULL)) {
             return null;

@@ -18,13 +18,14 @@ package net.siisise.security.mac;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.security.digest.SHA3Derived;
 import net.siisise.security.digest.cSHAKE;
+import net.siisise.security.key.KDF;
 
 /**
  * Keccak MAC.
  * NIST SP 800-185
  * MACかXOF
  */
-public abstract class KMAC implements MAC {
+public abstract class KMAC implements MAC, KDF {
     private cSHAKE cshake;
     protected long L;
 
@@ -57,6 +58,24 @@ public abstract class KMAC implements MAC {
     @Deprecated
     public abstract void init(byte[] K, int L, String S);
 
+    /**
+     * KDFとして利用.
+     * @param K 鍵導出鍵
+     * @param L 出力ビットサイズ
+     */
+    public void initKDF(byte[] K, long L) {
+        init(K, L, "KDF");
+    }
+
+    /**
+     * KDF4Xとして利用.
+     * @param K 鍵導出鍵
+     * @param L 出力ビットサイズ
+     */
+    public void initKDF4X(byte[] K, long L) {
+        init(K, L, "KDF4X");
+    }
+
     @Override
     public void update(byte[] src, int offset, int length) {
         cshake.update(src, offset, length);
@@ -71,5 +90,36 @@ public abstract class KMAC implements MAC {
     @Override
     public int getMacLength() {
         return cshake.getDigestLength();
+    }
+    
+    public void setMacLength(long d) {
+        cshake.setDigestLength((int) d);
+        L = d;
+    }
+
+    /**
+     * KDF.
+     * @param password
+     * @return 
+     */
+    @Override
+    public byte[] kdf(byte[] password) {
+        update(password);
+        return sign();
+    }
+
+    /**
+     * 鍵導出 KDF.
+     * KMACXOFは使えない.
+     * @param password
+     * @param len
+     * @return 
+     */
+    @Override
+    public byte[] kdf(byte[] password, int len) {
+        setMacLength(len);
+//        L = 0; // でいいのか?
+        update(password);
+        return sign();
     }
 }

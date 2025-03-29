@@ -39,7 +39,7 @@ public class PBMAC1 implements MAC {
     /**
      * 
      * @param kdf MD 設定済みのPBKDF2
-     * @param kdfMac PBKDF2用MAC 省略時 HMAC-SHA1
+     * @param kdfMac PBKDF2用PRF MAC 省略時 HMAC-SHA1
      * @param mac 本体MAC
      */
     public PBMAC1(PBKDF2 kdf, MAC kdfMac, MAC mac) {

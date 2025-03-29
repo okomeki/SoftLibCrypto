@@ -158,12 +158,11 @@ public class Keccak extends BlockMessageDigest {
         return (R & 0x80) != 0;
     }
 
-//    static final int[] rr = {0,300,171,21,78,28,276,3,45,253,1,6,153,136,210,91,36,10,15,120,190,55,231,105,66};
-    static final int[] rr = {0, 44, 43, 21, 14, 28, 20, 3, 45, 61, 1, 6, 25, 8, 18, 27, 36, 10, 15, 56, 62, 55, 39, 41, 2};
+    static final int[] SS = {0,1,62,28,27, 36,44,6,55,20, 3,10,43,25,39, 41,45,15,21,8, 18,2,61,56,14 };
 
     /**
-     * 3.4 KECCAK-f
-     * 3.3 KECCAK-p
+     * 3.4 KECCAK-f[1600]
+     * 3.3 KECCAK-p[1600,12 + 2l]
      * Algorithm 7:
      * 3.2 Step Mappings
      * Algorithm 1: θ(A)
@@ -189,8 +188,10 @@ public class Keccak extends BlockMessageDigest {
             // 3.2.2 Algorithm 2: ρ(A)
             // 3.2.3 Algorithm 3: π(A)
             for (int y = 0; y < 5; y++) {
+                int y5 = y * 5;
                 for (int x = 0; x < 5; x++) {
-                    ad[x + y * 5] = ROTL(a[(y * 3 + x) % 5 + x * 5], rr[x + y * 5]);
+                    int s = (x + y * 3) % 5 + x * 5;
+                    ad[x + y5] = ROTL(a[s], SS[s]);
                 }
             }
 
