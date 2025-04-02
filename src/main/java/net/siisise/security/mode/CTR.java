@@ -30,7 +30,7 @@ import net.siisise.security.block.Block;
 public class CTR extends LongStreamMode {
 
     Packet xp;
-    ParamThread th;
+    Thread th;
 
     public CTR(Block b) {
         super(b);
@@ -74,10 +74,11 @@ public class CTR extends LongStreamMode {
 
     /**
      *
+     * @param len　ほしい長さ
      */
-    public void cc() {
+    public void cc(int len) {
         int size = xp.size();
-        while (size < 1000 && th != null) {
+        while (size < len && th != null) {
             xp.write(Bin.ltob(block.encrypt(vectorl, 0)));
             size += 16;
             next();
@@ -85,11 +86,24 @@ public class CTR extends LongStreamMode {
         th = null;
     }
 
+    /**
+     * 
+     * @param len ほしい長さ
+     */
+    void lcc(int len) {
+        int size = xp.size();
+        while (size < len) {
+            xp.write(Bin.ltob(block.encrypt(vectorl, 0)));
+            size += 16;
+            next();
+        }
+    }
+
     void thread() {
         Thread t = th;
         if (t == null) {
             try {
-                th = new ParamThread(this, "cc");
+                th = new ParamThread(this, "cc", 20000);
 //            next();
             } catch (NoSuchMethodException ex) {
                 throw new IllegalStateException(ex);
@@ -97,7 +111,7 @@ public class CTR extends LongStreamMode {
         }
     }
 
-    void join() {
+    private void join() {
         Thread t = th;
         th = null;
         if (t != null) {
@@ -107,6 +121,19 @@ public class CTR extends LongStreamMode {
                 throw new IllegalStateException(ex);
             }
         }
+    }
+    
+    private void join(int len) {
+        Thread t = th;
+        th = null;
+        if (t != null) {
+            try {
+                t.join();
+            } catch (InterruptedException ex) {
+                throw new IllegalStateException(ex);
+            }
+        }
+        lcc(len);
     }
 
     void next() {
@@ -118,16 +145,22 @@ public class CTR extends LongStreamMode {
         } while (vectorl[x] == 0 && x != 0);
     }
 
+    /**
+     * ブロックモード用.
+     * @param src
+     * @param offset
+     * @return 
+     */
     @Override
     public byte[] encrypt(byte[] src, int offset) {
         byte[] ret = new byte[16];
-        join();
+        join(16);
         int s = xp.read(ret);
-        if ( s != 16 ) {
-            xp.backWrite(ret, 0, s);
-            ret = Bin.ltob(block.encrypt(vectorl, 0));
-            next();
-        }
+//        if ( s != 16 ) {
+            //xp.backWrite(ret, 0, s);
+//            ret = Bin.ltob(block.encrypt(vectorl, 0));
+//            next();
+//        }
         thread();
         for (int i = 0; i < ret.length; i++) {
             ret[i] ^= src[offset + i];
@@ -135,17 +168,37 @@ public class CTR extends LongStreamMode {
         return ret;
     }
 
+    /**
+     * ブロックモード用.
+     * @param src
+     * @param offset
+     * @return 
+     */
     @Override
     public byte[] decrypt(byte[] src, int offset) {
         return encrypt(src, offset);
     }
 
+    /**
+     * ブロックモード用.
+     * @param src
+     * @param offset
+     * @return 
+     */
     @Override
     public long[] encrypt(long[] src, int offset) {
-        long[] ret = block.encrypt(vectorl, 0);
-        for (int i = 0; i < ret.length; i++) {
-            ret[i] ^= src[offset + i];
+        long[] ret;
+        if ( xp.readable(16)) {
+            byte[] r = new byte[16];
+            xp.read(r);
+            ret = Bin.btol(r);
+        } else {
+            ret = block.encrypt(vectorl, 0);
         }
+        Bin.xorl(ret, src, offset, ret.length);
+//        for (int i = 0; i < ret.length; i++) {
+//            ret[i] ^= src[offset + i];
+//        }
         next();
         return ret;
     }

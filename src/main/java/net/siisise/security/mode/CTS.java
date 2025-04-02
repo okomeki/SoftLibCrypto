@@ -15,11 +15,38 @@
  */
 package net.siisise.security.mode;
 
+import net.siisise.security.block.Block;
+
 /**
  * RFC 2040
  * @deprecated まだ
  */
 @Deprecated
-public class CTS {
-    
+public class CTS extends CBC {
+
+    private int len;
+
+    public CTS(Block block) {
+        super(block);
+        len = block.getBlockLength();
+    }
+
+    @Override
+    public byte[] doFinalEncrypt(byte[] src, int offset, int length) {
+        return encrypt(src, offset, length);
+    }
+
+    @Override
+    public byte[] doFinalDecrypt(byte[] src, int offset, int length) {
+        int bl = length / len;
+
+        byte[] ret = new byte[length];
+        int off = 0;
+        if ( bl > 0 ) {
+            System.arraycopy(decrypt(src, offset, bl * len), 0, ret, 0, bl * len);
+            off = bl * len;
+        }
+        
+        return decrypt(src, offset, length);
+    }
 }

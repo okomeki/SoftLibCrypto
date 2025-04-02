@@ -16,7 +16,6 @@
 package net.siisise.security.key;
 
 import java.security.MessageDigest;
-import net.siisise.security.PacketS;
 import net.siisise.security.mac.HMAC;
 import net.siisise.security.mac.MAC;
 
@@ -115,23 +114,29 @@ public class HKDF implements KDF {
      */
     private byte[] expand(byte[] prk, byte[] info, int length) {
         int l = mac.getMacLength();
-        int n = ((length + l - 1) / l);
+        int n = length / l;
         if (info == null) {
             info = new byte[0];
         }
-        PacketS pt = new PacketS();
         byte[] t = new byte[0];
         mac.init(prk);
+        byte[] r = new byte[length];
         byte[] d = new byte[1];
-        for (int i = 1; i <= n; i++) {
+        
+        for (int i = 0; i < n; i++) {
             mac.update(t);
             mac.update(info);
-            d[0] = (byte) i;
+            d[0] = (byte) (i+1);
             t = mac.doFinal(d);
-            pt.write(t);
+            System.arraycopy(t, 0, r, i * l, l);
         }
-        byte[] r = new byte[length];
-        pt.read(r);
+        if ( length % l > 0) {
+            mac.update(t);
+            mac.update(info);
+            d[0] = (byte) (n+1);
+            t = mac.doFinal(d);
+            System.arraycopy(t, 0, r, n * l, length % l);
+        }
         return r;
     }
 }
