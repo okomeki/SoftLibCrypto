@@ -190,6 +190,15 @@ public class HMAC implements MAC {
     }
 
     /**
+     * 鍵長(ブロック長バイト).
+     * @return 
+     */
+    @Override
+    public int getKeyLength() {
+        return blockLength / 8;
+    }
+
+    /**
      * 鍵.
      * L以上の長さが必要.
      * B以上の場合はハッシュ値に置き換える.

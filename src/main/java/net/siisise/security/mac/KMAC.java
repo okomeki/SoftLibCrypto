@@ -98,6 +98,16 @@ public abstract class KMAC implements MAC, KDF {
     }
 
     /**
+     * 鍵長.
+     * SHAKEの鍵長は任意なので適当に返す。
+     * @return 
+     */
+    @Override
+    public int getKeyLength() {
+        return cshake.getBitBlockLength() / 8;
+    }
+
+    /**
      * KDF.
      * @param password
      * @return 

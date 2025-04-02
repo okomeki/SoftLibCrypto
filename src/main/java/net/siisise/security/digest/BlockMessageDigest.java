@@ -19,6 +19,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.security.MessageDigest;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import net.siisise.io.Input;
 import net.siisise.security.io.BlockListener;
 import net.siisise.security.io.BlockOutputStream;
 
@@ -44,6 +45,10 @@ public abstract class BlockMessageDigest extends MessageDigest implements BlockL
     protected void engineUpdate(byte[] input, int offset, int len) {
         pac.write(input, offset, len);
         length += len * 8l;
+    }
+
+    public void update(Input in) {
+        pac.update(in);
     }
 
     public static BlockMessageDigest getInstance(String alg) {

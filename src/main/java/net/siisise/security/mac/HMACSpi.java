@@ -23,6 +23,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.AlgorithmParameterSpec;
 import javax.crypto.MacSpi;
 import javax.crypto.spec.SecretKeySpec;
+import javax.xml.crypto.dsig.spec.HMACParameterSpec;
 import net.siisise.security.digest.BlockMessageDigest;
 
 /**
@@ -93,7 +94,11 @@ public class HMACSpi extends MacSpi {
         } else {
             b = 512;
         }
-        
+
+        if (aps instanceof HMACParameterSpec) { // ToDo: まだ
+            int len = ((HMACParameterSpec) aps).getOutputLength();
+        }
+
         byte[] e = spec.getEncoded();
         md.reset();
         if ( e.length > b) {

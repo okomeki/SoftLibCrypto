@@ -40,10 +40,16 @@ public interface MAC extends SignVerify {
      * @return バイト長
      */
     int getMacLength();
+    
+    /*
+     * ブロック長.
+     * @return 
+     */
+//    int getBlockLength();
 
     /**
-     * 鍵生成用長さ.
-     *
+     * 鍵生成用長さ. (最小? または 適当)
+     * ハッシュ系は512bitまたは1024bit，KMAC(Keccak)は任意?
      * @return 鍵バイト長
      */
     @Override
