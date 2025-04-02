@@ -54,11 +54,11 @@ public abstract class RSASSA implements SignVerify {
 
     /**
      * 仮.
-     * @return 
+     * @return バイト長
      */
     @Override
     public int getKeyLength() {
-        return skey.getModulus().bitLength();
+        return (skey.getModulus().bitLength() + 7) / 8;
     }
 
     /**

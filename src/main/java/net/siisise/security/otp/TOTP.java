@@ -19,18 +19,20 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.MessageDigest;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 import net.siisise.abnf.ABNF;
 import net.siisise.abnf.ABNFReg;
 import net.siisise.abnf.rfc.URI3986;
 import net.siisise.io.BASE32;
 import net.siisise.lang.Bin;
+import net.siisise.security.digest.BlockMessageDigest;
 import net.siisise.security.digest.SHA1;
-import net.siisise.security.digest.SHA256;
-import net.siisise.security.digest.SHA512;
+import net.siisise.security.mac.HMAC;
+import net.siisise.security.mac.MAC;
 
 /**
- * RFC 6238 Time-based One-time Password Algorithm (TOTP).
- * HOTPを利用しているらしい.
+ * RFC 6238 Time-based One-time Password Algorithm (TOTP). HOTPを利用しているらしい.
  * URIを扱うので分けたい
  */
 public class TOTP implements OTP {
@@ -51,7 +53,7 @@ public class TOTP implements OTP {
      * 秘密鍵.
      */
     private byte[] secret;
-    int digit;
+    int digit = 8;
     /**
      * 秒間隔. でふぉると 30秒
      */
@@ -59,16 +61,41 @@ public class TOTP implements OTP {
     String alg = "SHA1";
 
     public TOTP() {
-        this(new SHA1());
+        this("SHA1");
     }
 
-    public TOTP(MessageDigest md) {
-        hotp = new HOTP(md);
+    /**
+     * 未. HOTPのHMAC用ハッシュ ToDo: アルゴリズムの扱いが未定
+     *
+     * @param alg ハッシュ識別名
+     */
+    public TOTP(String alg) {
+        hotp = new HOTP(toMD(alg));
+        this.alg = alg;
     }
 
+    /**
+     * HOTPのMACアルゴリズムHMAC以外も指定可能.
+     *
+     * @param mac MACアルゴリズム 非互換 KMAC, CMACなどもあり
+     * @param alg ハッシュ識別名
+     */
+    public TOTP(MAC mac, String alg) {
+        hotp = new HOTP(mac);
+    }
+
+    /**
+     * 鍵の設定.
+     *
+     * @param k 鍵
+     */
     public void setSecret(byte[] k) {
         hotp.setKey(k);
         this.secret = k.clone();
+    }
+
+    public byte[] getSecret() {
+        return secret.clone();
     }
 
     public void setDigit(int digit) {
@@ -76,7 +103,14 @@ public class TOTP implements OTP {
         this.digit = digit;
     }
 
-    @Override
+    /**
+     * TOTP
+     *
+     * @deprecated validateOTP
+     * @param counter
+     * @return
+     */
+    @Override @Deprecated
     public String generateOTP(byte[] counter) {
         return hotp.generateOTP(counter);
     }
@@ -85,17 +119,30 @@ public class TOTP implements OTP {
         return generateOTP(Bin.ltob(new long[]{counter}));
     }
 
+    /**
+     * クライアント側に必要そうな情報.
+     *
+     * @return
+     */
     public String generateOTP() {
         long time = Calendar.getInstance().getTimeInMillis() / 1000;
         return hotp.generateOTP(time / period);
     }
-    
+
     /**
-     * 確認する.
-     * n分以内に入力っぽいものの遅延に対応しておく.
-     * 15分など長期は1つ生成してこれは使わないほうがいいかも.
-     * 長時間有効にする場合は8桁くらいはほしい
-     * 40秒を指定すると40から60秒前に生成されたものが有効になったりならなかったりする。
+     * 残り秒数.
+     *
+     * @return 残り秒数
+     */
+    public int limit() {
+        long time = Calendar.getInstance().getTimeInMillis() / 1000;
+        return (int) (time % period);
+    }
+
+    /**
+     * 確認する. n分以内に入力っぽいものの遅延に対応しておく. 15分など長期は1つ生成してこれは使わないほうがいいかも.
+     * 長時間有効にする場合は8桁くらいはほしい 40秒を指定すると40から60秒前に生成されたものが有効になったりならなかったりする。
+     *
      * @param code 手入力
      * @param sec 最小何秒前まで有効か、ぐらいの感じで使いたい period の単位で区切られる
      * @return true 一致
@@ -104,91 +151,116 @@ public class TOTP implements OTP {
         long time = Calendar.getInstance().getTimeInMillis() / 1000;
         long start = (time - sec) / period;
         long end = time / period;
-        for ( long t = end; t >= start; t-- ) {
+        for (long t = end; t >= start; t--) {
             String genCode = hotp.generateOTP(t);
-            if ( genCode.equals(code) ) {
+            if (genCode.equals(code)) {
                 return true;
             }
         }
         return false;
     }
 
-    String secretEncode(byte[] secret) {
+    String encodeSecret(byte[] secret) {
         BASE32 b32 = new BASE32(BASE32.BASE32);
         return b32.encode(secret);
     }
 
-    byte[] secretDecode(String base32) {
+    byte[] decodeSecret(String base32) {
         BASE32 b32 = new BASE32(BASE32.Type.BASE32FIX);
         return b32.decode(base32);
     }
 
-    MessageDigest toMD(String algorithm) {
+    static MessageDigest toMD(String algorithm) {
         MessageDigest md;
 
+        //md = BlockMessageDigest.getInstance(algorithm);
         if (algorithm == null || "SHA1".equals(algorithm)) {
             md = new SHA1();
-        } else if ("SHA256".equals(algorithm)) {
-            md = new SHA256();
-        } else if ("SHA512".equals(algorithm)) {
-            md = new SHA512();
         } else {
-            throw new UnsupportedOperationException("Unknown algorithm");
+            md = BlockMessageDigest.getInstance(algorithm);
+            if (md == null) {
+                throw new UnsupportedOperationException("Unknown algorithm " + md);
+            }
         }
         return md;
     }
-    
+
     String toAlg(MessageDigest md) {
         return md.getAlgorithm();
     }
-    
+
+    /**
+     * encodeURI と encodeURIComponent と URI3986版といろいろある.
+     *
+     * @param src
+     * @return
+     */
+    String pcharEncode(String src) {
+        return URI3986.pcharPercentEncode(src);
+    }
+
+    String pcharDecode(String src) {
+        return URI3986.urlPercentDecode(src);
+    }
+
     /**
      * otpauth URI otpauth://TYPE/LABEL?PARAMETERS type = hotp または totp totpのみ
      * label = accountname / issuer (":" / "%3A") *"%20" accountname
      *
      * otpauth://totp/
      *
-     * @param secret
+     * @param secret 鍵
+     * @param accountname アカウント名
+     * @param issuer 発行者
+     * @param algorithm アルゴリズム null で SHA1
+     * @param digits 桁数
      * @return
      */
     public URI generateKeyURI(byte[] secret, String accountname, String issuer, String algorithm, int digits) {
-        
+
         // 型チェック
         toMD(algorithm);
         //alg = algorithm;
 
-        if ( !TOTP.issuer.is(issuer)) {
+        accountname = pcharEncode(accountname);
+        issuer = pcharEncode(issuer);
+
+        if (!TOTP.issuer.eq(issuer)) {
             throw new IllegalStateException("issuer " + issuer);
         }
-        if ( !TOTP.accountname.is(accountname)) {
+        if (!TOTP.accountname.eq(accountname)) {
             throw new IllegalStateException("accountname " + issuer);
         }
-        String label = issuer + ":" + accountname;
+//        String label = issuer + ":" + accountname;
 
-        String sec = secretEncode(secret);
+        String sec = encodeSecret(secret);
 
-        String base = "otpauth://totp/" + label + "?secret=" + sec + "&issuer=" + issuer;
+        StringBuilder uri = new StringBuilder("otpauth://totp/");
+        uri.append(issuer).append(':').append(accountname).append("?secret=").append(sec).append("&issuer=").append(issuer);
 
-        if (algorithm != null) {
-            base += "&algorithm=" + algorithm;
+//        String base = "otpauth://totp/" + issuer + ":" + accountname + "?secret=" + sec + "&issuer=" + issuer;
+        if (algorithm != null && !algorithm.equals("SHA1")) {
+            uri.append("&algorithm=").append(algorithm);
+            // base += "&algorithm=" + algorithm;
         }
         if (digits != 6) {
-            base += "&digits=" + digits;
+            uri.append("&digits=").append(digits);
+            // base += "&digits=" + digits;
         }
 
         try {
-            return new URI(base);
+            return new URI(uri.toString());
         } catch (URISyntaxException ex) {
             throw new IllegalStateException(ex);
         }
     }
-    
+
     public URI generateKeyURI(byte[] secret, String accountname, String issuer) {
         return generateKeyURI(secret, accountname, issuer, alg, digit);
     }
 
     public URI generateKeyURI(String secret, String accountname, String issuer, String algorithm, int digits) {
-        byte[] sec = secretDecode(secret);
+        byte[] sec = decodeSecret(secret);
         return generateKeyURI(sec, accountname, issuer, algorithm, digits);
     }
 
@@ -200,14 +272,39 @@ public class TOTP implements OTP {
         return generateKeyURI(secret, accountname, issuer);
     }
 
-    public void init(URI uri) {
-        if (!"otpauth".equals(uri.getScheme()) || !"totp".equals(uri.getHost())) {
+    /**
+     * KeyURIから設定を復元する.
+     *
+     * @param keyuri
+     */
+    public void init(URI keyuri) {
+        if (!"otpauth".equals(keyuri.getScheme()) || !"totp".equals(keyuri.getHost())) {
             throw new IllegalStateException();
         }
-        String path = uri.getPath();
-        String query = uri.getQuery();
-        
-        
-        throw new UnsupportedOperationException("まだない");
+//        String local = keyuri.getPath();
+        String query = keyuri.getQuery();
+        Map<String, String> queryMap = parseQuery(query);
+        String sec = queryMap.get("secret");
+        //String issuer = ret.get("issuer");
+        String algorithm = queryMap.get("algorithm");
+        String digits = queryMap.get("digits");
+        hotp = new HOTP(new HMAC(toMD(algorithm)));
+        this.alg = algorithm;
+        setSecret(decodeSecret(sec));
+        setDigit(Integer.parseInt(digits));
+    }
+
+    Map<String, String> parseQuery(String query) {
+        Map<String, String> q = new HashMap<>();
+        String[] split = query.split("&");
+        for (String n : split) {
+            String[] v = n.split("=", 2);
+            if (v.length == 1) {
+                q.put(pcharDecode(n), null);
+            } else {
+                q.put(pcharDecode(v[0]), pcharDecode(v[1]));
+            }
+        }
+        return q;
     }
 }
