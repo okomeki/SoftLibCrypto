@@ -15,28 +15,26 @@
  */
 package net.siisise.security.mac;
 
-import net.siisise.io.Packet;
-import net.siisise.io.PacketA;
+import net.siisise.io.FIFOPacket;
 import net.siisise.lang.Bin;
 import net.siisise.lang.ParamThread;
+import net.siisise.math.GFRev;
 
 /**
  * GCM 内部用GHASH.
  * 一般的に利用できる暗号化ハッシュ関数ではない.
+ * RFC 4543 GMAC の元
  *
  */
 public class GHASH implements MAC {
 
     // hash subkey Cache
-    private final long[] HCa = new long[64];
-    private final long[] HCb = new long[64];
-    private final long[] HCc = new long[64];
-    private final long[] HCd = new long[64];
+    GFRev H;
     private long[] y;
 
-    private Packet pool;
+    private FIFOPacket pool;
     // AAD length
-    private Packet lens;
+    private FIFOPacket lens;
     private long alen;
     
     ParamThread th;
@@ -52,10 +50,15 @@ public class GHASH implements MAC {
         init(Bin.btol(H), new byte[0]);
     }
 
+    /**
+     * 初期化っぽいこと.
+     * AADを後付する必要あり?.
+     * @param H GHASHの鍵 暗号化した0列
+     */
     public void init(long[] H) {
-        pool = new PacketA();
-        lens = new PacketA();
-        buildHCache(H);
+        pool = new FIFOPacket();
+        lens = new FIFOPacket();
+        this.H = new GFRev(H);
         y = new long[H.length];
     }
 
@@ -63,90 +66,38 @@ public class GHASH implements MAC {
      * 初期値っぽいもの
      *
      * @param H hash subkey
-     * @param a 暗号化しない部分
+     * @param a AAD 暗号化しない部分
      */
     public void init(long[] H, byte[] a) {
-        pool = new PacketA();
-        lens = new PacketA();
-        buildHCache(H);
-        y = new long[H.length];
+        init(H);
         aad(a);
     }
 
-    /**
-     * Hの乗算結果をキャッシュして4倍くらい高速化.
-     * @param H 
-     */
-    private void buildHCache(long[] H) {
-        long[] x = H;
-        for (int i = 0; i < 64; i++) {
-            HCa[i] = x[0];
-            HCb[i] = x[1];
-            x = GF_x(x);
-        }
-        for (int i = 0; i < 64; i++) {
-            HCc[i] = x[0];
-            HCd[i] = x[1];
-            x = GF_x(x);
-        }
-    }
-    
     /**
      * H を維持したまま他を消す.
      */
     public void clear() {
         y = new long[y.length];
     }
-    
+
+    /**
+     * updateとblockClose.
+     * @param a AAD 暗号化しない部分
+     */
     public void aad(byte[] a) {
         alen = 0;
         update(a, 0, a.length);
         blockClose();
     }
 
-    private static final long CONST_RB = 0xe100000000000000l;
-
-    private long[] GF_x(long[] s) {
-        long[] r = Bin.shr(s);
-        r[0] ^= (s[1] & 1) * CONST_RB;
-        return r;
-    }
-
     /**
-     * y にブロックを y M_n
+     * y にブロックを y C_n
      *
      * @param x ブロック列っぽく
      */
     private void xorMul(byte[] x) {
         Bin.xorl(y, x, 0, y.length);
-        YmulH();
-    }
-
-    /**
-     * 128bit固定GF ビット順が逆 y・H.
-     * 変態演算なのでメモリ食うかも
-     * y・H
-     */
-    private void YmulH() {
-        long b = 0;
-        long c = 0;
-        
-        long t = y[0];
-        long u = y[1];
-        for (int i = 0; i < 64; i++) {
-            if (t < 0) {
-                b ^= HCa[i];
-                c ^= HCb[i];
-            }
-            t<<=1;
-            if (u < 0) {
-                b ^= HCc[i];
-                c ^= HCd[i];
-            }
-            u<<=1;
-        }
-        y[0] = b;
-        y[1] = c;
+        y = H.mul(y);
     }
 
     @Override
@@ -177,13 +128,16 @@ public class GHASH implements MAC {
      */
     public void q() throws java.lang.SecurityException {
         byte[] d = new byte[16];
-        while (pool.size() >= 16) {
+        while (pool.readable(16)) {
             pool.read(d);
             xorMul(d);
         }
         th = null;
     }
 
+    /**
+     * AAD、暗号ブロックの終端.
+     */
     private void blockClose() {
         Thread t = th;
         if ( t != null ) {
