@@ -138,7 +138,7 @@ public class GHASH implements MAC {
     /**
      * AAD、暗号ブロックの終端.
      */
-    private void blockClose() {
+    void blockClose() {
         Thread t = th;
         if ( t != null ) {
             try {
