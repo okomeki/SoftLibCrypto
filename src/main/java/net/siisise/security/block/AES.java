@@ -17,6 +17,7 @@ package net.siisise.security.block;
 
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.lang.Bin;
+import net.siisise.math.GF;
 import net.siisise.security.mode.CBC;
 import net.siisise.security.mode.CCM;
 import net.siisise.security.mode.CFB;
@@ -132,35 +133,14 @@ public class AES extends IntBlock {
     private static final long[] IMIX3 = new long[256];
 
     static {
-        // 2・n
-        final int[] GF = new int[256];
-        final int[] logGF = new int[256];
-        final int[] expGF = new int[256];
-
-        // テーブルにしてしまうといろいろ省略できる 使い捨てだが関数でもいい
-        for (int i = 1; i < 256; ++i) {
-            // 1と1bに分けずにシフト演算でまとめる
-            GF[i] = (i << 1) ^ ((i >> 7) * 0x11b);
-        } // m(x) = x^8 + x^4 * x^3 + x + 1 のビット 100011011 = 0x11b
-
+        GF gf = new GF(8,0x11b);
         // sboxつくる
-        // https://tociyuki.hatenablog.jp/entry/20160427/1461721356
-        // を元に高速化したもの
-        int n = 1;
-        for (int e = 0; e < 255; e++) {
-            logGF[n] = e;
-            expGF[e] = n;
-            n ^= GF[n]; // 3・n
-        }
-        logGF[0] = 0;
-        expGF[255] = expGF[0];
-
+        
         for (int i = 0; i < 256; ++i) {
-            // r ガロア体の逆数変換 1回しか使わないので使い捨て
-            int r = (i == 0) ? 0 : expGF[255 - logGF[i]];  // むつかしいところ
+            // r ガロア体の逆数変換 1回しか使わないので使い捨て アフィン変換
+            int r = gf.inv(i); //(i == 0) ? 0 : expGF[255 - logGF[i]];  // むつかしいところ
             int s = r ^ (r << 1) ^ (r << 2) ^ (r << 3) ^ (r << 4);
             s = 0x63 ^ s ^ ((s >> 8) * 0x101); // 手抜きローテート
-//            System.out.println("r " + r + " rgf " + rgf[i] + " rgf3 "+ (rgf[rgf[i]] ^ rgf[i]) + " s " + s);
 
             SBOX[i] = s;
             /*
@@ -171,7 +151,7 @@ public class AES extends IntBlock {
 /*/
             IBOX[s] = i;
 //*/
-            int gf2 = GF[s]; // 前段階のsboxを含める
+            int gf2 = gf.x(s); // GF[s]; // 前段階のsboxを含める
             // 1,2,3しかないのに個別に mulとかしてはいけない
             // XOR で演算できるので 3は1と2を合成するだけ
             // sbox込み あとで XOR できるところまで計算
@@ -182,10 +162,10 @@ public class AES extends IntBlock {
             LMIX3[i] = s * 0x01010100l ^ gf2 * 0x00000101l;
 
             // 同じ原理で個別の計算を省略する
-            gf2 = GF[i];
-            int gf4 = GF[gf2];
+            gf2 = gf.x(i); //GF[i];
+            int gf4 = gf.x(gf2); //GF[gf2];
             long gf7x = i ^ (gf2 * 0x101) ^ (gf4 * 0x10001l);
-            long gf9x = ((long)GF[gf4] ^ i) * 0x01010101l;
+            long gf9x = ((long)gf.x(gf4) /*GF[gf4]*/ ^ i) * 0x01010101l;
 
             // iboxあり
             IMIX0[s] = gf9x ^ ((gf7x << 24) ^ (gf7x >>> 8)) & 0xffffffffl;
@@ -195,29 +175,16 @@ public class AES extends IntBlock {
         }
 
         // upd1 5.2. Table 5. Round constants
-        n = 1;
+        int n = 1;
         for (int i = 1; i < 11; i++) { // 使う範囲で生成
             Rcon[i] = n << 24;
-            n = GF[n];
+            n = gf.x(n); //GF[n];
         }
     }
 
     @Override
     public int getBlockLength() {
         return blockLength;
-    }
-
-    /**
-     * subWord(rotate(t))
-     *
-     * @param t
-     * @return
-     */
-    private static int rotsubWord(int t) {
-        return (int)((SBOX[t >>  16 & 0xff] << 24)
-             | (SBOX[t >>   8 & 0xff] << 16)
-             | (SBOX[t        & 0xff] << 8)
-             |  SBOX[t >>> 24       ]);
     }
 
     /**
@@ -294,11 +261,11 @@ public class AES extends IntBlock {
         // ラウンド鍵の初期化 ワード列版 128*11?
         w = new int[Nb * (Nr + 1)];
         Bin.btoi(key, 0, w, Nk);
-        int temp;
         for (int i = Nk; i < Nb * (Nr + 1); i++) {
-            temp = w[i - 1];
+            int temp = w[i - 1];
             if (i % Nk == 0) {
-                temp = rotsubWord(temp) ^ Rcon[i / Nk];
+                temp = temp >>> 24 | temp << 8;
+                temp = subWord(temp) ^ Rcon[i / Nk];
             } else if (Nk > 6 && i % Nk == 4) {
                 temp = subWord(temp);
             }
@@ -375,23 +342,23 @@ public class AES extends IntBlock {
             // SubBytes + ShiftRow + MixColumns
             long e, g;
             e  = LMIX0[(int)(a >>> 0x38)]
-              ^  LMIX1[(int)(a >>  0x10) & 0xff];
+              ^  LMIX1[(int)(a >>> 0x10) & 0xff];
             g  = LMIX0[(int)(b >>> 56)]
-              ^  LMIX1[(int) b >> 0x10  & 0xff];
-            e ^= LMIX2[(int)(b >> 40) & 0xff]
+              ^  LMIX1[(int) b >>> 0x10  & 0xff];
+            e ^= LMIX2[(int)(b >>> 40) & 0xff]
               ^  LMIX3[(int) b        & 0xff];
-            g ^= LMIX2[(int)(a >> 40) & 0xff]
+            g ^= LMIX2[(int)(a >>> 40) & 0xff]
               ^  LMIX3[(int) a        & 0xff];
             e <<= 32;
             g <<= 32;
-            e ^= LMIX0[(int)(a >> 24) & 0xff]
-              ^  LMIX1[(int)(b >> 48) & 0xff];
-            g ^= LMIX0[(int) b >> 24  & 0xff];
-            g ^= LMIX1[(int)(a >> 48) & 0xff];
-            e ^= LMIX2[(int) b >>  8  & 0xff]
-              ^  LMIX3[(int)(a >> 32) & 0xff];
-            g ^= LMIX2[(int)(a >>  8) & 0xff];
-            g ^= LMIX3[(int)(b >> 32) & 0xff];
+            e ^= LMIX0[(int)(a >>> 0x18) & 0xff]
+              ^  LMIX1[(int)(b >>> 0x30) & 0xff];
+            g ^= LMIX0[(int)(b >>> 0x18) & 0xff];
+            g ^= LMIX1[(int)(a >>> 0x30) & 0xff];
+            e ^= LMIX2[(int)(b >>> 0x08) & 0xff]
+              ^  LMIX3[(int)(a >>> 0x20) & 0xff];
+            g ^= LMIX2[(int)(a >>> 0x08) & 0xff];
+            g ^= LMIX3[(int)(b >>> 0x20) & 0xff];
 
             // AddRoundKey
             a = e ^ lw[r];
@@ -523,23 +490,23 @@ public class AES extends IntBlock {
             // SubBytes + ShiftRow + MixColumns
             long c, d;
             c  = LMIX0[(int)(a >>> 0x38)]
-              ^  LMIX1[(int)(a >> 16) & 0xff];
+              ^  LMIX1[(int)(a >>> 16) & 0xff];
             d  = LMIX0[(int)(b >>> 56)]
-              ^  LMIX1[(int)(b >> 16) & 0xff];
-            c ^= LMIX2[(int)(b >> 40) & 0xff]
+              ^  LMIX1[(int)(b >>> 16) & 0xff];
+            c ^= LMIX2[(int)(b >>> 40) & 0xff]
               ^  LMIX3[(int)b & 0xff];
-            d ^= LMIX2[(int)(a >> 40) & 0xff]
+            d ^= LMIX2[(int)(a >>> 40) & 0xff]
               ^  LMIX3[(int)a & 0xff];
             c <<= 32;
             d <<= 32;
-            c ^= LMIX0[(int)(a >> 24) & 0xff]
-              ^  LMIX1[(int)(b >> 48) & 0xff];
-            d ^= LMIX0[(int)(b >> 24) & 0xff];
-            d ^= LMIX1[(int)(a >> 48) & 0xff];
-            c ^= LMIX2[(int)(b >> 8) & 0xff]
-              ^  LMIX3[(int)(a >> 32) & 0xff];
-            d ^= LMIX2[(int)(a >> 8) & 0xff];
-            d ^= LMIX3[(int)(b >> 32) & 0xff];
+            c ^= LMIX0[(int)(a >>> 24) & 0xff]
+              ^  LMIX1[(int)(b >>> 48) & 0xff];
+            d ^= LMIX0[(int)(b >>> 24) & 0xff];
+            d ^= LMIX1[(int)(a >>> 48) & 0xff];
+            c ^= LMIX2[(int)(b >>> 8) & 0xff]
+              ^  LMIX3[(int)(a >>> 32) & 0xff];
+            d ^= LMIX2[(int)(a >>> 8) & 0xff];
+            d ^= LMIX3[(int)(b >>> 32) & 0xff];
 
             // AddRoundKey
             a = c ^ lw[r];
@@ -549,21 +516,21 @@ public class AES extends IntBlock {
         // SubBytes + ShiftRows
         long e, f;
         e =  (SBOX[(int)(a >>> 56)]       << 56)
-          |  (SBOX[(int)(a >> 16) & 0xff] << 48);
-        e |= (SBOX[(int)(b >> 40) & 0xff] << 40)
+          |  (SBOX[(int)(a >>> 16) & 0xff] << 48);
+        e |= (SBOX[(int)(b >>> 40) & 0xff] << 40)
           |  (SBOX[(int) b        & 0xff] << 32);
-        e |= (SBOX[(int)(a >> 24) & 0xff] << 24)
-          |  (SBOX[(int)(b >> 48) & 0xff] << 16);
-        e |= (SBOX[(int)(b >>  8) & 0xff] << 8)
-          |   SBOX[(int)(a >> 32) & 0xff];
-        f  = (SBOX[(int)(b >> 56) & 0xff] << 56)
-          |  (SBOX[(int)(b >> 16) & 0xff] << 48);
-        f |= (SBOX[(int)(a >> 40) & 0xff] << 40)
+        e |= (SBOX[(int)(a >>> 24) & 0xff] << 24)
+          |  (SBOX[(int)(b >>> 48) & 0xff] << 16);
+        e |= (SBOX[(int)(b >>>  8) & 0xff] << 8)
+          |   SBOX[(int)(a >>> 32) & 0xff];
+        f  = (SBOX[(int)(b >>> 56) & 0xff] << 56)
+          |  (SBOX[(int)(b >>> 16) & 0xff] << 48);
+        f |= (SBOX[(int)(a >>> 40) & 0xff] << 40)
           |  (SBOX[(int) a        & 0xff] << 32);
-        f |= (SBOX[(int)(b >> 24) & 0xff] << 24)
-          |  (SBOX[(int)(a >> 48) & 0xff] << 16)
-          |  (SBOX[(int)(a >> 8) & 0xff] << 8)
-          |   SBOX[(int)(b >> 32) & 0xff];
+        f |= (SBOX[(int)(b >>> 24) & 0xff] << 24)
+          |  (SBOX[(int)(a >>> 48) & 0xff] << 16)
+          |  (SBOX[(int)(a >>> 8) & 0xff] << 8)
+          |   SBOX[(int)(b >>> 32) & 0xff];
 
         // AddRoundKey
         return new long[] {
