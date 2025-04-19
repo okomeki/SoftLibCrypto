@@ -18,6 +18,7 @@ package net.siisise.security.key;
 import java.math.BigInteger;
 import java.security.PrivateKey;
 import net.siisise.ietf.pkcs1.PKCS1;
+import net.siisise.iso.asn1.tag.ASN1DERFormat;
 import net.siisise.iso.asn1.tag.INTEGER;
 import net.siisise.iso.asn1.tag.SEQUENCEMap;
 
@@ -167,12 +168,12 @@ public class RSAMiniPrivateKey implements PrivateKey, java.security.interfaces.R
     /**
      * PKCS #1 A.1.2. RSA Private Key Syntax の出力はできない.
      * 公開鍵相当にしておく.
-     * @return 
+     * @return modulus と privateExponent の ASN.1 DER Format
      */
     @Override
     public byte[] getEncoded() {
         SEQUENCEMap seq = getPKCS1ASN1();
-        return seq.encodeAll();
+        return (byte[]) seq.rebind(new ASN1DERFormat());
     }
 
     /**

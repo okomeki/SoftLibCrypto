@@ -17,6 +17,7 @@ package net.siisise.security.sign;
 
 import java.security.MessageDigest;
 import java.util.Arrays;
+import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.security.digest.SHA1;
 import net.siisise.security.key.RSAMiniPrivateKey;
 import net.siisise.security.key.RSAPublicKey;
@@ -28,6 +29,9 @@ import net.siisise.security.key.RSAPublicKey;
  */
 public class RSASSA_PKCS1_v1_5 extends RSASSA {
     
+    static final OBJECTIDENTIFIER pkcs1 = new OBJECTIDENTIFIER("1.2.840.113549.1.1");
+    static final OBJECTIDENTIFIER sha224WithRSAEncryption = pkcs1.sub(14);
+
     /**
      * 省略時 SHA-1 を使用(非推奨)
      */

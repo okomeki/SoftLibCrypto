@@ -22,6 +22,7 @@ import net.siisise.ietf.pkcs1.PKCS1;
 import net.siisise.ietf.pkcs8.EncryptedPrivateKeyInfo;
 import net.siisise.ietf.pkcs8.PrivateKeyInfo;
 import net.siisise.ietf.pkcs8.RFC5958;
+import net.siisise.iso.asn1.tag.ASN1DERFormat;
 import net.siisise.iso.asn1.tag.SEQUENCEMap;
 
 /**
@@ -200,7 +201,7 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
      * @return 
      */
     public byte[] getPKCS8Encoded() {
-        return getPKCS8PrivateKeyInfo().encodeASN1().encodeAll();
+        return getPKCS8PrivateKeyInfo().rebind(new ASN1DERFormat());
     }
 
     /**
@@ -267,7 +268,7 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
      * @return ASN.1 DER 出力
      */
     public byte[] getPKCS1Encoded() {
-        return getPKCS1ASN1().encodeAll();
+        return rebind(new ASN1DERFormat());
     }
 
     /**

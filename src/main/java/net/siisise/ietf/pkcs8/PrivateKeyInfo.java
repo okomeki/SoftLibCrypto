@@ -23,6 +23,7 @@ import net.siisise.bind.format.TypeFormat;
 import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.iso.asn1.ASN1Cls;
 import net.siisise.iso.asn1.ASN1Tag;
+import net.siisise.iso.asn1.tag.ASN1Convert;
 import net.siisise.iso.asn1.tag.INTEGER;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
@@ -120,16 +121,7 @@ public class PrivateKeyInfo {
      * @return ASN.1型
      */
     public SEQUENCEMap encodeASN1() {
-        SEQUENCEMap s = new SEQUENCEMap();
-        s.put("version", new INTEGER(version));
-        s.put("privateKeyAlgorithm", privateKeyAlgorithm.encodeASN1());
-        s.put("privateKey", new OCTETSTRING(privateKey));
-        if ( attributes != null ) {
-            SEQUENCEList atrs = new SEQUENCEList(ASN1Cls.CONTEXT_SPECIFIC, 0); // SET OF
-            atrs.addAll(Rebind.valueOf(attributes, ASN1Tag.class));
-            s.put("attributes", atrs);
-        }
-        return s;
+        return (SEQUENCEMap)rebind(new ASN1Convert());
     }
 
     /**

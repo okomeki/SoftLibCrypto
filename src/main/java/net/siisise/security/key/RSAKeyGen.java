@@ -17,10 +17,13 @@ package net.siisise.security.key;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyPair;
 import java.security.KeyPairGeneratorSpi;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.spec.AlgorithmParameterSpec;
+import java.security.spec.RSAKeyGenParameterSpec;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -46,19 +49,34 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
     private int keysize;
     private SecureRandom srnd;
     private boolean strong = false;
+    private BigInteger publicExponent;
 
     @Override
     public void initialize(int keysize, SecureRandom random) {
         this.keysize = keysize;
         srnd = random;
+        publicExponent = null;
+    }
+
+    @Override
+    public void initialize(AlgorithmParameterSpec spec, SecureRandom random) throws InvalidAlgorithmParameterException {
+        if (!(spec instanceof RSAKeyGenParameterSpec)) {
+            throw new InvalidAlgorithmParameterException();
+        }
+        RSAKeyGenParameterSpec rsaKeyGenSpec = (RSAKeyGenParameterSpec)spec;
+        publicExponent = rsaKeyGenSpec.getPublicExponent();
+        this.keysize = rsaKeyGenSpec.getKeysize();
+        srnd = random;
     }
 
     /**
      * 強暗号.
+     * e を 65537 以外で生成してみる.
      * @param strong 
      */
     public void setStrong(boolean strong) {
         this.strong = strong;
+        publicExponent = null;
     }
 
     /**
@@ -69,7 +87,9 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
     @Override
     public KeyPair generateKeyPair() {
         RSAPrivateCrtKey fkey;
-        if ( strong ) {
+        if ( publicExponent != null ) {
+            fkey = generatePrivateKey(keysize, srnd, 2, publicExponent);
+        } else if ( strong ) {
             fkey = generateStrongPrivateKey(keysize, srnd, 2);
         } else {
             fkey = generatePrivateKey(keysize, srnd, 2);
@@ -90,7 +110,11 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
 
     /**
      * 一般暗号鍵生成.
-     * @return 
+     * e を 65537 に固定した一般的なもの.
+     * @param len 鍵長 (ビット)
+     * @param srnd セキュアな乱数生成器
+     * @param u 2 または 3以上 まるちぷらいむ
+     * @return RSA秘密鍵
      */
     static RSAPrivateCrtKey generatePrivateKey(int len, SecureRandom srnd, int u) {
         BigInteger e; // publicExponent
@@ -101,10 +125,10 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
     /**
      * 強暗号鍵生成.
      * eを多少ランダムにしたもの.
-     * @param len
-     * @param srnd
-     * @param u
-     * @return 
+     * @param len 鍵長 (ビット)
+     * @param srnd セキュアな乱数生成器
+     * @param u 2 または 3以上 まるちぷらいむ
+     * @return RSA秘密鍵
      */
     static RSAPrivateCrtKey generateStrongPrivateKey(int len, SecureRandom srnd, int u) {
         BigInteger e; // publicExponent
@@ -116,14 +140,15 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
      * 秘密鍵生成.
      * マルチプライムRSA 対応.
      * @param len 鍵長 (ビット)
+     * @param srndc
      * @param u 2 または 3以上 まるちぷらいむ
+     * @param e publicExponent
      * @return 全要素入り.
      */
     static RSAPrivateCrtKey generatePrivateKey(int len, SecureRandom srnd, int u, BigInteger e) {
         //RSAFullPrivateKey key = new RSAPrivateCrtKey();
         BigInteger lambda;
         BigInteger n; // modulus
-//        BigInteger e; // publicExponent
 
         int pbit = len % u;
 //        do {
@@ -338,7 +363,28 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
         }
         return b;
     }
-    
+
+    static BigInteger xgcd(BigInteger a, BigInteger b) {
+        BigInteger x0 = BigInteger.ONE;
+        BigInteger y0 = BigInteger.ZERO;
+        BigInteger x1 = BigInteger.ZERO;
+        BigInteger y1 = BigInteger.ONE;
+        while ( !b.equals(BigInteger.ZERO)) {
+            BigInteger q = a.divide(b);
+            BigInteger ob = b;
+            b = a.mod(b); // a % b
+            a = a.divide(ob);
+
+            BigInteger tx0 = x0;
+            x0 = x1;
+            x1 = tx0.subtract(q.multiply(x1));
+            BigInteger ty0 = y0;
+            y0 = y1;
+            y1 = ty0.subtract(q.multiply(y1));
+        }
+        return x0;
+    }
+
     /**
      * ax + by = gcd(a,b)
      * ax - 1 = qm
