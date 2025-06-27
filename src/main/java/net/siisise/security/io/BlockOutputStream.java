@@ -15,6 +15,8 @@
  */
 package net.siisise.security.io;
 
+import net.siisise.io.Input;
+
 /**
  * IOExceptionが発生しない版
  * OutputStreamは使えない
@@ -61,6 +63,23 @@ public class BlockOutputStream extends BlockIOOutputStream {
         if (length > 0) { // 残機格納
             System.arraycopy(src, offset, sleepBlock, 0, length);
             this.offset = length;
+        }
+    }
+    
+    public void update(Input in) {
+        int ablelen = max - offset;
+        long rdl;
+        rdl = in.read(sleepBlock, offset, ablelen);
+        while ( rdl > 0 ) {
+            if ( rdl == ablelen ) {
+                ((BlockListener)listener).blockWrite(sleepBlock,0,max);
+                offset = 0;
+            } else {
+                offset += rdl;
+//                rdl = 0;
+            }
+            ablelen = max - offset;
+            rdl = in.read(sleepBlock, offset, ablelen);
         }
     }
     
