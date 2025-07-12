@@ -31,8 +31,8 @@ public abstract class BaseBlock implements Block {
 
     /**
      * 暗号化.
-     * @param src 元ブロック
-     * @return 
+     * @param src メッセージ
+     * @return 暗号文
      */
     @Override
     public byte[] encrypt(byte[] src) {
@@ -67,10 +67,10 @@ public abstract class BaseBlock implements Block {
     /**
      * 復号処理.
      * 
-     * @param src
-     * @param offset
-     * @param length
-     * @return
+     * @param src 暗号文
+     * @param offset 位置
+     * @param length　サイズ
+     * @return 平文
      */
     @Override
     public byte[] decrypt(byte[] src, int offset, int length) {
@@ -91,10 +91,10 @@ public abstract class BaseBlock implements Block {
     /**
      * 復号処理.
      * 
-     * @param src
-     * @param offset
-     * @param length
-     * @return
+     * @param src 暗号文
+     * @param offset 位置
+     * @param length サイズ
+     * @return 平文
      */
     @Override
     public int[] decrypt(int[] src, int offset, int length) {

@@ -98,11 +98,11 @@ public abstract class IntBlock extends BaseBlock {
     }
 
     /**
-     *
-     * @param src
-     * @param offset
-     * @param length
-     * @return
+     * 暗号化.
+     * @param src 平文
+     * @param offset 位置
+     * @param length サイズ
+     * @return 暗号文
      */
     @Override
     public int[] encrypt(int[] src, int offset, int length) {
@@ -164,7 +164,7 @@ public abstract class IntBlock extends BaseBlock {
      * @param offset 符号化位置
      * @param dst 暗号化先
      * @param doffset 先符号化位置
-     * @param length
+     * @param length 長さ
      */
     @Override
     public void encrypt(byte[] src, int offset, byte[] dst, int doffset, int length) {

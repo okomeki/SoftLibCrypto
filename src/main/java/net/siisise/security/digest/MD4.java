@@ -15,6 +15,7 @@
  */
 package net.siisise.security.digest;
 
+import net.siisise.lang.Bin;
 import net.siisise.security.io.BlockOutputStream;
 
 /**
@@ -24,6 +25,7 @@ import net.siisise.security.io.BlockOutputStream;
 @Deprecated
 public class MD4 extends BlockMessageDigest {
 
+    private final int[] IV = new int[]{0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476};
     private int[] ad;
 
     public MD4() {
@@ -43,7 +45,7 @@ public class MD4 extends BlockMessageDigest {
 
     @Override
     protected void engineReset() {
-        ad = new int[]{0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476};
+        ad = IV.clone();
         length = 0;
         pac = new BlockOutputStream(this);
     }
@@ -82,17 +84,11 @@ public class MD4 extends BlockMessageDigest {
         ad[e] = ((m << d) | (m >>> (32 - d)));
     }
 
-    int x[] = new int[16];
-
     @Override
     public void blockWrite(byte[] input, int offset, int len) {
 
         int aa, bb, cc, dd;
-        for (int j = 0; j < 16; j++) {
-            int of = offset + j*4;
-            x[j] = (input[of] & 0xff) + ((input[of+1] & 0xff) << 8)
-                    + ((input[of+2] & 0xff) << 16) + ((input[of+3] & 0xff) << 24);
-        }
+        int[] x = Bin.btoli(input, offset, len / 4);
         aa = ad[0];
         bb = ad[1];
         cc = ad[2];
@@ -127,18 +123,11 @@ public class MD4 extends BlockMessageDigest {
         pac.write(new byte[]{(byte) 0x80});
         int padlen = 512 - (int) ((len + 64 + 8) % 512);
         pac.write(new byte[padlen / 8]);
-        byte[] lena = new byte[8];
-        for (int i = 0; i < 8; i++) {
-            lena[i] = (byte) len;
-            len >>>= 8;
-        }
+        byte[] lena = Bin.lltob(len);
 
         pac.write(lena, 0, lena.length);
 
-        byte[] ret = new byte[16];
-        for (int i = 0; i < 16; i++) {
-            ret[i] = (byte) (ad[i / 4] >>> ((i & 3) * 8));
-        }
+        byte[] ret = Bin.litob(ad);
         engineReset();
         return ret;
     }

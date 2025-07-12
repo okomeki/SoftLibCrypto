@@ -95,10 +95,12 @@ public class MD5 extends BlockMessageDigest {
     public int getBitBlockLength() {
         return 512;
     }
+    
+    private static final int[] IV = {0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476};
 
     @Override
     protected void engineReset() {
-        ad = new int[]{0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476};
+        ad = IV.clone();
         length = 0;
         pac = new BlockOutputStream(this);
     }
@@ -192,11 +194,7 @@ public class MD5 extends BlockMessageDigest {
         pac.write(new byte[]{(byte) 0x80});
         int padlen = 512 - (int) ((len + 64 + 8) % 512);
         pac.write(new byte[padlen / 8]);
-        byte[] lena = new byte[8];
-        for (int i = 0; i < 8; i++) {
-            lena[i] = (byte) len;
-            len >>>= 8;
-        }
+        byte[] lena = Bin.lltob(len);
 
         pac.write(lena, 0, lena.length);
 

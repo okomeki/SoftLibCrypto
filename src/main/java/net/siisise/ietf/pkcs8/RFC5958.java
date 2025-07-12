@@ -15,7 +15,6 @@
  */
 package net.siisise.ietf.pkcs8;
 
-import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
@@ -98,10 +97,9 @@ public class RFC5958 extends PKCS8 {
      * AuthenticatedData メッセージ認証コードを使用して EnvelopedDataと同様な AuthEnvelopedData
      * EnvelopedDataと同様な
      *
-     * @param src EncryptedPrivateKeyInfo
+     * @param encdInfo 暗号化された秘密鍵
      * @param pass password
      * @return PKCS #8 PrivateKeyInfo
-     * @throws IOException
      */
     @Override
     public PrivateKeyInfo decryptPrivateKeyInfo(EncryptedPrivateKeyInfo encdInfo, byte[] pass) {

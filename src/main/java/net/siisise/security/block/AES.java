@@ -225,7 +225,7 @@ public class AES extends IntBlock {
 
     /**
      * 必要なパラメータサイズ
-     * @return 
+     * @return 長さ列
      */
     @Override
     public int[] getParamLength() {
@@ -543,9 +543,9 @@ public class AES extends IntBlock {
      * CBCなどで使う
      * AES/CBC
      * AMD Ryzen 7 5800X 1490Mbps 程度
-     * @param src int型に納めた元
+     * @param src int型に納めた暗号文
      * @param offset 復号化位置
-     * @return 
+     * @return 平文
      */
     @Override
     public int[] decrypt(final int[] src, final int offset) {
@@ -613,9 +613,9 @@ public class AES extends IntBlock {
      * CBCなどで使う
      * AES/CBC
      * AMD Ryzen 7 5800X 1490Mbps 程度
-     * @param src int型に納めた元
+     * @param src int型に納めた暗号文
      * @param offset 復号化位置
-     * @return 
+     * @return 平文
      */
     @Override
     public long[] decrypt(final long[] src, final int offset) {

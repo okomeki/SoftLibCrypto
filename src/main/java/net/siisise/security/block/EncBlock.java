@@ -47,8 +47,8 @@ public interface EncBlock {
     /**
      * encrypy(src, 0, src.length) へリダイレクト
      * 
-     * @param src
-     * @return 
+     * @param src メッセージ
+     * @return 暗号文
      */
     byte[] encrypt(byte[] src);
     int[] encrypt(int[] src);

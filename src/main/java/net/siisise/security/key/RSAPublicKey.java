@@ -19,6 +19,7 @@ import java.math.BigInteger;
 import net.siisise.bind.format.TypeFormat;
 import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.ietf.pkcs1.PKCS1;
+import net.siisise.iso.asn1.tag.ASN1DERFormat;
 import net.siisise.iso.asn1.tag.BITSTRING;
 import net.siisise.iso.asn1.tag.INTEGER;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
@@ -106,13 +107,10 @@ public class RSAPublicKey implements java.security.interfaces.RSAPublicKey {
      * @return RFC 8017 A.1.1.形式のASN.1 DER
      */
     public byte[] getPKCS1Encoded() {
-        return getPKCS1ASN1().encodeAll();
+        return (byte[])getPKCS1ASN1().rebind(new ASN1DERFormat());
     }
 
     public SEQUENCEMap getPKCS1ASN1() {
-/*      // rebind 任せでもいい
-        return (SEQUENCE)rebind(new ASN1Convert());
-/*/
         SEQUENCEMap pub = new SEQUENCEMap();
         pub.put("modules", modulus); // n
         pub.put("publicExponent", publicExponent); // e
@@ -128,12 +126,9 @@ public class RSAPublicKey implements java.security.interfaces.RSAPublicKey {
      * @return 出力
      */
     public <T> T rebind(TypeFormat<T> format) {
-        SEQUENCEMap rsaPublicKey = new SEQUENCEMap();
-        rsaPublicKey.put("modulus", modulus); // n
-        rsaPublicKey.put("publicExponent", publicExponent); // e
-        return format.mapFormat(rsaPublicKey);
+        return (T)getPKCS1ASN1().rebind(format);
     }
-    
+
     /**
      * PKCS #8 PUBLIC KEY 非公式.
      * bit string のパターン
@@ -141,7 +136,7 @@ public class RSAPublicKey implements java.security.interfaces.RSAPublicKey {
      */
     @Deprecated
     public byte[] getPKCS8Encoded() {
-        return getPKCS8ASN1().encodeAll();
+        return (byte[])getPKCS8ASN1().rebind(new ASN1DERFormat());
     }
 
     /**
