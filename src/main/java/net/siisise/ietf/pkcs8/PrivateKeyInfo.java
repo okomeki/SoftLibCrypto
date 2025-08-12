@@ -108,7 +108,7 @@ public class PrivateKeyInfo {
         s.put("version", version);
         s.put("privateKeyAlgorithm", privateKeyAlgorithm);
         s.put("privateKey", privateKey);
-        if (attributes != null) {
+        if (attributes != null && !attributes.isEmpty()) {
             SEQUENCEList atrs = new SEQUENCEList(ASN1Cls.CONTEXT_SPECIFIC, 0); // SET OF
             atrs.addAll(Rebind.valueOf(attributes, ASN1Tag.class));
             s.put("attributes", atrs);

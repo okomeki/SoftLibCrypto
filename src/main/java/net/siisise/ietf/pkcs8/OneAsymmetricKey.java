@@ -15,13 +15,11 @@
  */
 package net.siisise.ietf.pkcs8;
 
-import java.util.LinkedHashMap;
 import net.siisise.bind.Rebind;
 import net.siisise.bind.format.TypeFormat;
 import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.iso.asn1.ASN1;
 import net.siisise.iso.asn1.tag.ASN1Convert;
-import net.siisise.iso.asn1.tag.ASN1Prefixed;
 import net.siisise.iso.asn1.tag.BITSTRING;
 import net.siisise.iso.asn1.tag.INTEGER;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
@@ -87,6 +85,7 @@ public class OneAsymmetricKey extends PrivateKeyInfo {
 
     /**
      * 公開鍵.
+     * 
      */
     public byte[] publicKey; // [1] PublicKey OPTIONAL
 
@@ -104,44 +103,43 @@ public class OneAsymmetricKey extends PrivateKeyInfo {
         } else {
             one.put("version", version);
         }
-        one.put("privateKeyAlgorithm", privateKeyAlgorithm.encodeASN1());
+        one.put("privateKeyAlgorithm", privateKeyAlgorithm);
         one.put("privateKey", privateKey);
-        if (attributes != null) {
+        if (attributes != null && !attributes.isEmpty()) {
             //ASN1Prefixed pre0 = new ASN1Prefixed(0, Rebind.valueOf(attributes, new ASN1Convert()));
             SEQUENCE pre0 = (SEQUENCE) Rebind.valueOf(attributes, new ASN1Convert());
             pre0.setContextSpecific(0);
             one.put("attributes", pre0);
         }
         if (publicKey != null && version > 0) { // IMPLICIT
-            BITSTRING pre1 = new BITSTRING( 1,publicKey);
-            one.put("publicKey", pre1);
+            BITSTRING pre1 = new BITSTRING( publicKey);
+            one.putImplicit("publicKey", 1, pre1);
         }
         return one;
     }
 
     /**
-     *
-     * @param <V>
-     * @param format
-     * @return
+     * OneAsymmetricKeyの符号化
+     * @param <V> 出力型
+     * @param format 出力形式
+     * @return 符号化
      */
     @Override
     public <V> V rebind(TypeFormat<V> format) {
-        LinkedHashMap map = new LinkedHashMap();
+        SEQUENCEMap map = new SEQUENCEMap();
         map.put("version", version);
         map.put("privateKeyAlgorithm", privateKeyAlgorithm);
         map.put("privateKey", privateKey);
 
-        if (attributes != null) {
-            ASN1Prefixed pre1 = new ASN1Prefixed(1, Rebind.valueOf(attributes, new ASN1Convert()));
-            map.put("attributes", pre1);
+        if (attributes != null && !attributes.isEmpty()) {
+            map.putExplicit("attributes", 0, Rebind.valueOf(attributes, new ASN1Convert()));
         }
 
         if (publicKey != null && version >= 1) { // IMPLICIT
-            BITSTRING pre1 = new BITSTRING(1, publicKey);
-            map.put("publicKey", pre1);
+            BITSTRING pre1 = new BITSTRING( publicKey);
+            map.putImplicit("publicKey", 1, pre1);
         }
-        return format.mapFormat(map); //Rebind.valueOf(map, format);
+        return (V)map.rebind(format); //Rebind.valueOf(map, format);
     }
 
     /**

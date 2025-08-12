@@ -16,6 +16,7 @@
 package net.siisise.ietf.pkcs5;
 
 import java.security.MessageDigest;
+import java.util.List;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.security.block.Block;
 import net.siisise.security.block.DES;
@@ -44,6 +45,14 @@ public class PBES1 implements PBES {
     // PBKDF2 12 
     // PBES2 13 
     
+    public static final List OIDS = List.of(
+            pbeWithMD2AndDES_CBC,
+            pbeWithMD5AndDES_CBC,
+            pbeWithMD2AndRC2_CBC,
+            pbeWithMD5AndRC2_CBC,
+            pbeWithSHA1AndDES_CBC,
+            pbeWithSHA1AndDES_CBC);
+    
     final PBKDF1 kdf;
 
     protected Block block;
@@ -66,37 +75,18 @@ public class PBES1 implements PBES {
     public void init(byte[] salt, int c) {
         kdf.init(salt, c);
     }
-    
+
     /**
-     *
-     * A.3.
-     * pbeWithMD2AndDES
-     * pbeWithMD2AndRC2
-     * pbeWithMD5AndDES
-     * pbeWithMD5AndRC2
-     * pbeWithSHA1AndDES
-     * pbeWithSHA1AndRC2
-     * @param block DES/CBC RC2/CBC
-     * @param digest PBKDFのパラメータ
-     * @param password PBKDFのパラメータ
+     * OIDの
+     * @param block
+     * @param digest 
      */
-    public void init(Block block, MessageDigest digest, byte[] password) {
+    public void init(Block block, MessageDigest digest) {
         this.block = block;
         kdf.init(digest);
-        byte[] dk = kdf.kdf(password, 16);
-        k = new byte[8];
-        iv = new byte[8];
-        System.arraycopy(dk, 0, k, 0, 8);
-        System.arraycopy(dk, 8, iv, 0, 8);
-        block.init(k,iv);
-    }
-    
-    public void init(Block block, MessageDigest digest, byte[] password, byte[] salt, int c) {
-        init(salt, c);
-        init(block, digest, password);
     }
 
-    public void init(OBJECTIDENTIFIER oid, byte[] password) {
+    public void init(OBJECTIDENTIFIER oid) {
         MessageDigest md;
         Block b;
         if ( pbeWithMD2AndDES_CBC.equals(oid)) {
@@ -120,7 +110,44 @@ public class PBES1 implements PBES {
         } else {
             throw new SecurityException();
         }
-        init(new PKCS7Padding(new CBC(b)), md, password);
+        init(new PKCS7Padding(new CBC(b)), md);
+    }
+    
+    public void init(byte[] password) {
+        byte[] dk = kdf.kdf(password, 16);
+        k = new byte[8];
+        iv = new byte[8];
+        System.arraycopy(dk, 0, k, 0, 8);
+        System.arraycopy(dk, 8, iv, 0, 8);
+        block.init(k,iv);
+    }
+    
+    /**
+     *
+     * A.3.
+     * pbeWithMD2AndDES
+     * pbeWithMD2AndRC2
+     * pbeWithMD5AndDES
+     * pbeWithMD5AndRC2
+     * pbeWithSHA1AndDES
+     * pbeWithSHA1AndRC2
+     * @param block DES/CBC RC2/CBC
+     * @param digest PBKDFのパラメータ
+     * @param password PBKDFのパラメータ
+     */
+    public void init(Block block, MessageDigest digest, byte[] password) {
+        init(block, digest);
+        init(password);
+    }
+
+    public void init(OBJECTIDENTIFIER oid, byte[] password) {
+        init(oid);
+        init(password);
+    }
+    
+    public void init(Block block, MessageDigest digest, byte[] password, byte[] salt, int c) {
+        init(salt, c);
+        init(block, digest, password);
     }
 
     /** 2回目があれば */
@@ -189,5 +216,4 @@ public class PBES1 implements PBES {
         pb.init(block, digest, password);
         return pb.decrypt(message);
     }
-    
 }

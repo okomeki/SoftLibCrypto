@@ -16,8 +16,6 @@
 package net.siisise.ietf.pkcs5;
 
 import java.math.BigInteger;
-import java.util.LinkedHashMap;
-import net.siisise.bind.Rebind;
 import net.siisise.bind.format.TypeFormat;
 import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.iso.asn1.ASN1Tag;
@@ -103,14 +101,14 @@ public class PBKDF2params {
     public SEQUENCEMap encodeASN1() {
 //        return (SEQUENCE)rebind(new ASN1Convert());
 
-        SEQUENCEMap seq = new SEQUENCEMap();
-        seq.put("salt",salt);
-        seq.put("iterationCount", iterationCount);
+        SEQUENCEMap params = new SEQUENCEMap();
+        params.put("salt", salt); // specified OCTET STRING または otherSource AlgorithmIdentifier
+        params.put("iterationCount", iterationCount);
         if (keyLength != null) {
-            seq.put("keyLength", keyLength); // OPTIONAL
+            params.put("keyLength", keyLength); // OPTIONAL
         }
-        seq.put("prf", prf.encodeASN1()); // DEFAULT algid-hmacWithSHA1
-        return seq;
+        params.put("prf", prf); // DEFAULT algid-hmacWithSHA1
+        return params;
     }
 
     /**
@@ -120,14 +118,14 @@ public class PBKDF2params {
      * @return ASN.1っぽいPBKDF2 のパラメータ
      */
     public <V> V rebind(TypeFormat<V> format) {
-        LinkedHashMap<String, Object> params = new LinkedHashMap<>();
+        SEQUENCEMap params = new SEQUENCEMap();
         params.put("salt", salt); // specified OCTET STRING または otherSource AlgorithmIdentifier
         params.put("iterationCount", iterationCount);
         if (keyLength != null) { // OPTIONAL
             params.put("keyLength", keyLength);
         }
         params.put("prf", prf); // DEFAULT algid-hmacWithSHA1
-        return Rebind.valueOf(params, format);
+        return (V)params.rebind(format);
     }
 
     /**
@@ -156,5 +154,15 @@ public class PBKDF2params {
             kdf.init(tsalt, c);
         }
         return kdf;
+    }
+
+    /**
+     * AES-CBC-Pad ぐらいの
+     * @return 
+     */
+    public PBKDF2params gen() {
+        PBKDF2params kdf2p = new PBKDF2params();
+        kdf2p.iterationCount = BigInteger.valueOf(2048);
+        return kdf2p;
     }
 }

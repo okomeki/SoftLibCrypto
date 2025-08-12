@@ -15,6 +15,8 @@
  */
 package net.siisise.ietf.pkcs5;
 
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.LinkedHashMap;
 import net.siisise.bind.Rebind;
 import net.siisise.bind.format.TypeFormat;
@@ -31,6 +33,7 @@ import net.siisise.security.block.Block;
 import net.siisise.security.block.DES;
 import net.siisise.security.block.RC2;
 import net.siisise.security.block.TripleDES;
+import net.siisise.security.mac.HMAC;
 import net.siisise.security.mode.CBC;
 import net.siisise.security.mode.PKCS7Padding;
 
@@ -162,5 +165,27 @@ public class PBES2params {
         //       8 octet initicalization vector
         
         throw new UnsupportedOperationException("encryptionScheme:" + alg.toString());
+    }
+    
+    /**
+     * AES-CBC 仮パラメータ生成.
+     * OpenSSL と近くしておく
+     * @return 仮パラメータ
+     */
+    public static PBES2params gen() {
+        CBC cbc = new CBC(new AES());
+        int[] pls = cbc.getParamLength();
+        SecureRandom srnd;
+        try {
+            srnd = SecureRandom.getInstanceStrong();
+        } catch (NoSuchAlgorithmException ex) {
+            throw new IllegalStateException(ex);
+        }
+        byte[] salt = new byte[pls[1]/8]; // OpenSSL では 64bitかもしれない
+        srnd.nextBytes(salt);
+        PBKDF2params kdf2p = new PBKDF2params(salt,2048, HMAC.idhmacWithSHA256);
+        salt = new byte[pls[0]/8];
+        srnd.nextBytes(salt);
+        return new PBES2params(kdf2p, AES.AES128_CBC_PAD, salt);
     }
 }

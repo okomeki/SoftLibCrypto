@@ -15,7 +15,12 @@
  */
 package net.siisise.ietf.pkcs5;
 
+import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
+import net.siisise.iso.asn1.ASN1Util;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
+import net.siisise.iso.asn1.tag.OCTETSTRING;
+import net.siisise.iso.asn1.tag.SEQUENCE;
+import net.siisise.iso.asn1.tag.SEQUENCEMap;
 import net.siisise.security.block.Block;
 import net.siisise.security.mac.MAC;
 
@@ -228,5 +233,38 @@ public class PBES2 implements PBES {
 
     void setBlock(Block encryptionScheme) {
         this.block = encryptionScheme;
+    }
+
+    /**
+     * なんとなくAES-CBCっぽい暗号化で作る.
+     * @param message 原文
+     * @param password パスワード
+     * @return 
+     */
+    public static byte[] encryptAll(byte[] message, byte[] password) {
+        PBES2params pa = PBES2params.gen();
+        PBES2 es = pa.decode();
+        es.init(password);
+        byte[] c = es.encrypt(message);
+        // ASN.1化 ToDo:名前
+        SEQUENCEMap map = new SEQUENCEMap();
+        map.put("a", new AlgorithmIdentifier(PBES2.id_PBES2, pa.encode()));
+        map.put("v", new OCTETSTRING(c));
+        return map.encodeAll();
+    }
+    
+    public static byte[] decryptAll(byte[] compress, byte[] password) {
+        SEQUENCE p8c = (SEQUENCE) ASN1Util.toASN1(compress);
+        return decryptAll(p8c, password);
+    }
+
+    public static byte[] decryptAll(SEQUENCE p8c, byte[] pass) {
+        AlgorithmIdentifier ai = AlgorithmIdentifier.decode((SEQUENCE) p8c.get(0));
+        if (!ai.algorithm.equals(PBES2.id_PBES2)) {
+            throw new java.lang.UnsupportedOperationException();
+        }
+        PBES2 es = PBES2params.decode((SEQUENCE) ai.parameters).decode();
+        OCTETSTRING body = (OCTETSTRING) p8c.get(1);
+        return es.decrypt(body.getValue());
     }
 }

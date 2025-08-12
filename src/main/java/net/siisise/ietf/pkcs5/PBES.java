@@ -21,4 +21,5 @@ import net.siisise.security.block.ES;
  * RFC 8018 6. Encryption Schemes
  */
 public interface PBES extends ES {
+    void init(byte[] password);
 }

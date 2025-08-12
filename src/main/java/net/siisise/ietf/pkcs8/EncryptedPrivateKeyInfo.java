@@ -32,6 +32,7 @@ public class EncryptedPrivateKeyInfo {
 
     /**
      * PBES2 想定.
+     * RFC 5208 PBES1っぽい
      */
     public AlgorithmIdentifier encryptionAlgorithm;
     /**
@@ -62,10 +63,10 @@ public class EncryptedPrivateKeyInfo {
         throw new IllegalStateException();
     }
 
-    public SEQUENCEMap decode() {
+    public SEQUENCEMap encode() {
         return (SEQUENCEMap)rebind(new ASN1Convert());
     }
-    
+
     public <V> V rebind(TypeFormat<V> format) {
         LinkedHashMap info = new LinkedHashMap();
         info.put("encryptionAlgorithm", encryptionAlgorithm.rebind(format));

@@ -19,6 +19,7 @@ import net.siisise.bind.format.TypeFormat;
 import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.ietf.pkcs1.PKCS1;
 import net.siisise.iso.asn1.ASN1;
+import net.siisise.iso.asn1.ASN1Util;
 import net.siisise.iso.asn1.tag.ASN1Prefixed;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
 import net.siisise.iso.asn1.tag.SEQUENCE;
@@ -34,11 +35,11 @@ import net.siisise.security.padding.MGF1;
 public class RSAES_OAEP_params {
 
     public AlgorithmIdentifier hashAlgorithm = new AlgorithmIdentifier(SHA1.OBJECTIDENTIFIER);
-    public AlgorithmIdentifier maskGenAlgorithm = new AlgorithmIdentifier(MGF1.OID, new AlgorithmIdentifier(SHA1.OBJECTIDENTIFIER).encodeASN1());
+    public AlgorithmIdentifier maskGenAlgorithm = new AlgorithmIdentifier(MGF1.OID, ASN1Util.toASN1(new AlgorithmIdentifier(SHA1.OBJECTIDENTIFIER)));
     public AlgorithmIdentifier pSourceAlgorithm = new AlgorithmIdentifier(PKCS1.id_pSpecified, new OCTETSTRING());
 
     public <T> T rebind(TypeFormat<T> format) {
-        return format.mapFormat(encode());
+        return (T)encode().rebind(format);
     }
 
     public SEQUENCEMap encode() {

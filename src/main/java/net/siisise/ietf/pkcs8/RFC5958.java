@@ -18,6 +18,9 @@ package net.siisise.ietf.pkcs8;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
+import net.siisise.ietf.pkcs5.PBEParameter;
+import net.siisise.ietf.pkcs5.PBES;
+import net.siisise.ietf.pkcs5.PBES1;
 import net.siisise.ietf.pkcs5.PBES2;
 import net.siisise.ietf.pkcs5.PBES2params;
 import net.siisise.ietf.pkcs5.PBKDF2params;
@@ -103,23 +106,21 @@ public class RFC5958 extends PKCS8 {
      */
     @Override
     public PrivateKeyInfo decryptPrivateKeyInfo(EncryptedPrivateKeyInfo encdInfo, byte[] pass) {
-        if (encdInfo.encryptionAlgorithm.algorithm.equals(PBES2.id_PBES2)) {
-            PBES2params pbes2params = PBES2params.decode((SEQUENCE) encdInfo.encryptionAlgorithm.parameters);
-            PBES2 es = pbes2params.decode();
-            es.init(pass);
-            byte[] encryptedData = encdInfo.encryptedData.getValue();
-            byte[] key = es.decrypt(encryptedData);
-            SEQUENCE info = (SEQUENCE) ASN1Util.toASN1(key);
-/*
-            try {
-                System.out.println(ASN1Util.toXMLString(info));
-            } catch (Exception ex) {
-                throw new IllegalStateException(ex);
-            }
-*/
-            return OneAsymmetricKey.decode(info);
+        AlgorithmIdentifier ai = encdInfo.encryptionAlgorithm;
+        byte[] encryptedData = encdInfo.encryptedData.getValue();
+        PBES es;
+        if (ai.algorithm.equals(PBES2.id_PBES2)) {
+            PBES2params pbes2params = PBES2params.decode((SEQUENCE) ai.parameters);
+            es = pbes2params.decode();
+        } else if (PBES1.OIDS.contains(ai.algorithm)) {
+            es = PBEParameter.decode(ai);
+        } else {
+            throw new UnsupportedOperationException("未対応:" + encdInfo.encryptionAlgorithm.algorithm.getName());
         }
-        throw new UnsupportedOperationException();
+        es.init(pass);
+        byte[] key = es.decrypt(encryptedData);
+        SEQUENCE info = (SEQUENCE) ASN1Util.toASN1(key);
+        return OneAsymmetricKey.decode(info);
     }
 
 }

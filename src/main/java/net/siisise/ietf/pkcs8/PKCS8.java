@@ -17,6 +17,7 @@ package net.siisise.ietf.pkcs8;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import net.siisise.ietf.pkcs5.PBES2;
 import net.siisise.iso.asn1.ASN1Util;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.SEQUENCE;
@@ -75,7 +76,7 @@ public class PKCS8 {
      */
     @Deprecated
     public SEQUENCEMap encryptedPrivateKeyInfoASN1(RSAPrivateCrtKey key, byte[] pass) throws NoSuchAlgorithmException {
-        return encryptedPrivateKeyInfo(key.getPKCS8PrivateKeyInfo(), pass).decode();
+        return encryptedPrivateKeyInfo(key.getPKCS8PrivateKeyInfo(), pass).encode();
     }
 
     /**
@@ -102,8 +103,9 @@ public class PKCS8 {
      * @return PKCS #8 PrivateKeyInfo
      */
     public PrivateKeyInfo decryptPrivateKeyInfo(byte[] src, byte[] pass) {
-        SEQUENCE s = (SEQUENCE) ASN1Util.toASN1(src);
-        return decryptPrivateKeyInfo(s, pass);
+        byte[] m = PBES2.decryptAll(src, pass);
+        SEQUENCE s = (SEQUENCE) ASN1Util.toASN1(m);
+        return OneAsymmetricKey.decode(s);
     }
 
     public PrivateKeyInfo decryptPrivateKeyInfo(SEQUENCE src, byte[] pass) {
@@ -111,6 +113,6 @@ public class PKCS8 {
     }
 
     public PrivateKeyInfo decryptPrivateKeyInfo(EncryptedPrivateKeyInfo info, byte[] pass) {
-        throw new UnsupportedOperationException();
+        return new RFC5958().decryptPrivateKeyInfo(info, pass);
     }
 }
