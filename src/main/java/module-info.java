@@ -16,6 +16,8 @@
 
 module net.siisise.crypto {
     requires java.logging;
+    // HMACSpi 仮
+    requires java.xml.crypto;
     requires net.siisise;
     requires net.siisise.asn;
     requires net.siisise.xml;
