@@ -340,7 +340,7 @@ public class DSAKeyGen {
     /**
      * Generation of the Generator g
      *
-     * @param d
+     * @param d domain
      * @return g
      */
     private DSADomain a2gen(DSADomain d) {

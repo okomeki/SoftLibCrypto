@@ -17,14 +17,16 @@ package net.siisise.security.key;
 
 import java.math.BigInteger;
 import java.security.interfaces.DSAParams;
-import java.util.ArrayList;
-import java.util.List;
-import net.siisise.bind.Rebind;
+import net.siisise.bind.format.TypeFormat;
 import net.siisise.iso.asn1.tag.ASN1DERFormat;
+import net.siisise.iso.asn1.tag.INTEGER;
+import net.siisise.iso.asn1.tag.SEQUENCE;
+import net.siisise.iso.asn1.tag.SEQUENCEMap;
 
 /**
  * DSA ドメインパラメータ
  * FIPS PUB 186-4 Section 4
+ * RFC 3370 Dss-Params
  */
 public class DSADomain implements DSAParams {
 
@@ -62,13 +64,23 @@ public class DSADomain implements DSAParams {
     public BigInteger getG() {
         return g;
     }
-    
+
     public byte[] getEncoded() {
-        List l = new ArrayList();
-        l.add(p);
-        l.add(q);
-        l.add(g);
-        return Rebind.valueOf(l, new ASN1DERFormat());
-        
+        return rebind(new ASN1DERFormat());
+    }
+
+    public <T> T rebind(TypeFormat<T> format) {
+        SEQUENCEMap m = new SEQUENCEMap();
+        m.put("p", p);
+        m.put("q", q);
+        m.put("g", g);
+        return (T) m.rebind(format);
+    }
+
+    public static DSADomain decode(SEQUENCE seq) {
+        BigInteger p = ((INTEGER)seq.get(0)).getValue();
+        BigInteger q = ((INTEGER)seq.get(1)).getValue();
+        BigInteger g = ((INTEGER)seq.get(2)).getValue();
+        return new DSADomain(p,q,g);
     }
 }
