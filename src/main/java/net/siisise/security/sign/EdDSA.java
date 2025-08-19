@@ -24,6 +24,7 @@ import net.siisise.io.PacketA;
 import net.siisise.iso.asn1.tag.ASN1DERFormat;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
+import net.siisise.lang.Bin;
 import net.siisise.security.digest.SHA512;
 import net.siisise.security.digest.SHAKE256;
 import net.siisise.security.key.EdDSAPrivateKey;
@@ -41,6 +42,11 @@ public class EdDSA implements SignVerify {
     public static final OBJECTIDENTIFIER X448 = new OBJECTIDENTIFIER("1.3.101.111");
     public static final OBJECTIDENTIFIER Ed25519 = new OBJECTIDENTIFIER("1.3.101.112");
     public static final OBJECTIDENTIFIER Ed448 = new OBJECTIDENTIFIER("1.3.101.113");
+
+    private static final BigInteger THREE = BigInteger.valueOf(3);
+    private static final BigInteger FOUR = BigInteger.valueOf(4);
+    private static final BigInteger FIVE = BigInteger.valueOf(5);
+    private static final BigInteger EIGHT = BigInteger.valueOf(8);
 
     /**
      * Ed25519 32byte 256bit
@@ -72,92 +78,25 @@ public class EdDSA implements SignVerify {
          * @return 
          */
         public byte[] encXY(int bit) {
-            byte[] code = new byte[bit / 8];
-            byte[] by = y.toByteArray();
-            int l = code.length - 1;
-            for (int i = 0; i < by.length; i++) {
-                code[l - i] = by[i];
-            }
-            code[code.length - 1] |= x.testBit(bit - 1) ? 0x80 : 0;
+            byte[] code = itob(y, bit/8);
+            code[code.length - 1] |= x.testBit(0) ? 0x80 : 0;
             return code;
         }
         
-        /**
-         * 5.1.3. Decoding.
-         * @param code 5.1.2で符号化されたもの
-         * @param curve
-         */
-        public static Point decXY(byte[] code, EllipticCurve curve) {
-            // 1.
-            byte[] by = rev(code);
-            int x_0 = ((by[0] & 0x80) >>> 7) & 1;
-            by[0] &= 0x7f;
-            BigInteger y = new BigInteger(by); //new BigInteger(by);
-            if (y.compareTo(curve.p) >= 0) {
-                throw new IllegalStateException();
+        @Override
+        public boolean equals(Object p) {
+            if ( p instanceof Point ) {
+                Point xp = (Point) p;
+                return xp.x.equals(x) && xp.y.equals(y);
             }
-            // 2.
-            BigInteger THREE = BigInteger.valueOf(3);
-            BigInteger FOUR = BigInteger.valueOf(4);
-            BigInteger FIVE = BigInteger.valueOf(5);
-            BigInteger EIGHT = BigInteger.valueOf(8);
-
-            BigInteger yy = y.multiply(y); // y.modPow(BigInteger.TWO, curve.p);
-            BigInteger u = yy.subtract(BigInteger.ONE);//.mod(curve.p);
-            BigInteger v = curve.d.multiply(yy).add(BigInteger.ONE);//.mod(curve.p);
-            //BigInteger uv = u.multiply(v).mod(curve.p);
-            BigInteger urv = u.multiply(v.modInverse(curve.p));//.mod(curve.p);
-            if (urv.equals(BigInteger.ZERO)) {
-                if (x_0 != 0) {
-                    throw new IllegalStateException();
-                } else {
-                    return new Point(BigInteger.ZERO, y);
-                }
-            }
-            
-            BigInteger x = urv.modPow(curve.p.add(THREE).divide(EIGHT), curve.p);
-            BigInteger xx = x.multiply(x);
-            if (!xx.subtract(urv).mod(curve.p).equals(BigInteger.ZERO)) {
-                BigInteger m1 = BigInteger.TWO.modPow(curve.p.subtract(BigInteger.ONE).divide(FOUR), curve.p);
-                x = x.multiply(m1).mod(curve.p);
-                xx = x.multiply(x);
-                if (!xx.subtract(urv).mod(curve.p).equals(BigInteger.ZERO)) {
-                    throw new IllegalStateException();
-                }
-            }
-            System.out.println(x);
-            if ( x.testBit(0) != (x_0 == 1)) {
-                
-            }
-            //BigInteger x = u.multiply(uv.modPow(curve.p.subtract(FIVE).divide(EIGHT), curve.p)).mod(curve.p);
-            // 3.
-            BigInteger vxx = x.modPow(BigInteger.TWO, curve.p).multiply(v);
-            System.out.println(vxx);
-            System.out.println(u);
-            if (!vxx.equals(u)) {
-                if (!vxx.equals(u.negate())) {
-                    throw new IllegalStateException(vxx.toString() + " " + u.toString());
-                } else {
-                    x = x.multiply(BigInteger.TWO.modPow(curve.p.subtract(BigInteger.ONE).divide(FOUR),curve.p));
-                }
-            }
-            // 4.
-            if (x_0 == 1 && x.equals(BigInteger.ZERO)) {
-                throw new IllegalStateException();
-            }
-//            int x0 = x.mod(BigInteger.TWO).intValue();
-            int x0 = x.testBit(0) ? 1 : 0;
-            if (x_0 != x0) {
-                x = curve.p.subtract(x);
-            }
-            return new Point(x,y);
+            return false;
         }
     }
 
     /**
      * パラメータ. ECDSAと同じ? RFC 8032 3.のパラメータ
      */
-    public static class EllipticCurve {
+    public abstract static class EllipticCurve {
         public final OBJECTIDENTIFIER oid;
 
         // 1. GF(p) 奇数
@@ -174,7 +113,7 @@ public class EdDSA implements SignVerify {
         // 6. c <= n < b
         public final int n;
         // 7. GF(p)の非正方形要素
-        private final BigInteger d;
+        final BigInteger d;
         // 8. GF(p)の非ゼロの正方形要素
         private final BigInteger a;
         // 9. B
@@ -231,56 +170,26 @@ public class EdDSA implements SignVerify {
             return x;
         }
 
-
+        abstract public Point decXY(byte[] code);
+        
         public Point nE(BigInteger x) {
             return nE(x, B);
         }
 
         Point nE(BigInteger x, Point b) {
-            return nE(x, new xPoint(b)).toPoint();
-        }
-
-        xPoint nE(BigInteger x, xPoint p) {
-            xPoint r = new xPoint();
-            int bl = x.bitLength();
-            for (int i = 0; i < bl; i++) {
-                if (x.testBit(i)) {
-                    r = r.add(p);
-                }
-                p = p.x2();
-            }
-            return r;
+            return nE(x, toxPoint(b)).toPoint();
         }
         
-//        abstract xPoint xPoint(Point p);
+        abstract xPoint toxPoint(Point x);
 
-        class xPoint {
+        Point add(Point a, Point b) {
+            return toxPoint(a).add(toxPoint(b)).toPoint();
+        }
 
-            BigInteger X;
-            BigInteger Y;
-            BigInteger Z;
-            BigInteger T;
-
-            xPoint(Point p) {
-                Z = BigInteger.ONE;
-                X = p.x;
-                Y = p.y;
-                T = p.x.multiply(p.y);
-            }
-
-            xPoint() {
-                X = BigInteger.ZERO;
-                Y = BigInteger.ONE;
-                Z = BigInteger.ONE;
-                T = BigInteger.ZERO;
-            }
-
-            xPoint(BigInteger X, BigInteger Y, BigInteger Z, BigInteger T) {
-                this.X = X;
-                this.Y = Y;
-                this.Z = Z;
-                this.T = T;
-            }
+        abstract class xPoint {
+            protected BigInteger X;
+            protected BigInteger Y;
+            protected BigInteger Z;
 
             Point toPoint() {
                 BigInteger R = Z.modInverse(p);
@@ -288,39 +197,14 @@ public class EdDSA implements SignVerify {
                 BigInteger y = Y.multiply(R).mod(p);
                 return new Point(x, y);
             }
-
-            xPoint add(xPoint b) {
-                BigInteger A = Y.subtract(X).multiply(b.Y.subtract(b.X));
-                BigInteger B = Y.add(X).multiply(b.Y.add(b.X));
-                BigInteger C = T.multiply(BigInteger.TWO).multiply(d).multiply(b.T).mod(p);
-                BigInteger D = Z.multiply(BigInteger.TWO).multiply(b.Z).mod(p);
-                BigInteger E = B.subtract(A).mod(p);
-                BigInteger F = D.subtract(C).mod(p);
-                BigInteger G = D.add(C).mod(p);
-                BigInteger H = B.add(A).mod(p);
-                BigInteger X2 = E.multiply(F).mod(p);
-                BigInteger Y2 = G.multiply(H).mod(p);
-                BigInteger T2 = E.multiply(H).mod(p);
-                BigInteger Z2 = F.multiply(G).mod(p);
-                return new xPoint(X2, Y2, Z2, T2);
-            }
-
-            xPoint x2() {
-                BigInteger A = X.modPow(BigInteger.TWO, p);
-                BigInteger B = Y.modPow(BigInteger.TWO, p);
-                BigInteger C = Z.modPow(BigInteger.TWO, p).multiply(BigInteger.TWO).mod(p);
-                BigInteger H = A.add(B).mod(p);
-                BigInteger E = H.subtract(X.add(Y).modPow(BigInteger.TWO, p));
-                BigInteger G = A.subtract(B).mod(p);
-                BigInteger F = C.add(G).mod(p);
-                BigInteger X2 = E.multiply(F).mod(p);
-                BigInteger Y2 = G.multiply(H).mod(p);
-                BigInteger T2 = E.multiply(H).mod(p);
-                BigInteger Z2 = F.multiply(G).mod(p);
-                return new xPoint(X2, Y2, Z2, T2);
-            }
-
+            
+            abstract xPoint add(xPoint x);
+            abstract xPoint x2();
         }
+        
+        abstract xPoint nE(BigInteger x, xPoint p);
+        
+        
     }
 
     static final BigInteger P25519 = BigInteger.ONE.shiftLeft(255).subtract(BigInteger.valueOf(19));
@@ -344,6 +228,140 @@ public class EdDSA implements SignVerify {
         public EdWards25519() {
             super(Ed25519, P25519, 256, 3, 254, -1, D25519, B25519, new SHA512(),L25519);
         }
+
+        /**
+         * 5.1.3. Decoding.
+         * @param code 5.1.2で符号化されたもの
+         * @return 復元Point
+         */
+        @Override
+        public Point decXY(byte[] code) {
+            // 1.
+            byte[] by = rev(code);
+            boolean x_0 = (by[0] & 0x80) != 0;
+            by[0] &= 0x7f;
+            BigInteger y = new BigInteger(by); //new BigInteger(by);
+            if (y.compareTo(p) >= 0) {
+                throw new IllegalStateException();
+            }
+            // 2.
+            BigInteger yy = y.modPow(BigInteger.TWO, p); // y.modPow(BigInteger.TWO, curve.p);
+            BigInteger u = sub(yy,BigInteger.ONE);
+            BigInteger v = d.multiply(yy).add(BigInteger.ONE).mod(p);
+            BigInteger uv = u.multiply(v).mod(p);
+            BigInteger x = u.multiply(uv.modPow(p.divide(EIGHT), p)).mod(p);
+            // 3.
+            BigInteger vxx = v.multiply(x.modPow(BigInteger.TWO, p)).mod(p);
+//            BigInteger x2 = u.multiply(v.modInverse(p)).mod(p);
+//            BigInteger vxx = v.multiply(x2).mod(p);
+            if ( !vxx.equals(u) ) {
+                if (vxx.equals(p.subtract(u))) {
+                    BigInteger z = BigInteger.TWO.modPow(p.divide(FOUR), p);
+                    x = x.multiply(z).mod(p);
+                } else {
+                    throw new IllegalStateException();
+                }
+            }
+            // 4.
+            if ( x_0 && x.equals(BigInteger.ZERO)) {
+                throw new IllegalStateException();
+            }
+            if (x.testBit(0) != x_0) {
+                x = p.subtract(x);
+            }
+            return new Point(x,y);
+        }
+        
+        @Override
+        x25519Point toxPoint(Point x) {
+            return new x25519Point(x);
+        }
+
+        @Override
+        xPoint nE(BigInteger x, xPoint p) {
+            x25519Point r = new x25519Point();
+            int bl = x.bitLength();
+            for (int i = 0; i < bl; i++) {
+                if (x.testBit(i)) {
+                    r = r.add(p);
+                }
+                p = p.x2();
+            }
+            return r;
+        }
+
+        BigInteger sub(BigInteger a, BigInteger b) {
+            BigInteger s = a.subtract(b);
+            if (s.compareTo(BigInteger.ZERO) < 0) {
+                return p.add(s);
+            }
+            return s;
+        }
+
+//        @Override
+//        Point add(Point a, Point b) {
+//            return new x25519Point(a).add(new x25519Point(b)).toPoint();
+//        }
+        
+        class x25519Point extends xPoint {
+
+            BigInteger T;
+
+            x25519Point(Point p) {
+                Z = BigInteger.ONE;
+                X = p.x;
+                Y = p.y;
+                T = p.x.multiply(p.y);
+            }
+
+            x25519Point() {
+                X = BigInteger.ZERO;
+                Y = BigInteger.ONE;
+                Z = BigInteger.ONE;
+                T = BigInteger.ZERO;
+            }
+
+            x25519Point(BigInteger X, BigInteger Y, BigInteger Z, BigInteger T) {
+                this.X = X;
+                this.Y = Y;
+                this.Z = Z;
+                this.T = T;
+            }
+
+            @Override
+            x25519Point add(xPoint sb) {
+                x25519Point b = (x25519Point) sb;
+                BigInteger A = sub(Y, X).multiply(sub(b.Y,b.X)).mod(p);
+                BigInteger B = Y.add(X).multiply(b.Y.add(b.X)).mod(p);
+                BigInteger C = T.multiply(BigInteger.TWO).multiply(d).mod(p).multiply(b.T).mod(p);
+                BigInteger D = Z.multiply(BigInteger.TWO).multiply(b.Z).mod(p);
+                BigInteger E = sub(B,A);
+                BigInteger F = sub(D,C);
+                BigInteger G = D.add(C).mod(p);
+                BigInteger H = B.add(A).mod(p);
+                BigInteger X2 = E.multiply(F).mod(p);
+                BigInteger Y2 = G.multiply(H).mod(p);
+                BigInteger T2 = E.multiply(H).mod(p);
+                BigInteger Z2 = F.multiply(G).mod(p);
+                return new x25519Point(X2, Y2, Z2, T2);
+            }
+
+            @Override
+            x25519Point x2() {
+                BigInteger A = X.modPow(BigInteger.TWO, p);
+                BigInteger B = Y.modPow(BigInteger.TWO, p);
+                BigInteger C = Z.modPow(BigInteger.TWO, p).multiply(BigInteger.TWO).mod(p);
+                BigInteger H = A.add(B).mod(p);
+                BigInteger E = sub(H,X.add(Y).modPow(BigInteger.TWO, p));
+                BigInteger G = sub(A,B);
+                BigInteger F = C.add(G).mod(p);
+                BigInteger X2 = E.multiply(F).mod(p);
+                BigInteger Y2 = G.multiply(H).mod(p);
+                BigInteger T2 = E.multiply(H).mod(p);
+                BigInteger Z2 = F.multiply(G).mod(p);
+                return new x25519Point(X2, Y2, Z2, T2);
+            }
+        }
     }
 
     /**
@@ -352,6 +370,114 @@ public class EdDSA implements SignVerify {
     public static class EdWards448 extends EllipticCurve {
         public EdWards448() {
             super( Ed448, P448, 456, 2, 447, 1, D448, B448, new SHAKE256(114*8),L448); // 448 + 8
+        }
+
+        /**
+         * 5.2.3. Decoding.
+         * @param code 5.2.2で符号化されたもの
+         * @return 復元Point
+         */
+        @Override
+        public Point decXY(byte[] code) {
+            // 1.
+            byte[] by = rev(code);
+            int x_0 = by[0] & 0x80;
+            by[0] &= 0x7f;
+            BigInteger y = new BigInteger(by); //new BigInteger(by);
+            if (y.compareTo(p) >= 0) {
+                throw new IllegalStateException();
+            }
+            // 2.
+            BigInteger yy = y.modPow(BigInteger.TWO, p); // y.modPow(BigInteger.TWO, curve.p);
+            BigInteger u = yy.subtract(BigInteger.ONE).mod(p);
+            BigInteger v = d.multiply(yy).subtract(BigInteger.ONE).mod(p);
+            BigInteger uv = u.multiply(v).mod(p);
+            
+            BigInteger x = u.multiply(uv.modPow(p.subtract(THREE).divide(FOUR), p)).mod(p);
+            // 3.
+            //BigInteger vxx = uv.multiply(v).mod(curve.p);
+            BigInteger vxx = v.multiply(x.modPow(BigInteger.TWO, p)).mod(p);
+            if ( !vxx.equals(u) ) {
+                throw new IllegalStateException();
+            }
+            // 4.
+            if ( x_0 != 0 ) {
+                if ( x.equals(BigInteger.ZERO)) {
+                    throw new IllegalStateException();
+                } else {
+                    x = p.subtract(x);
+                }
+            }
+            return new Point(x,y);
+        }
+
+        @Override
+        x448Point toxPoint(Point x) {
+            return new x448Point(x);
+        }
+
+        @Override
+        xPoint nE(BigInteger x, xPoint p) {
+            x448Point r = new x448Point();
+            int bl = x.bitLength();
+            for (int i = 0; i < bl; i++) {
+                if (x.testBit(i)) {
+                    r = r.add((x448Point)p);
+                }
+                p = p.x2();
+            }
+            return r;
+        }
+        
+        class x448Point extends xPoint {
+
+            x448Point(Point p) {
+                X = p.x;
+                Y = p.y;
+                Z = BigInteger.ONE;
+            }
+
+            x448Point() {
+                X = BigInteger.ZERO;
+                Y = BigInteger.ONE;
+                Z = BigInteger.ONE;
+            }
+            
+            x448Point(BigInteger x, BigInteger y, BigInteger z) {
+                X = x;
+                Y = y;
+                Z = z;
+            }
+            
+            @Override
+            x448Point add(xPoint b) {
+                BigInteger A = Z.multiply(b.Z).mod(p);
+                BigInteger B = A.multiply(A).mod(p);
+                BigInteger C = X.multiply(b.X).mod(p);
+                BigInteger D = Y.multiply(b.Y).mod(p);
+                BigInteger E = d.multiply(C).mod(p).multiply(D).mod(p);
+                BigInteger F = B.subtract(E).mod(p);
+                BigInteger G = B.add(E).mod(p);
+                BigInteger H = X.add(Y).mod(p).multiply(b.X.add(b.Y).mod(p)).mod(p);
+                BigInteger X1 = A.multiply(F).mod(p).multiply(p.add(p).add(H).subtract(C.add(D)).mod(p));
+                BigInteger Y1 = A.multiply(G).mod(p).multiply(p.add(D).subtract(C).mod(p)).mod(p);
+                BigInteger Z1 = F.multiply(G).mod(p);
+                return new x448Point(X1,Y1,Z1);
+            }
+
+            @Override
+            x448Point x2() {
+                BigInteger B = X.add(Y).modPow(BigInteger.TWO, p);
+                BigInteger C = X.modPow(BigInteger.TWO, p);
+                BigInteger D = Y.modPow(BigInteger.TWO, p);
+                BigInteger E = C.add(D);
+                BigInteger H = Z.modPow(BigInteger.TWO, p);
+                BigInteger J = E.subtract(H.shiftLeft(1)).mod(p);
+                BigInteger X1 = B.subtract(E).multiply(J).mod(p);
+                BigInteger Y1 = E.multiply(C.subtract(D)).mod(p);
+                BigInteger Z1 = E.multiply(J).mod(p);
+                return new x448Point(X1,Y1,Z1);
+            }
         }
     }
 
@@ -403,13 +529,13 @@ public class EdDSA implements SignVerify {
     }
 
     /**
-     *
      * Little Endian 変換.
      *
-     * @param src
-     * @return
+     * @param src 数
+     * @param len バイト長
+     * @return LE列
      */
-    byte[] itob(BigInteger src, int len) {
+    static byte[] itob(BigInteger src, int len) {
         byte[] code = src.toByteArray();
         byte[] dst = new byte[len];
         if (code[0] < 0 && dst.length > code.length) {
@@ -474,8 +600,6 @@ public class EdDSA implements SignVerify {
 
     /**
      * 5.1.5. 鍵の生成
-     * 秘密鍵は乱数
-     * スカラー s
      * 公開鍵
      *
      * @return 公開鍵
@@ -490,25 +614,23 @@ public class EdDSA implements SignVerify {
     @Override
     public byte[] sign() {
         EllipticCurve curve = pkey.curve();
-        BigInteger r = btoi(curve.H.digest());
-        // r を　L で約分 (省略可?)
-        r = r.mod(curve.L);
-        Point R = curve.nE(r);
-        curve.H.update(R.encXY(curve.b));
+        BigInteger r = btoi(curve.H.digest()).mod(curve.L);
+        byte[] R = curve.nE(r).encXY(curve.b);
+        curve.H.update(R);
         curve.H.update(pkey.getA());
         byte[] phM = block.toByteArray(); //curve.PH(); // PH(M)
-        byte[] k = curve.H.digest(phM);
-        BigInteger S = r.add(btoi(k).multiply(pkey.gets())).mod(curve.L);
+        BigInteger k = btoi(curve.H.digest(phM)).mod(curve.L);
+        BigInteger S = r.add(k.multiply(pkey.gets())).mod(curve.L);
         PacketA d = new PacketA();
-        d.write(R.encXY(curve.b));
+        d.write(R);
         d.write(itob(S, curve.b / 8));
         
         preSign();
         return d.toByteArray();
     }
-    
+
     /**
-     *
+     * 検証. Verify.
      * @param sign
      * @return
      */
@@ -516,19 +638,22 @@ public class EdDSA implements SignVerify {
     public boolean verify(byte[] sign) {
         EdWards25519 curve = new EdWards25519();
         int hlen = curve.b / 8;
-        byte[] R = Arrays.copyOfRange(sign, 0, hlen);
-        byte[] S = Arrays.copyOfRange(sign, hlen, hlen * 2);
-        byte[] A = pubKey.getA();
+        byte[] Rb = Arrays.copyOfRange(sign, 0, hlen);
+        BigInteger S = btoi(Arrays.copyOfRange(sign, hlen, hlen * 2));
+        if ( S.compareTo(curve.L) >= 0) {
+            throw new IllegalStateException();
+        }
+        byte[] Ab = pubKey.getA();
         byte[] phM = block.toByteArray();
         curve.H.reset();
-        curve.H.update(R);
-        curve.H.update(A);
+        curve.H.update(Rb);
+        curve.H.update(Ab);
         byte[] h = curve.H.digest(phM);
-        Point SB = curve.nE(btoi(S));
-        Point HA = curve.nE(btoi(h), Point.decXY(A, curve));
-        byte[] NSB = SB.encXY(curve.b);
-        byte[] NHA = HA.encXY(curve.b);
-
-        return Arrays.compare(NSB, NHA) == 0;
+        BigInteger k = btoi(h).mod(curve.L);
+        Point R = curve.decXY(Rb);
+        Point A = curve.decXY(Ab);
+        Point RkA = curve.add(R, curve.nE(k, A));
+        Point SB = curve.nE(S, curve.B);
+        return SB.equals(RkA);
     }
 }
