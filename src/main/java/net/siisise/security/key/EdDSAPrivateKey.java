@@ -48,7 +48,7 @@ public class EdDSAPrivateKey implements PrivateKey {
     public EdDSAPrivateKey(EdDSA.EllipticCurve curve, byte[] k) {
         this.curve = curve;
         this.key = k.clone();
-        h = curve.digest(k);
+        init();
     }
 
     @Override
@@ -110,9 +110,18 @@ public class EdDSAPrivateKey implements PrivateKey {
             byte[] hc = Arrays.copyOfRange(h, 0, hlen);
             hc[0] &= 0xff << curve.c;
             hc = EdDSA.rev(hc);
+            int n = hc.length - curve.n / 8 - 1;
+            // Ed448
+            for ( int i = 0; i < n; i++) {
+                hc[i] = 0;
+            }
+            // Ed25519
             hc[0] &= 0x7f;
-            s = new BigInteger(hc).setBit(curve.n);
-            A = curve.nE(s).encXY(curve.b);
+            
+            hc[n] |= 1 << (curve.n % 8);
+            
+            s = new BigInteger(hc);//.setBit(getCurve.n);
+            A = curve.nE(s);
         }
         return h.clone();
     }
@@ -129,7 +138,7 @@ public class EdDSAPrivateKey implements PrivateKey {
         return new EdDSAPublicKey(curve,A);
     }
     
-    public EdDSA.EllipticCurve curve() {
+    public EdDSA.EllipticCurve getCurve() {
         return curve;
     }
 }
