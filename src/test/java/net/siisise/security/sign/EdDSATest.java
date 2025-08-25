@@ -15,21 +15,9 @@
  */
 package net.siisise.security.sign;
 
-import java.security.InvalidKeyException;
-import java.security.KeyFactory;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.Signature;
-import java.security.SignatureException;
-import java.security.interfaces.EdECPrivateKey;
-import java.security.spec.EdECPrivateKeySpec;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.NamedParameterSpec;
 import net.siisise.iso.asn1.ASN1Util;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
 import net.siisise.lang.Bin;
-import net.siisise.security.digest.SHAKE256;
 import net.siisise.security.key.EdDSAPrivateKey;
 import net.siisise.security.key.EdDSAPublicKey;
 import org.junit.jupiter.api.Test;
