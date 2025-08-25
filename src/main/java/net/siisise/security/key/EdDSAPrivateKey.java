@@ -26,26 +26,26 @@ import net.siisise.security.sign.EdDSA;
 
 /**
  * EdDSA 秘密鍵.
- * 
+ *
  */
 public class EdDSAPrivateKey implements PrivateKey {
 
-    final EdDSA.EllipticCurve curve;
+    final EdDSA.EdWards curve;
     byte[] key;
     byte[] h;
     BigInteger s;
     byte[] A;
-    
+
     public EdDSAPrivateKey(byte[] k) {
         this(new EdDSA.EdWards25519(), k);
     }
 
     /**
-     * 
+     *
      * @param curve 曲線
      * @param k 秘密鍵
      */
-    public EdDSAPrivateKey(EdDSA.EllipticCurve curve, byte[] k) {
+    public EdDSAPrivateKey(EdDSA.EdWards curve, byte[] k) {
         this.curve = curve;
         this.key = k.clone();
         init();
@@ -72,6 +72,7 @@ public class EdDSAPrivateKey implements PrivateKey {
 
     /**
      * 鍵
+     *
      * @return OneAsymmetricKey
      */
     @Override
@@ -80,16 +81,17 @@ public class EdDSAPrivateKey implements PrivateKey {
     }
 
     public byte[] getPKCS8Encoded() {
-        ASN1DERFormat af = new ASN1DERFormat(); 
-        OneAsymmetricKey k = new OneAsymmetricKey(curve.oid, rebind(af)); 
+        ASN1DERFormat af = new ASN1DERFormat();
+        OneAsymmetricKey k = new OneAsymmetricKey(curve.oid, rebind(af));
         return k.rebind(af);
     }
-    
+
     /**
      * PrivateKeyInfo の privateKey PrivateKeyの内側の形式
+     *
      * @param <T>
      * @param format
-     * @return 
+     * @return
      */
     public <T> T rebind(TypeFormat<T> format) {
         OCTETSTRING k = new OCTETSTRING(this.key);
@@ -99,46 +101,46 @@ public class EdDSAPrivateKey implements PrivateKey {
     /**
      * ハッシュ化された鍵
      * EdDSAでは乱数の代わりに使われる
+     *
      * @return ハッシュ化された秘密鍵
      */
     public byte[] init() {
         if (h == null) {
-            h = curve.digest(key);
+            h = curve.H().digest(key);
         }
-        if ( A == null ) {
+        if (A == null) {
             int hlen = curve.b / 8;
             byte[] hc = Arrays.copyOfRange(h, 0, hlen);
             hc[0] &= 0xff << curve.c;
             hc = EdDSA.rev(hc);
             int n = hc.length - curve.n / 8 - 1;
-            // Ed448
-            for ( int i = 0; i < n; i++) {
+            for (int i = 0; i < n; i++) {
                 hc[i] = 0;
             }
-            // Ed25519
-            hc[0] &= 0x7f;
-            
+            hc[n] &= 0xff >>> (7 - (curve.n % 8));
             hc[n] |= 1 << (curve.n % 8);
-            
-            s = new BigInteger(hc);//.setBit(getCurve.n);
+            // 01xxxxxx
+            // 1xxxxxxx
+
+            s = new BigInteger(hc).mod(curve.L);
             A = curve.nE(s);
         }
         return h.clone();
     }
-    
+
     public BigInteger gets() {
         return s;
     }
-    
+
     public byte[] getA() {
         return A;
     }
 
     public EdDSAPublicKey getPublicKey() {
-        return new EdDSAPublicKey(curve,A);
+        return new EdDSAPublicKey(curve, A);
     }
-    
-    public EdDSA.EllipticCurve getCurve() {
+
+    public EdDSA.EdWards getCurve() {
         return curve;
     }
 }

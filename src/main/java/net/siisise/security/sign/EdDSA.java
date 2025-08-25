@@ -44,29 +44,16 @@ public class EdDSA implements SignVerify {
     public static final OBJECTIDENTIFIER Ed448 = new OBJECTIDENTIFIER("1.3.101.113");
 
     /**
-     * Ed25519 32byte 256bit
-     * Ed448
-     */
-    EdDSAPrivateKey pkey;
-    EdDSAPublicKey pubKey;
-
-    byte[] dom;
-    PacketA block = new PacketA();
-    
-    /**
      * パラメータ. ECDSAと同じ? RFC 8032 3.のパラメータ
      */
-    public abstract static class EllipticCurve {
+    public abstract static class EdWards {
+
         public final OBJECTIDENTIFIER oid;
 
         // 1. GF(p) 奇数
         final BigInteger p;
         // 2. 鍵と署名のサイズの元 2^(b-1) > p
         public final int b;
-        // 3. 有限体 GF(p)の要素のb-1ビットエンコーディング
-        // ENC のことか?
-        // 4. 暗号ハッシュ関数H 25519はSHA512 449はSHAKE EdDSA用 Curveとは別
-        final MessageDigest H;
         // 5. 対数 c 2または3
         // c <= n < b 上位ビットから有効なビット数
         public final int c;
@@ -77,17 +64,20 @@ public class EdDSA implements SignVerify {
         // 8. GF(p)の非ゼロの正方形要素
         private final BigInteger a;
         // 9. B
-        final xPoint B;
+        final Point B;
+        final Point ZP;
         // 10. 素数
-        BigInteger L;
+        public final BigInteger L;
         // 11. prehash
 //        MessageDigest PH;
 
-        byte[] SIG;
-//        int phflag;
+        private final byte[] SIG;
+        /**
+         * 空dom
+         */
         byte[] ID;
-        
-        EllipticCurve(OBJECTIDENTIFIER oid, BigInteger p, int b, int c, int n, int a, BigInteger d, BigInteger Bx, BigInteger By, MessageDigest H, BigInteger L, byte[] SIG, byte[] IC) {
+
+        EdWards(OBJECTIDENTIFIER oid, BigInteger p, int b, int c, int n, int a, BigInteger d, BigInteger Bx, BigInteger By, BigInteger L, byte[] SIG, byte[] IC) {
             this.oid = oid;
             this.p = p;
             this.b = b;
@@ -95,13 +85,14 @@ public class EdDSA implements SignVerify {
             this.n = n;
             this.a = BigInteger.valueOf(a);
             this.d = d;
-            this.B = toxPoint(Bx, By);
-            this.H = H;
+//            this.B = decXY(itob(By,b));
+            this.B = toPoint(Bx, By);
+            this.ZP = toPoint(BigInteger.ZERO, BigInteger.ONE);
             this.L = L;
             this.SIG = SIG;
-            this.ID = dom(0,IC);
+            this.ID = dom(0, IC);
         }
-        
+
         /**
          * ハッシュの頭.
          *
@@ -111,19 +102,16 @@ public class EdDSA implements SignVerify {
          */
         final byte[] dom(int x, byte[] y) {
             PacketA dom = new PacketA();
-            if ( y != null ) {
+            if (y != null) {
                 dom.write(SIG);
-                dom.write((byte)x);
-                dom.write((byte)y.length); // 32bit int
+                dom.write((byte) x);
+                dom.write((byte) y.length); // 32bit int
                 dom.write(y);
             }
             return dom.toByteArray();
         }
-
-        public byte[] digest(byte[] s) {
-            H.reset();
-            return H.digest(s);
-        }
+        
+        abstract public MessageDigest H();
 
         /*
          * PH ぷりハッシュ計算.
@@ -135,19 +123,31 @@ public class EdDSA implements SignVerify {
             return x;
         }
 
-        abstract public xPoint decXY(byte[] code);
-
-        BigInteger sub(BigInteger a, BigInteger b) {
-            BigInteger s = a.subtract(b);
-            if (s.compareTo(BigInteger.ZERO) < 0) {
-                return p.add(s);
+        /**
+         * Little Endian 変換.
+         *
+         * @param src 数
+         * @return LE列
+         */
+        public byte[] itob(BigInteger src) {
+            byte[] code = src.toByteArray();
+            byte[] dst = new byte[b/8];
+            if (code[0] < 0 && dst.length > code.length) {
+                Arrays.fill(dst, code.length, dst.length, (byte) 0xff);
             }
-            return s;
+            int offset = 0;
+            for (int i = code.length - 1; i >= 0; i--) {
+                dst[offset++] = code[i];
+            }
+            return dst;
+        }
+        
+        public byte[] ENC(BigInteger s) {
+            return itob(s.mod(L));
         }
 
-        abstract xPoint toxPoint(BigInteger x, BigInteger y);
+        abstract public class Point {
 
-        abstract public class xPoint {
             protected BigInteger X;
             protected BigInteger Y;
             protected BigInteger Z;
@@ -160,31 +160,34 @@ public class EdDSA implements SignVerify {
                     Y = Y.multiply(r).mod(p);
                 }
             }
-            
-            public boolean equals(xPoint p) {
-                reset();
-                p.reset();
-                return X.equals(p.X) && Y.equals(p.Y);
+
+            public boolean equals(Point p) {
+//                reset();
+//                p.reset();
+                return X.multiply(p.Z).subtract(p.X.multiply(Z)).mod(EdWards.this.p).equals(BigInteger.ZERO)
+                    && Y.multiply(p.Z).subtract(p.Y.multiply(Z)).mod(EdWards.this.p).equals(BigInteger.ZERO);
             }
-            
+
             /**
              * 5.1.2. Encoding.
-             * @return 
+             *
+             * @return
              */
             public byte[] encXY() {
                 reset();
 
-                byte[] code = itob(Y, b/8);
+                byte[] code = itob(Y);
                 code[code.length - 1] |= X.testBit(0) ? 0x80 : 0;
                 return code;
             }
-            
-            abstract xPoint add(xPoint x);
-            abstract xPoint x2();
 
-            xPoint nE(BigInteger x) {
-                xPoint r = toxPoint(BigInteger.ZERO,BigInteger.ONE);
-                xPoint p = this;
+            abstract Point add(Point x);
+
+            abstract Point x2();
+
+            Point nE(BigInteger x) {
+                Point r = ZP;
+                Point p = this;
                 int bl = x.bitLength();
                 for (int i = 0; i < bl; i++) {
                     if (x.testBit(i)) {
@@ -195,6 +198,10 @@ public class EdDSA implements SignVerify {
                 return r;
             }
         }
+
+        abstract public Point decXY(byte[] code);
+
+        abstract Point toPoint(BigInteger x, BigInteger y);
 
         public byte[] nE(BigInteger x) {
             return B.nE(x).encXY();
@@ -216,8 +223,7 @@ public class EdDSA implements SignVerify {
 //            new BigInteger("363419362147803445274661903944002267176820680343659030140745099590306164083365386343198191849338272965044442230921818680526749009182718"));
     static final BigInteger L448 = BigInteger.ONE.shiftLeft(446).subtract(new BigInteger("13818066809895115352007386748515426880336692474882178609894547503885"));
 
-    static final BigInteger D448G = P448.add(BigInteger.valueOf(-39081));
-//    static final BigInteger D448G = P448.subtract(BigInteger.valueOf(-39081));
+    static final BigInteger D448G = BigInteger.valueOf(-39081);
     static final BigInteger B448GX = new BigInteger("224580040295924300187604334099896036246789641632564134246125461686950415467406032909029192869357953282578032075146446173674602635247710");
     static final BigInteger B448GY = new BigInteger("298819210078481492676017930443930673437544040154080242095928241372331506189835876003536878655418784733982303233503462500531545062832660");
 //    static final byte[] SIGED25519 = "SigEd25519 no Ed25519 collisions".getBytes(StandardCharsets.ISO_8859_1);
@@ -226,18 +232,25 @@ public class EdDSA implements SignVerify {
     /**
      * RFC 7748 Ed25519 暗号強度 128bit 鍵長 256bit DJB作?
      */
-    public static class EdWards25519 extends EllipticCurve {
+    public static class EdWards25519 extends EdWards {
+
         public EdWards25519() {
-            super(Ed25519, P25519, 256, 3, 254, -1, D25519, B25519X, B25519Y, new SHA512(),L25519, SIG25519, null);
+            super(Ed25519, P25519, 256, 3, 254, -1, D25519, B25519X, B25519Y, L25519, SIG25519, null);
+        }
+        
+        @Override
+        public MessageDigest H() {
+            return new SHA512();
         }
 
         /**
          * 5.1.3. Decoding.
+         *
          * @param code 5.1.2で符号化されたもの
          * @return 復元Point
          */
         @Override
-        public xPoint decXY(byte[] code) {
+        public Point decXY(byte[] code) {
             // 1.
             byte[] by = rev(code);
             boolean x_0 = (by[0] & 0x80) != 0;
@@ -248,13 +261,13 @@ public class EdDSA implements SignVerify {
             }
             // 2.
             BigInteger yy = y.modPow(BigInteger.TWO, p);
-            BigInteger u = sub(yy,BigInteger.ONE);
+            BigInteger u = yy.subtract(BigInteger.ONE);
             BigInteger v = d.multiply(yy).add(BigInteger.ONE).mod(p);
             BigInteger uv = u.multiply(v).mod(p);
             BigInteger x = u.multiply(uv.modPow(p.shiftRight(3), p)).mod(p);
             // 3.
             BigInteger vxx = v.multiply(x.modPow(BigInteger.TWO, p)).mod(p);
-            if ( !vxx.equals(u) ) {
+            if (!vxx.equals(u)) {
                 if (vxx.equals(p.subtract(u))) {
                     BigInteger z = BigInteger.TWO.modPow(p.shiftRight(2), p);
                     x = x.multiply(z).mod(p);
@@ -263,96 +276,106 @@ public class EdDSA implements SignVerify {
                 }
             }
             // 4.
-            if ( x_0 && x.equals(BigInteger.ZERO)) {
+            if (x_0 && x.equals(BigInteger.ZERO)) {
                 throw new IllegalStateException();
             }
             if (x.testBit(0) != x_0) {
                 x = p.subtract(x);
             }
-            return new x25519Point(x,y);
+            return new Point25519(x, y);
         }
-        
+
         @Override
-        x25519Point toxPoint(BigInteger x, BigInteger y) {
-            return new x25519Point(x,y);
+        Point25519 toPoint(BigInteger x, BigInteger y) {
+            return new Point25519(x, y);
         }
 
-        class x25519Point extends xPoint {
+        class Point25519 extends Point {
 
+            // x * y
             BigInteger T;
 
-            x25519Point(BigInteger x, BigInteger y) {
+            Point25519(BigInteger x, BigInteger y) {
                 Z = BigInteger.ONE;
                 X = x;
                 Y = y;
                 T = x.multiply(y).mod(p);
             }
 
-            x25519Point(BigInteger X, BigInteger Y, BigInteger Z, BigInteger T) {
+            Point25519(BigInteger X, BigInteger Y, BigInteger Z, BigInteger T) {
                 this.X = X;
                 this.Y = Y;
                 this.Z = Z;
                 this.T = T;
             }
-            
+
             @Override
             void reset() {
                 super.reset();
-                T = X.multiply(Y);
+                T = X.multiply(Y).mod(p);
             }
 
             @Override
-            x25519Point add(xPoint sb) {
-                x25519Point b = (x25519Point) sb;
-                BigInteger A = sub(Y, X).multiply(sub(b.Y,b.X)).mod(p);
+            Point25519 add(Point sb) {
+                Point25519 b = (Point25519) sb;
+                BigInteger A = Y.subtract(X).multiply(b.Y.subtract(b.X)).mod(p);
                 BigInteger B = Y.add(X).multiply(b.Y.add(b.X)).mod(p);
-                BigInteger C = T.multiply(BigInteger.TWO).multiply(d).mod(p).multiply(b.T).mod(p);
-                BigInteger D = Z.multiply(BigInteger.TWO).multiply(b.Z).mod(p);
-                BigInteger E = sub(B,A);
-                BigInteger F = sub(D,C);
-                BigInteger G = D.add(C).mod(p);
-                BigInteger H = B.add(A).mod(p);
+                BigInteger C = T.multiply(d).shiftLeft(1).mod(p).multiply(b.T).mod(p);
+                BigInteger D = Z.multiply(b.Z).shiftLeft(1).mod(p);
+                BigInteger H = B.add(A);
+                BigInteger E = B.subtract(A);
+                BigInteger G = D.add(C);
+                BigInteger F = D.subtract(C);
+
                 BigInteger X2 = E.multiply(F).mod(p);
                 BigInteger Y2 = G.multiply(H).mod(p);
                 BigInteger T2 = E.multiply(H).mod(p);
                 BigInteger Z2 = F.multiply(G).mod(p);
-                return new x25519Point(X2, Y2, Z2, T2);
+                return new Point25519(X2, Y2, Z2, T2);
             }
 
             @Override
-            x25519Point x2() {
+            Point25519 x2() {
                 BigInteger A = X.modPow(BigInteger.TWO, p);
                 BigInteger B = Y.modPow(BigInteger.TWO, p);
-                BigInteger C = Z.modPow(BigInteger.TWO, p).multiply(BigInteger.TWO).mod(p);
-                BigInteger H = A.add(B).mod(p);
-                BigInteger E = sub(H,X.add(Y).modPow(BigInteger.TWO, p));
-                BigInteger G = sub(A,B);
-                BigInteger F = C.add(G).mod(p);
+                BigInteger C = Z.modPow(BigInteger.TWO, p).shiftLeft(1);
+                BigInteger H = A.add(B);
+                BigInteger E = H.subtract(X.add(Y).modPow(BigInteger.TWO, p)); // B
+                BigInteger G = A.subtract(B);
+                BigInteger F = C.add(G);
+
                 BigInteger X2 = E.multiply(F).mod(p);
                 BigInteger Y2 = G.multiply(H).mod(p);
                 BigInteger T2 = E.multiply(H).mod(p);
                 BigInteger Z2 = F.multiply(G).mod(p);
-                return new x25519Point(X2, Y2, Z2, T2);
+                return new Point25519(X2, Y2, Z2, T2);
             }
         }
     }
-    
+
     /**
      * RFC 7748 Ed448 暗号強度 224bit 鍵長 448bit DJB作?
      * Ed448-Goldilocks
      */
-    public static class EdWards448 extends EllipticCurve {
+    public static class EdWards448 extends EdWards {
+
         public EdWards448() {
-            super( Ed448, P448, 456, 2, 447, 1, D448G, B448GX, B448GY, new SHAKE256(114*8l), L448, SIG448, new byte[0]); // 448 + 8
+            super(Ed448, P448, 456, 2, 447, 1, D448G, B448GX, B448GY, L448, SIG448, new byte[0] ); // 448 + 8
         }
-        
+
+        @Override
+        public MessageDigest H() {
+            return new SHAKE256(114*8l);
+        }
+
         /**
          * 5.2.3. Decoding.
+         *
          * @param code 5.2.2で符号化されたもの
          * @return 復元Point
          */
         @Override
-        public xPoint decXY(byte[] code) {
+        public Point decXY(byte[] code) {
             // 1.
             byte[] by = rev(code);
             boolean x_0 = (by[0] & 0x80) != 0;
@@ -363,32 +386,32 @@ public class EdDSA implements SignVerify {
             }
             // 2.
             BigInteger yy = y.modPow(BigInteger.TWO, p); // y.modPow(BigInteger.TWO, getCurve.p);
-            BigInteger u = yy.subtract(BigInteger.ONE).mod(p);
-            BigInteger v = d.multiply(yy).subtract(BigInteger.ONE).mod(p);
+            BigInteger u = yy.subtract(BigInteger.ONE);
+            BigInteger v = d.multiply(yy).subtract(BigInteger.ONE);
             BigInteger uv = u.multiply(v).mod(p);
-            
+
             BigInteger x = u.multiply(uv.modPow(p.shiftRight(2), p)).mod(p);
             // 3.
             BigInteger vxx = v.multiply(x.modPow(BigInteger.TWO, p)).mod(p);
-            if ( !vxx.equals(u) ) {
+            if (!vxx.equals(u)) {
                 throw new IllegalStateException();
             }
             // 4.
-            if ( x_0 && x.equals(BigInteger.ZERO)) {
+            if (x_0 && x.equals(BigInteger.ZERO)) {
                 throw new IllegalStateException();
             }
             if (x.testBit(0) != x_0) {
                 x = p.subtract(x);
             }
-            return new x448Point(x,y);
-        }
-
-        @Override
-        x448Point toxPoint(BigInteger x, BigInteger y) {
             return new x448Point(x, y);
         }
 
-        class x448Point extends xPoint {
+        @Override
+        x448Point toPoint(BigInteger x, BigInteger y) {
+            return new x448Point(x, y);
+        }
+
+        class x448Point extends Point {
 
             x448Point(BigInteger x, BigInteger y) {
                 Z = BigInteger.ONE;
@@ -403,19 +426,19 @@ public class EdDSA implements SignVerify {
             }
 
             @Override
-            x448Point add(xPoint b) {
+            x448Point add(Point b) {
                 BigInteger A = Z.multiply(b.Z).mod(p);
                 BigInteger B = A.modPow(BigInteger.TWO, p); //.multiply(A).mod(p);
                 BigInteger C = X.multiply(b.X).mod(p);
                 BigInteger D = Y.multiply(b.Y).mod(p);
                 BigInteger E = d.multiply(C).mod(p).multiply(D).mod(p);
-                BigInteger F = sub(B, E);
-                BigInteger G = B.add(E).mod(p);
-                BigInteger H = X.add(Y).mod(p).multiply(b.X.add(b.Y).mod(p)).mod(p);
-                BigInteger X1 = A.multiply(F).mod(p).multiply(sub(sub(H,C),D)).mod(p);
-                BigInteger Y1 = A.multiply(G).mod(p).multiply(sub(D,C)).mod(p);
+                BigInteger F = B.subtract(E);
+                BigInteger G = B.add(E);
+                BigInteger H = X.add(Y).multiply(b.X.add(b.Y)).mod(p);
+                BigInteger X1 = A.multiply(F).mod(p).multiply(H.subtract(C.add(D))).mod(p);
+                BigInteger Y1 = A.multiply(G).mod(p).multiply(D.subtract(C)).mod(p);
                 BigInteger Z1 = F.multiply(G).mod(p);
-                return new x448Point(X1,Y1,Z1);
+                return new x448Point(X1, Y1, Z1);
             }
 
             @Override
@@ -423,13 +446,12 @@ public class EdDSA implements SignVerify {
                 BigInteger B = X.add(Y).modPow(BigInteger.TWO, p);
                 BigInteger C = X.modPow(BigInteger.TWO, p);
                 BigInteger D = Y.modPow(BigInteger.TWO, p);
-                BigInteger E = C.add(D).mod(p);
-                BigInteger H = Z.modPow(BigInteger.TWO, p);
-                BigInteger J = sub(E,(BigInteger.TWO.multiply(H).mod(p)));
-                BigInteger X1 = sub(B,E).multiply(J).mod(p);
-                BigInteger Y1 = E.multiply(sub(C,D)).mod(p);
+                BigInteger E = C.add(D);
+                BigInteger J = E.subtract((Z.modPow(BigInteger.TWO, p).shiftLeft(1)));
+                BigInteger X1 = B.subtract(E).multiply(J).mod(p);
+                BigInteger Y1 = E.multiply(C.subtract(D)).mod(p);
                 BigInteger Z1 = E.multiply(J).mod(p);
-                return new x448Point(X1,Y1,Z1);
+                return new x448Point(X1, Y1, Z1);
             }
         }
     }
@@ -441,6 +463,17 @@ public class EdDSA implements SignVerify {
     public static EdWards448 init448() {
         return new EdWards448();
     }
+
+    /**
+     * Ed25519 32byte 256bit
+     * Ed448
+     */
+    EdDSAPrivateKey pkey;
+    EdDSAPublicKey pubKey;
+    MessageDigest H;
+
+    byte[] dom;
+    PacketA block = new PacketA();
 
     public EdDSA() {
     }
@@ -456,16 +489,6 @@ public class EdDSA implements SignVerify {
         dom = pub.getCurve().ID;
     }
 
-    void preSign() {
-        byte[] hkey = pkey.init();
-        EdDSA.EllipticCurve curve = pkey.getCurve();
-        int hlen = curve.b / 8;
-        MessageDigest h = curve.H;
-        h.reset();
-        h.update(dom);
-        h.update(hkey, hlen, hlen);
-    }
-
     /**
      * 秘密鍵長?
      *
@@ -478,30 +501,10 @@ public class EdDSA implements SignVerify {
 
     @Override
     public void update(byte[] src, int offset, int length) {
-        if ( pkey != null) {
-            pkey.getCurve().H.update(src, offset, length);
+        if (pkey != null) {
+            H.update(src, offset, length);
         }
         block.write(src, offset, length);
-    }
-
-    /**
-     * Little Endian 変換.
-     *
-     * @param src 数
-     * @param len バイト長
-     * @return LE列
-     */
-    static byte[] itob(BigInteger src, int len) {
-        byte[] code = src.toByteArray();
-        byte[] dst = new byte[len];
-        if (code[0] < 0 && dst.length > code.length) {
-            Arrays.fill(dst, code.length, dst.length, (byte) 0xff);
-        }
-        int offset = 0;
-        for (int i = code.length - 1; i >= 0; i--) {
-            dst[offset++] = code[i];
-        }
-        return dst;
     }
 
     /**
@@ -513,7 +516,7 @@ public class EdDSA implements SignVerify {
     static BigInteger btoi(byte[] src) {
         int offset = src.length + ((src[src.length - 1] < 0) ? 1 : 0);
         byte[] code = new byte[offset];
-        
+
         for (int i = 0; i < src.length; i++) {
             code[--offset] = src[i];
         }
@@ -537,13 +540,13 @@ public class EdDSA implements SignVerify {
      * @param curve 曲線
      * @return OCTETSTRING な形式?
      */
-    public byte[] genPrvKey(EllipticCurve curve) {
+    public byte[] genPrvKey(EdWards curve) {
         byte[] key = new byte[curve.b / 8]; // ?
         SecureRandom srnd;
         try {
             srnd = SecureRandom.getInstanceStrong();
             srnd.nextBytes(key);
-            pkey = new EdDSAPrivateKey(curve,key);
+            pkey = new EdDSAPrivateKey(curve, key);
             dom = curve.ID;
             preSign();
             OCTETSTRING oct = new OCTETSTRING(key);
@@ -561,7 +564,19 @@ public class EdDSA implements SignVerify {
      * @return 公開鍵
      */
     public byte[] genPubKey() {
-        return pkey.getPublicKey().getA();
+        if (pubKey == null) {
+            pubKey = pkey.getPublicKey();
+        }
+        return pubKey.getA();
+    }
+
+    void preSign() {
+        byte[] hkey = pkey.init();
+        EdDSA.EdWards curve = pkey.getCurve();
+        int hlen = curve.b / 8;
+        H = curve.H();
+        H.update(dom);
+        H.update(hkey, hlen, hlen); // prefix
     }
 
     /**
@@ -571,55 +586,56 @@ public class EdDSA implements SignVerify {
      */
     @Override
     public byte[] sign() {
-        EllipticCurve curve = pkey.getCurve();
+        EdWards curve = pkey.getCurve();
         // 2.
-        BigInteger r = btoi(curve.H.digest()).mod(curve.L);
+        BigInteger r = btoi(H.digest()).mod(curve.L);
         // 3.
-        byte[] R = curve.B.nE(r).encXY();
-        curve.H.update(dom);
-        curve.H.update(R);
-        curve.H.update(pkey.getA());
+        byte[] R = curve.nE(r); // チェック済み
+        H.update(dom);
+        H.update(R);
+        H.update(pkey.getA());
         byte[] phM = block.toByteArray(); //curve.PH(); // PH(M)
-        curve.H.update(phM);
-        BigInteger k = btoi(curve.H.digest()).mod(curve.L);
+        H.update(phM);
 
+        BigInteger k = btoi(H.digest()).mod(curve.L);
         BigInteger s = pkey.gets();
-        BigInteger SI = r.add(k.multiply(s).mod(curve.L)).mod(curve.L);
-        byte[] S = itob(SI, curve.b / 8);
+        byte[] S = curve.ENC(r.add(k.multiply(s)));
         PacketA d = new PacketA();
-        d.write(R);
-        d.write(S);
-        
+        d.dwrite(R);
+        d.dwrite(S);
+
         preSign();
         return d.toByteArray();
     }
 
     /**
      * 検証. Verify.
+     *
      * @param sign
      * @return
      */
     @Override
     public boolean verify(byte[] sign) {
-        EllipticCurve curve = pubKey.getCurve();
+        byte[] Ab = genPubKey();
+        EdWards curve = pubKey.getCurve();
         int hlen = curve.b / 8;
         byte[] Rb = Arrays.copyOfRange(sign, 0, hlen);
         BigInteger S = btoi(Arrays.copyOfRange(sign, hlen, hlen * 2));
-        if ( S.compareTo(curve.L) >= 0) {
+        System.out.println("S:" + S);
+        if (S.compareTo(curve.L) >= 0) {
             throw new IllegalStateException();
         }
-        byte[] Ab = pubKey.getA();
         byte[] phM = block.toByteArray();
-        curve.H.reset();
-        curve.H.update(dom);
-        curve.H.update(Rb);
-        curve.H.update(Ab);
-        byte[] h = curve.H.digest(phM);
+        H = curve.H();
+        H.update(dom);
+        H.update(Rb);
+        H.update(Ab);
+        byte[] h = H.digest(phM);
         BigInteger k = btoi(h).mod(curve.L);
-        EllipticCurve.xPoint R = curve.decXY(Rb);
-        EllipticCurve.xPoint A = curve.decXY(Ab);
-        EllipticCurve.xPoint RkA = R.add(A.nE(k));
-        EllipticCurve.xPoint SB = curve.B.nE(S);
+        EdWards.Point R = curve.decXY(Rb);
+        EdWards.Point A = curve.decXY(Ab);
+        EdWards.Point RkA = R.add(A.nE(k));
+        EdWards.Point SB = curve.B.nE(S);
         return SB.equals(RkA);
     }
 }

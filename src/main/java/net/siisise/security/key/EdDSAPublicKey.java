@@ -21,15 +21,15 @@ import net.siisise.security.sign.EdDSA;
  * EdDSAの公開鍵.
  */
 public class EdDSAPublicKey {
-    EdDSA.EllipticCurve curve;
+    EdDSA.EdWards curve;
     byte[] A;
 
-    public EdDSAPublicKey(EdDSA.EllipticCurve curve, byte[] A) {
+    public EdDSAPublicKey(EdDSA.EdWards curve, byte[] A) {
         this.curve = curve;
         this.A = A;
     }
     
-    public EdDSA.EllipticCurve getCurve() {
+    public EdDSA.EdWards getCurve() {
         return curve;
     }
     

@@ -292,7 +292,7 @@ public class Keccak extends BlockMessageDigest {
      */
     byte[] pad10x1() {
         int rblen = r / 8; // R * 8;
-        int padlen = rblen - (int) ((pac.size() + 1) % rblen) + 1;
+        int padlen = rblen - (pac.size() % rblen);
         byte[] pad = new byte[padlen];
         pad[0] |= padstart; // 種類判定用おまけbitが付く
         pad[padlen - 1] |= 0x80;
