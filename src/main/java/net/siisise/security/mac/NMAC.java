@@ -16,13 +16,14 @@
 package net.siisise.security.mac;
 
 import java.security.MessageDigest;
+import net.siisise.io.Output;
 
 /**
  * RFC 6151
  * HMAC の元のように書かれているNMAC
  * H(key1 H(key2 M))
  */
-public class NMAC implements MAC {
+public class NMAC extends Output.AbstractOutput implements MAC {
     
     MessageDigest md;
     byte[] k1;

@@ -18,6 +18,7 @@ package net.siisise.security.sign;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import net.siisise.io.Output;
 
 /**
  * デジタル署名 署名・検証 をまとめる
@@ -61,5 +62,11 @@ public interface SignVerify extends Signer,Verifyer {
     @Override
     default boolean verify(byte[] signature) {
         return Arrays.equals(sign(), signature);
+    }
+
+    @Override
+    default public Output put(byte[] data, int offset, int length) {
+        update(data, offset, length);
+        return this;
     }
 }

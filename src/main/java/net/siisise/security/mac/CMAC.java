@@ -15,6 +15,7 @@
  */
 package net.siisise.security.mac;
 
+import net.siisise.io.Output;
 import net.siisise.io.Packet;
 import net.siisise.io.PacketA;
 import net.siisise.lang.Bin;
@@ -41,7 +42,7 @@ import net.siisise.security.block.Block;
  * RFC 4493 The AES-CMAC Algorithm.
  * NIST SP 800-38B Recommendation for Block Cipher Modes of Operation: The CMAC Mode for Authentication.
  */
-public class CMAC implements MAC {
+public class CMAC extends Output.AbstractOutput implements MAC {
 
     private final Block block; // E
     private MacCBC cbc;

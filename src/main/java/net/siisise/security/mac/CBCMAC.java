@@ -15,6 +15,7 @@
  */
 package net.siisise.security.mac;
 
+import net.siisise.io.Output;
 import net.siisise.io.Packet;
 import net.siisise.io.PacketA;
 import net.siisise.security.block.Block;
@@ -26,7 +27,7 @@ import net.siisise.security.block.Block;
  * ISO/IEC 9797-1
  *
  */
-public class CBCMAC implements MAC {
+public class CBCMAC extends Output.AbstractOutput implements MAC {
 
     Block block;
     /** ブロック出力なしMACのみ */

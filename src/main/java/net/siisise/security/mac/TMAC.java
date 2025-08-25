@@ -15,6 +15,7 @@
  */
 package net.siisise.security.mac;
 
+import net.siisise.io.Output;
 import net.siisise.security.block.Block;
 
 /**
@@ -22,7 +23,7 @@ import net.siisise.security.block.Block;
  * @deprecated まだ未実装、古いので使わない方がよさそ
  */
 @Deprecated
-public class TMAC implements MAC {
+public class TMAC extends Output.AbstractOutput implements MAC {
     private final Block block;
     MacCBC cbc;
     byte[] k2;

@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.List;
 import net.siisise.bind.Rebind;
 import net.siisise.ietf.pkcs1.PKCS1;
+import net.siisise.io.Output;
 import net.siisise.iso.asn1.ASN1Util;
 import net.siisise.iso.asn1.tag.ASN1DERFormat;
 import net.siisise.iso.asn1.tag.SEQUENCE;
@@ -47,7 +48,7 @@ import net.siisise.iso.asn1.tag.SEQUENCE;
  *  k 乱数値 毎回必要
  * 
  */
-public class DSA implements SignVerify {
+public class DSA extends Output.AbstractOutput implements SignVerify {
     
     private DSAPrivateKey signKey;
     private DSAPublicKey verifyKey;

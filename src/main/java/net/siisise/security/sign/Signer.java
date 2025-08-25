@@ -15,10 +15,12 @@
  */
 package net.siisise.security.sign;
 
+import net.siisise.io.Output;
+
 /**
  * 署名用.
  */
-public interface Signer {
+public interface Signer extends Output {
     /**
      * メッセージ本文の追加.
      * @param src 
@@ -35,4 +37,10 @@ public interface Signer {
      * @return signature
      */
     byte[] sign();
+
+    @Override
+    default public Output put(byte[] data, int offset, int length) {
+        update(data, offset, length);
+        return this;
+    }
 }

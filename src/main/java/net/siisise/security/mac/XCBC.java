@@ -16,6 +16,7 @@
 package net.siisise.security.mac;
 
 import java.util.Arrays;
+import net.siisise.io.Output;
 import net.siisise.io.Packet;
 import net.siisise.io.PacketA;
 import net.siisise.lang.Bin;
@@ -26,7 +27,7 @@ import net.siisise.security.block.Block;
  * XCBC-MAC-1
  * RFC 3664,4434 AES-XCBC-PRF-128 疑似乱数
  */
-public class XCBC implements MAC {
+public class XCBC extends Output.AbstractOutput implements MAC {
 
     private final Block block;
     private MacCBC cbc;

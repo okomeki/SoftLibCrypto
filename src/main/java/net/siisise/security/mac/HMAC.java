@@ -19,6 +19,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import javax.crypto.SecretKey;
 import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
+import net.siisise.io.Output;
 import net.siisise.iso.asn1.tag.NULL;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.security.digest.BlockMessageDigest;
@@ -70,7 +71,7 @@ import net.siisise.security.digest.SHA512256;
  *                          HMAC-SHA-384, and HMAC-SHA-512
  * RFC 6234 US Secure Hash Algorithms (SHA and SHA-based HMAC and HKDF)
  */
-public class HMAC implements MAC {
+public class HMAC extends Output.AbstractOutput implements MAC {
 
     public static final OBJECTIDENTIFIER RSADSI = new OBJECTIDENTIFIER("1.2.840.113549");
     public static final OBJECTIDENTIFIER DIGESTALGORITHM = RSADSI.sub(2);

@@ -15,6 +15,7 @@
  */
 package net.siisise.ietf.pkcs5;
 
+import net.siisise.io.Output;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.security.mac.MAC;
 
@@ -22,7 +23,7 @@ import net.siisise.security.mac.MAC;
  * PKCS #5
  * RFC 8018 7.1. PBMAC1
  */
-public class PBMAC1 implements MAC {
+public class PBMAC1 extends Output.AbstractOutput implements MAC {
     public static final OBJECTIDENTIFIER id_PBMAC1 = PBKDF2.PKCS5.sub(14);
 
     private final PBKDF2 kdf;

@@ -17,14 +17,15 @@ package net.siisise.security.sign;
 
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import net.siisise.io.Output;
 import net.siisise.io.PacketA;
 import net.siisise.iso.asn1.tag.ASN1DERFormat;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
+import net.siisise.security.digest.BlockMessageDigest;
 import net.siisise.security.digest.SHA512;
 import net.siisise.security.digest.SHAKE256;
 import net.siisise.security.key.EdDSAPrivateKey;
@@ -36,7 +37,7 @@ import net.siisise.security.key.EdDSAPublicKey;
  * 秘密鍵
  * 署名 64byte 512bit
  */
-public class EdDSA implements SignVerify {
+public class EdDSA extends Output.AbstractOutput implements SignVerify {
 
     public static final OBJECTIDENTIFIER X25519 = new OBJECTIDENTIFIER("1.3.101.110");
     public static final OBJECTIDENTIFIER X448 = new OBJECTIDENTIFIER("1.3.101.111");
@@ -111,7 +112,7 @@ public class EdDSA implements SignVerify {
             return dom.toByteArray();
         }
         
-        abstract public MessageDigest H();
+        abstract public BlockMessageDigest H();
 
         /*
          * PH ぷりハッシュ計算.
@@ -239,7 +240,7 @@ public class EdDSA implements SignVerify {
         }
         
         @Override
-        public MessageDigest H() {
+        public BlockMessageDigest H() {
             return new SHA512();
         }
 
@@ -364,7 +365,7 @@ public class EdDSA implements SignVerify {
         }
 
         @Override
-        public MessageDigest H() {
+        public BlockMessageDigest H() {
             return new SHAKE256(114*8l);
         }
 
@@ -470,7 +471,7 @@ public class EdDSA implements SignVerify {
      */
     EdDSAPrivateKey pkey;
     EdDSAPublicKey pubKey;
-    MessageDigest H;
+    BlockMessageDigest H;
 
     byte[] dom;
     PacketA block = new PacketA();

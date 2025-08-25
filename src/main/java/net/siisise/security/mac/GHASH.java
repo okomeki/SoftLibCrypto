@@ -16,6 +16,7 @@
 package net.siisise.security.mac;
 
 import net.siisise.io.FIFOPacket;
+import net.siisise.io.Output;
 import net.siisise.lang.Bin;
 import net.siisise.lang.ParamThread;
 import net.siisise.math.GFRev;
@@ -26,7 +27,7 @@ import net.siisise.math.GFRev;
  * RFC 4543 GMAC の元
  *
  */
-public class GHASH implements MAC {
+public class GHASH extends Output.AbstractOutput implements MAC {
 
     // hash subkey Cache
     GFRev H;

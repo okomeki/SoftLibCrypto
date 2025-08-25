@@ -15,12 +15,13 @@
  */
 package net.siisise.security.mac;
 
+import net.siisise.io.Output;
 import net.siisise.security.block.Block;
 
 /**
  *
  */
-public class GMAC implements MAC {
+public class GMAC extends Output.AbstractOutput implements MAC {
     private Block block;
     GHASH hash;
 

@@ -16,6 +16,7 @@
 package net.siisise.security.sign;
 
 import java.nio.ByteBuffer;
+import net.siisise.io.Output;
 import net.siisise.security.key.RSAMiniPrivateKey;
 import net.siisise.security.key.RSAPrivateCrtKey;
 import net.siisise.security.key.RSAPublicKey;
@@ -25,7 +26,7 @@ import net.siisise.security.key.RSAPublicKey;
  * modulus より長いデータの署名に向いている
  * https://www.cryptrec.go.jp/en/cryptrec_03_spec_cypherlist_files/PDF/pkcs-1v2-12.pdf
  */
-public abstract class RSASSA implements SignVerify {
+public abstract class RSASSA extends Output.AbstractOutput implements SignVerify {
     final EMSA emsa;
     private RSAMiniPrivateKey skey;
     private RSAPublicKey pkey;

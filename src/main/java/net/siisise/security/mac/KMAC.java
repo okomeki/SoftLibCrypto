@@ -15,6 +15,7 @@
  */
 package net.siisise.security.mac;
 
+import net.siisise.io.Output;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.security.digest.SHA3Derived;
 import net.siisise.security.digest.cSHAKE;
@@ -25,7 +26,7 @@ import net.siisise.security.key.KDF;
  * NIST SP 800-185
  * MACかXOF
  */
-public abstract class KMAC implements MAC, KDF {
+public abstract class KMAC extends Output.AbstractOutput implements MAC, KDF {
     private cSHAKE cshake;
     protected long L;
 

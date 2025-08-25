@@ -30,6 +30,10 @@ PKCS #1 ぜんぶ RSA系
   - EME-PKCS1_v1_5
 - RSASSA-PSS
 - RSASSA-PKCS1_v1_5
+- DSA
+- EdDSA
+  - Ed25519
+  - Ed448
 など
 
 ## 共通鍵 Block 暗号

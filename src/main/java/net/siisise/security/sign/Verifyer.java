@@ -15,11 +15,13 @@
  */
 package net.siisise.security.sign;
 
+import net.siisise.io.Output;
+
 /**
  * 検証用.
  * 鍵の設定が別途必要.
  */
-public interface Verifyer {
+public interface Verifyer extends Output {
     /**
      * メッセージ本文の追加.
      * @param src 
@@ -37,4 +39,10 @@ public interface Verifyer {
      * @return 検証結果
      */
     boolean verify(byte[] signature);
+
+    @Override
+    default public Output put(byte[] data, int offset, int length) {
+        update(data, offset, length);
+        return this;
+    }
 }
