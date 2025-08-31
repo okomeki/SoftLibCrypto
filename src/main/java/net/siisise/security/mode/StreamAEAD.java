@@ -36,7 +36,7 @@ public interface StreamAEAD extends Stream {
     /**
      * 必要なパラメータ長の確認.
      * 
-     * @return 
+     * @return パラメータ長の配列
      */
     int[] getParamLength();
     /**

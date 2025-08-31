@@ -25,7 +25,7 @@ import net.siisise.io.Output;
  * MAC,RSASSA
  * 鍵生成も必要?
  */
-public interface SignVerify extends Signer,Verifyer {
+public interface SignVerify extends Signer, Verifyer {
 
     default byte[] keyGen() {
         byte[] key = new byte[getKeyLength()];
@@ -36,22 +36,23 @@ public interface SignVerify extends Signer,Verifyer {
             throw new SecurityException(ex);
         }
     }
-    
+
     /**
      * 鍵生成用の長さの目安
+     *
      * @return 一般的な鍵長でいいかな
      */
     int getKeyLength();
-    
+
     /**
      * メッセージ本文の追加.
-     * @param src 
+     *
+     * @param src 本文
      */
     @Override
     default void update(byte[] src) {
-        update(src,0,src.length);
+        update(src, 0, src.length);
     }
-
 
     /**
      * verify 検証.
@@ -64,6 +65,13 @@ public interface SignVerify extends Signer,Verifyer {
         return Arrays.equals(sign(), signature);
     }
 
+    /**
+     * 追加.
+     * @param data 本文
+     * @param offset 本文位置
+     * @param length 本文長さ
+     * @return これ
+     */
     @Override
     default public Output put(byte[] data, int offset, int length) {
         update(data, offset, length);

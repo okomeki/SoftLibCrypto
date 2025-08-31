@@ -47,6 +47,11 @@ public class PBKDF1 implements PBKDF {
         this.md = md;
     }
 
+    /**
+     * 初期化.
+     * @param salt salt, an octet string 塩
+     * @param c iteration count カウント
+     */
     @Override
     public void init(byte[] salt, int c) {
         this.salt = salt;

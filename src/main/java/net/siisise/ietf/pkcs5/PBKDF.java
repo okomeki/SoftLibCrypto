@@ -23,10 +23,11 @@ import net.siisise.security.key.KDF;
  * 鍵導出関数?
  */
 public interface PBKDF extends KDF {
+
     /**
-     * 
-     * @param salt
-     * @param c 
+     * 初期化.
+     * @param salt salt, an octet string 塩
+     * @param c iteration count カウント
      */
     void init(byte[] salt, int c);
     

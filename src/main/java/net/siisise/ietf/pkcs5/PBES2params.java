@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2024 okome.
+ * Copyright 2023-2025 okome.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,7 +72,7 @@ public class PBES2params {
     /**
      * ASN.1から復元.
      * @param s ASN.1 PBES2params SEQUENCE
-     * @return 
+     * @return 復元 PBES2Params
      */
     public static PBES2params decode(SEQUENCE s) {
         PBES2params params = new PBES2params();
@@ -85,7 +85,7 @@ public class PBES2params {
      * KDF と 暗号から
      * 暗号は IV などをパラメータとして持っているので初期化時に共通鍵以外を設定済みにしておける。
      * 暗号化モードの設定による。
-     * @return 
+     * @return 復元されたPBES2
      */
     public PBES2 decode() {
         PBES2 es;

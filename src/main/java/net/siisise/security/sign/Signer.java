@@ -21,14 +21,24 @@ import net.siisise.io.Output;
  * 署名用.
  */
 public interface Signer extends Output {
+
     /**
-     * メッセージ本文の追加.
-     * @param src 
+     * メッセージ本文の追加. 長さ指定を省略したもの.
+     *
+     * @param src 分割可能本文
      */
     default void update(byte[] src) {
-        update(src,0,src.length);
+        update(src, 0, src.length);
     }
 
+    /**
+     * 本文の追加。
+     * 分割追加が可能.
+     * 
+     * @param src 本文
+     * @param offset src内の開始位置
+     * @param length 本文長さ
+     */
     void update(byte[] src, int offset, int length);
 
     /**

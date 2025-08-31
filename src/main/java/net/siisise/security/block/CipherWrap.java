@@ -44,15 +44,19 @@ public class CipherWrap extends LongBlock implements StreamAEAD {
     public CipherWrap(String mode) {
         transformation = mode;
     }
-    
+
+    /**
+     * bit block length
+     * @return ブロックのビット長
+     */
     @Override
     public int getBlockLength() {
         return enc.getBlockSize() * 8;
     }
 
     /**
-     *
-     * @param params
+     * 適度になにか.
+     * @param params パラメータ
      */
     @Override
     public void init(byte[]... params) {

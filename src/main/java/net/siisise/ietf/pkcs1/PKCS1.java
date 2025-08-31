@@ -145,8 +145,6 @@ public class PKCS1 {
         return rsaes.decrypt(prv, c);
     }
 
-//    public static byte[] 
-    
     /**
      * 8.2.1 Signature generation operation
      * RSASSA-PKCS1_V1_5-SIGN(K, M)
@@ -164,10 +162,10 @@ public class PKCS1 {
     
     /**
      * 8.2.2 Signature verification operation
-     * @param pub
-     * @param M
-     * @param S
-     * @return 
+     * @param pub Public Key
+     * @param M Message
+     * @param S Signature
+     * @return verify
      * @deprecated 
      */
     @Deprecated

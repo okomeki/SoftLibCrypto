@@ -16,7 +16,6 @@
 package net.siisise.security.key;
 
 import java.math.BigInteger;
-import java.util.Arrays;
 import net.siisise.lang.Bin;
 import net.siisise.security.ec.GF;
 
@@ -47,17 +46,40 @@ public class ECDH {
         }
 
         /**
+         * 仮に v を出してみる.
          * v^2 = u^3 + A*u^2 + u
-         *
-         * @param su
-         * @return
+         * フラグは参考程度.
+         * 5.1.1. x = a^((p+3)/8) ( mod p)
+         * x = u(uv)^(p - 5)/8 ( mod p)
+         * 5.2.1. x = a^((p+1)/4) ( mod p)
+         * x = u(uv)^(p - 3)/4 ( mod p)
+         * @param su 符号化されたuvっぽいもの
+         * @return v v座標っぽいもの
          */
-        BigInteger v(BigInteger su) {
-            GF u = new GF(p).val(su);
-            GF A = u.val(a);
-            GF vv = u.pow(3).add(A.mul(u.pow(2))).add(u);
-            throw new IllegalStateException();
+        public BigInteger v(byte[] su) {
+            BigInteger nu = Bin.lbtobi(su);
+            boolean u_0 = (su[su.length - 1] & 0x80) != 0;
+            GF u = new GF(p).val(nu);
+            GF vv = u.pow(3).add(u.pow(2).mul(a)).add(u);
+
+            BigInteger v = vv.pow(p.shiftRight(c).add(BigInteger.ONE)).val;
+            
+            v = vCheck(v, vv.val);
+
+            if ( u_0 && BigInteger.ZERO.equals(v)) {
+                throw new IllegalStateException();
+            }
+            if (u_0 != v.testBit(0)) { // 適当な仮
+                v = p.subtract(v);
+            }
+            return v;
         }
+        
+        public BigInteger v(BigInteger u) {
+            return v(Bin.bitolb(u, (b+1)/8));
+        }
+        
+        abstract BigInteger vCheck(BigInteger v, BigInteger a);
 
         /**
          * k の
@@ -78,19 +100,13 @@ public class ECDH {
             return s;
         }
 
-        public byte[] toB(BigInteger i) {
-            byte[] bi = i.toByteArray();
-            bi = Arrays.copyOfRange(bi, bi.length - (b + 1) / 8, bi.length);
-            return Bin.rev(bi);
-        }
-
         public byte[] x(byte[] k, byte[] u) {
             BigInteger ik = Bin.lbtobi(k); //cuts(k);
             byte[] uc = u.clone();
             //uc[uc.length - 1] &= 0x7f; // 互換 X25519のみ
             BigInteger iu = Bin.lbtobi(uc);
             BigInteger ia = x(ik, iu);
-            return toB(ia);
+            return Bin.bitolb(ia,(b+1)/8);
         }
 
         /**
@@ -171,12 +187,39 @@ public class ECDH {
         public Curve25519() {
             super(P25519, 255, A25519, L25519, 3, U25519);
         }
+
+        /**
+         * 仮.
+         */
+        BigInteger vCheck(BigInteger v, BigInteger a) {
+            BigInteger vv = v.modPow(BigInteger.TWO, p);
+            if ( !vv.equals(a)) {
+                if (vv.equals(p.subtract(a))) {
+                    BigInteger z = BigInteger.TWO.modPow(p.shiftRight(2), p);
+                    v = v.multiply(z).mod(p);
+                } else {
+                    throw new IllegalStateException();
+                }
+            }
+            return v;
+        }
     }
 
     public static class Curve448 extends Curve {
 
         public Curve448() {
             super(P448, 448, A448, L448, 2, U448);
+        }
+
+        /**
+         * 仮.
+         */
+        BigInteger vCheck(BigInteger v, BigInteger a) {
+            BigInteger vv = v.modPow(BigInteger.TWO, p);
+            if ( !vv.equals(a)) {
+                throw new IllegalStateException();
+            }
+            return v;
         }
     }
 

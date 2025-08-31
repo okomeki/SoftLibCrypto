@@ -49,9 +49,9 @@ public class RSA {
 
     /**
      * 暗号の復号 (バイト列渡し)
-     * @param key 秘密鍵
+     * @param key private key 秘密鍵
      * @param v 暗号
-     * @return プレーン
+     * @return plane message
      */
     public static BigInteger rsadp(RSAMiniPrivateKey key, byte[] v) {
         return key.rsadp(v);
@@ -61,8 +61,8 @@ public class RSA {
      * 秘密鍵で署名
      * Section 5.2.1. RSASP1
      * @param key 秘密鍵
-     * @param m 
-     * @return 
+     * @param m Message 平文
+     * @return sign 署名
      */
     public static BigInteger rsasp1(RSAMiniPrivateKey key, BigInteger m) {
        return key.rsasp1(m);
@@ -71,8 +71,8 @@ public class RSA {
     /**
      * 署名検証的なもの
      * @param key 公開鍵
-     * @param s
-     * @return 
+     * @param s sign 署名
+     * @return Message 平文
      */
     public static BigInteger rsavp1(RSAPublicKey key, BigInteger s) {
         return key.rsavp1(s);

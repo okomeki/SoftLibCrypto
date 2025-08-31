@@ -22,24 +22,50 @@ import net.siisise.lang.Bin;
  */
 public abstract class OneBlock extends BaseBlock {
 
+    /**
+     * 1ブロック暗号化.
+     * @param src source 平文
+     * @param offset 位置
+     * @return 暗号
+     */
     @Override
     public int[] encrypt(int[] src, int offset) {
         int bl = getBlockLength() / 32;
         return Bin.btoi(encrypt(Bin.itob(src, offset, bl),0));
     }
 
+    /**
+     * 1ブロック暗号化.
+     * @param src source 平文
+     * @param offset 位置
+     * @return 暗号
+     */
     @Override
     public long[] encrypt(long[] src, int offset) {
         int bl = getBlockLength() / 64;
         return Bin.btol(encrypt(Bin.ltob(src, offset, bl),0));
     }
 
+    /**
+     * 1ブロック復号.
+     * 
+     * @param src source 暗号文
+     * @param offset 位置
+     * @return 平文
+     */
     @Override
     public int[] decrypt(int[] src, int offset) {
         int bl = getBlockLength() / 32;
         return Bin.btoi(decrypt(Bin.itob(src, offset, bl),0));
     }
 
+    /**
+     * 1ブロック復号.
+     * 
+     * @param src source 暗号文
+     * @param offset 位置
+     * @return 平文
+     */
     @Override
     public long[] decrypt(long[] src, int offset) {
         int bl = getBlockLength() / 64;
@@ -47,11 +73,12 @@ public abstract class OneBlock extends BaseBlock {
     }
 
     /**
+     * 複数ブロック暗号化.
      * 
-     * @param src
-     * @param offset
+     * @param src 平文
+     * @param offset 位置
      * @param length 固定サイズの倍数であること.
-     * @return 
+     * @return 暗号ブロック
      */
     @Override
     public byte[] encrypt(byte[] src, int offset, int length) {
@@ -70,11 +97,12 @@ public abstract class OneBlock extends BaseBlock {
     }
 
     /**
+     * 複数ブロック暗号化.
      * 
-     * @param src
-     * @param offset
+     * @param src 平文
+     * @param offset 位置
      * @param length 固定サイズの倍数であること.
-     * @return 
+     * @return 暗号ブロック
      */
     @Override
     public int[] encrypt(int[] src, int offset, int length) {
@@ -92,6 +120,14 @@ public abstract class OneBlock extends BaseBlock {
         return dec;
     }
 
+    /**
+     * 複数ブロック暗号化.
+     * 
+     * @param src 平文
+     * @param offset 位置
+     * @param length 固定サイズの倍数であること.
+     * @return 暗号ブロック
+     */
     @Override
     public long[] encrypt(long[] src, int offset, int length) {
         int blen = getBlockLength() / 64;
@@ -109,12 +145,13 @@ public abstract class OneBlock extends BaseBlock {
     }
 
     /**
+     * 複数ブロック暗号化.
      *
-     * @param src
-     * @param offset
-     * @param dec
-     * @param doffset
-     * @param length
+     * @param src 平文
+     * @param offset 位置
+     * @param dec 暗号格納場所
+     * @param doffset 暗号格納位置
+     * @param length 暗号長
      */
     @Override
     public void encrypt(byte[] src, int offset, byte[] dec, int doffset, int length) {
@@ -132,11 +169,11 @@ public abstract class OneBlock extends BaseBlock {
     /**
      * 復号処理.
      *
-     * @param src
-     * @param offset
-     * @param dst
-     * @param doffset
-     * @param length
+     * @param src 暗号文
+     * @param offset 暗号位置
+     * @param dst 復号格納場所
+     * @param doffset 復号格納位置
+     * @param length 復号長
      */
     @Override
     public void decrypt(byte[] src, int offset, byte[] dst, int doffset, int length) {

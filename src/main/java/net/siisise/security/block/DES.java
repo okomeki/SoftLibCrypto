@@ -319,8 +319,8 @@ public class DES extends OneBlock {
 
     /**
      * 暗号化.
-     * @param src 64bit
-     * @return
+     * @param src 64bit 平文
+     * @return 暗号文
      */
     @Override
     public byte[] encrypt(byte[] src, int offset) {
@@ -339,9 +339,10 @@ public class DES extends OneBlock {
 
     /**
      * 復号化.
-     * @param src
-     * @param offset
-     * @return 
+     * 
+     * @param src 暗号文ブロック
+     * @param offset 位置
+     * @return 平文
      */
     @Override
     public byte[] decrypt(byte[] src, int offset) {

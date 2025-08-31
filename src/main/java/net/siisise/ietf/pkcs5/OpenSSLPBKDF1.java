@@ -25,26 +25,39 @@ import net.siisise.security.digest.MD5;
  * OpenSSL の PBKDF1 長さ無制限版
  */
 public class OpenSSLPBKDF1 extends PBKDF1 {
-    
+
+    /**
+     * デフォルトMD5のコンストラクタ.
+     */
     public OpenSSLPBKDF1() {
         super(new MD5());
     }
-    
+
+    /**
+     * ハッシュ関数を指定可能なコンストラクタ.
+     * @param digest 暗号ハッシュ関数
+     */
     public OpenSSLPBKDF1(MessageDigest digest) {
         super(digest);
     }
-    
+
+    /**
+     * 初期化.
+     * @param salt ソルト
+     */
     public void init(byte[] salt) {
         init(salt, 1);
     }
 
     /**
+     * パスワードから鍵を生成.
+     * KDF
      * 
-     * @param password
+     * @param password パスワード
      * @param salt 8バイトに制限して利用
      * @param c 基本1回のみ 拡張利用可能
-     * @param dkLen
-     * @return 
+     * @param dkLen 鍵出力長
+     * @return 鍵
      */
     @Override
     public byte[] pbkdf(byte[] password, byte[] salt, int c, int dkLen) {
@@ -66,8 +79,8 @@ public class OpenSSLPBKDF1 extends PBKDF1 {
 
     /**
      * PBKDF1と互換の長さ
-     * @param password
-     * @return 128bit
+     * @param password パスワード
+     * @return 128bit鍵
      */
     @Override
     public byte[] kdf(byte[] password) {

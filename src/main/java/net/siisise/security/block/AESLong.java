@@ -214,7 +214,7 @@ public class AESLong extends OneBlock {
     /**
      * 複数パラメータは持たない
      *
-     * @param key
+     * @param key 未定
      */
     @Override
     public void init(byte[]... key) {

@@ -24,7 +24,8 @@ import net.siisise.io.Output;
 public interface Verifyer extends Output {
     /**
      * メッセージ本文の追加.
-     * @param src 
+     * 分割して追加可能.
+     * @param src 本文
      */
     default void update(byte[] src) {
         update(src,0,src.length);

@@ -32,7 +32,7 @@ public class SHA3Derived {
      * NIST SP 800-185 2.3.1
      * 255 文字 - 1 bit まで
      * @param x 0 &lt;= x &lt; 2^2040
-     * @return 
+     * @return 符号化されたもの
      */
     public static byte[] right_encode(long x) {
         byte[] is = BigInteger.valueOf(x).toByteArray();
@@ -47,7 +47,7 @@ public class SHA3Derived {
      * 正の整数.
      * 先頭に長さ情報が付く.
      * @param x 0 &lt;= x &lt; 2^2040
-     * @return 
+     * @return 符号化されたもの
      */
     public static byte[] left_encode(long x) {
         byte[] is = BigInteger.valueOf(x).toByteArray();
@@ -65,7 +65,7 @@ public class SHA3Derived {
     /**
      * NIST SP 800-185 2.3.2. String Encoding
      * @param s bit string
-     * @return 
+     * @return 符号化されたもの
      */
     public static Packet encode_string(byte[] s) {
         Packet p = new PacketA();
@@ -130,7 +130,7 @@ public class SHA3Derived {
      * 2.3.3 wバイト単位でパディングする.
      * @param X 元データ Packet を利用する
      * @param w ブロックっぽいサイズ (byte)
-     * @return 
+     * @return 符号化されたもの
      */
     public static byte[] bytepad(Packet X, int w) {
         X.dbackWrite(left_encode(w));

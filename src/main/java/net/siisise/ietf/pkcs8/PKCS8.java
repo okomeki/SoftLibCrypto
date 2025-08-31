@@ -44,7 +44,7 @@ public class PKCS8 {
     /**
      * 5. Private-Key Information Syntax
      * @param key 鍵をPKCS #8形式(暗号なし,DER)にする
-     * @return 
+     * @return PrivateKeyInfo PKCS #8でラップした鍵
      */
     public static SEQUENCEMap getPrivateKeyInfo(RSAPrivateCrtKey key) {
         PrivateKeyInfo info = new PrivateKeyInfo(rsaEncryption, key.getPKCS1Encoded());
@@ -53,9 +53,9 @@ public class PKCS8 {
 
     /**
      * PKCS #8 DER をPrivateKeyに変換する
-     * @param src
-     * @return
-     * @throws IOException 
+     * @param src ASN.1 DER 型 PKCS #8 PrivateKeyInfo
+     * @return Java 鍵型
+     * @throws IOException 未サポート等
      */
     public static RSAPrivateCrtKey setPrivateKeyInfo(byte[] src) throws IOException {
         PrivateKeyInfo info = PrivateKeyInfo.decode((SEQUENCE) ASN1Util.toASN1(src));
@@ -72,7 +72,7 @@ public class PKCS8 {
      * @param key RSA鍵
      * @param pass password
      * @return EncryptedPrivateKeyInfo
-     * @throws NoSuchAlgorithmException
+     * @throws NoSuchAlgorithmException 該当アルゴリズムなし
      */
     @Deprecated
     public SEQUENCEMap encryptedPrivateKeyInfoASN1(RSAPrivateCrtKey key, byte[] pass) throws NoSuchAlgorithmException {
@@ -85,7 +85,7 @@ public class PKCS8 {
      * @param info PKCS #8 PrivateKeyInfo
      * @param pass password
      * @return encryptedPrivateKeyInfo
-     * @throws NoSuchAlgorithmException
+     * @throws NoSuchAlgorithmException 該当アルゴリズムなし
      */
     public EncryptedPrivateKeyInfo encryptedPrivateKeyInfo(PrivateKeyInfo info, byte[] pass) throws NoSuchAlgorithmException {
         return encryptPrivateKeyInfo(info.encodeASN1().encodeAll(), pass);

@@ -68,7 +68,7 @@ public class PBES2 implements PBES {
      * @param password password
      * @param salt salt
      * @param c iteration count
-     * @return 
+     * @return パスワード設定済み暗号ブロック
      */
     public Block init(Block block, byte[] password, byte[] salt, int c) {
         kdf.init(salt, c);
@@ -76,11 +76,12 @@ public class PBES2 implements PBES {
     }
 
     /**
+     * 初期化.
      * 
-     * @param block
-     * @param password
+     * @param block 利用する暗号
+     * @param password 鍵に利用するパスワード
      * @param kdf hmac, salt, c 設定済み PBKDF2
-     * @return 
+     * @return 設定済み暗号
      */
     public Block init(Block block, byte[] password, PBKDF2 kdf) {
         this.kdf = kdf;
@@ -121,13 +122,14 @@ public class PBES2 implements PBES {
     }
 */    
     /**
+     * パスワードを利用した暗号の初期設定.
      * 
      * @param block XXX-CBC
      * @param hmac PBKDF2用疑似乱数関数 MAC PRF
      * @param password password
      * @param salt salt
      * @param c iteration count
-     * @return 
+     * @return ブロック暗号
      */
     public Block init(Block block, MAC hmac, byte[] password, byte[] salt, int c) {
         kdf.init(hmac, salt, c);
@@ -137,8 +139,8 @@ public class PBES2 implements PBES {
 
     /**
      * PBES2params から生成したあとパスワードだけ
-     * @param block
-     * @param password 
+     * @param block 暗号
+     * @param password パスワード
      */
     public void init(Block block, byte[] password) {
         // hmac.init();
@@ -203,7 +205,7 @@ public class PBES2 implements PBES {
 
     /**
      * ブロック長.
-     * @return 
+     * @return ブロック長
      */
     @Override
     public int getBlockLength() {
@@ -213,7 +215,7 @@ public class PBES2 implements PBES {
     /**
      * メッセージ1つを暗号化する.
      * 
-     * @param message 
+     * @param message Message メッセージ
      * @return ブロック長にpaddingされたメッセージの暗号
      */
     @Override
@@ -222,9 +224,9 @@ public class PBES2 implements PBES {
     }
 
     /**
-     * 復号
+     * 復号.
      * @param c 暗号
-     * @return 元メッセージ
+     * @return Message 元メッセージ
      */
     @Override
     public byte[] decrypt(byte[] c) {
@@ -239,7 +241,7 @@ public class PBES2 implements PBES {
      * なんとなくAES-CBCっぽい暗号化で作る.
      * @param message 原文
      * @param password パスワード
-     * @return 
+     * @return 暗号文
      */
     public static byte[] encryptAll(byte[] message, byte[] password) {
         PBES2params pa = PBES2params.gen();

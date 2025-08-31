@@ -159,8 +159,8 @@ public class Name {
     /**
      * ToDo: まともなParser
      * 
-     * @param name
-     * @return 
+     * @param name / 区切り
+     * @return Name
      */
     public static Name name(String name) {
         Name n = new Name();

@@ -29,7 +29,7 @@ import net.siisise.iso.asn1.tag.SEQUENCEMap;
 
 /**
  * RFC 5958 OneAsymmetricKey [v2].
- * 
+ *
  * OneAsymmetricKey ::= SEQUENCE {
  *   version Version,
  *   privateKeyAlgorithm PrivateKeyAlgorithmIdentifier,
@@ -85,14 +85,14 @@ public class OneAsymmetricKey extends PrivateKeyInfo {
 
     /**
      * 公開鍵.
-     * 
+     *
      */
     public byte[] publicKey; // [1] PublicKey OPTIONAL
 
     /**
      * version 指定を優先、公開鍵がない場合はv1固定。
      *
-     * @return
+     * @return ASN.1っぽく
      */
     @Override
     public SEQUENCEMap encodeASN1() {
@@ -112,7 +112,7 @@ public class OneAsymmetricKey extends PrivateKeyInfo {
             one.put("attributes", pre0);
         }
         if (publicKey != null && version > 0) { // IMPLICIT
-            BITSTRING pre1 = new BITSTRING( publicKey);
+            BITSTRING pre1 = new BITSTRING(publicKey);
             one.putImplicit("publicKey", 1, pre1);
         }
         return one;
@@ -120,6 +120,7 @@ public class OneAsymmetricKey extends PrivateKeyInfo {
 
     /**
      * OneAsymmetricKeyの符号化
+     *
      * @param <V> 出力型
      * @param format 出力形式
      * @return 符号化
@@ -136,17 +137,17 @@ public class OneAsymmetricKey extends PrivateKeyInfo {
         }
 
         if (publicKey != null && version >= 1) { // IMPLICIT
-            BITSTRING pre1 = new BITSTRING( publicKey);
+            BITSTRING pre1 = new BITSTRING(publicKey);
             map.putImplicit("publicKey", 1, pre1);
         }
-        return (V)map.rebind(format); //Rebind.valueOf(map, format);
+        return (V) map.rebind(format); //Rebind.valueOf(map, format);
     }
 
     /**
      * ToDo: overflow
      *
-     * @param s
-     * @return
+     * @param s ASN.1
+     * @return デコードされた型
      */
     public static PrivateKeyInfo decode(SEQUENCE s) {
         INTEGER ver = (INTEGER) s.get(0);

@@ -43,9 +43,9 @@ public class OpenSSLPBES1 extends PBES1 {
     }
 
     /**
-     * 
-     * @param salt saltとiv兼用
-     * @param c 
+     * saltとcの初期化.
+     * @param salt salt, an octet string 塩 saltとiv兼用
+     * @param c iteration count カウント
      */
     @Override
     public void init(byte[] salt, int c) {
@@ -54,10 +54,11 @@ public class OpenSSLPBES1 extends PBES1 {
     }
     
     /**
+     * 初期化.
      * 
-     * @param block
+     * @param block 暗号
      * @param digest PBKDF1 パラメータ
-     * @param password
+     * @param password パスワード
      */
     @Override
     public void init(Block block, MessageDigest digest, byte[] password) {
@@ -71,9 +72,9 @@ public class OpenSSLPBES1 extends PBES1 {
     }
 
     /**
-     * 
+     * アルゴリズム、パスワードの初期化.
      * @param alg DEK-Infoのアルゴリズム
-     * @param password 
+     * @param password パスワード
      */
     public void init(String alg, byte[] password) {
         Block b;
@@ -123,6 +124,12 @@ public class OpenSSLPBES1 extends PBES1 {
         init(b, new MD5(), password);
     }
 
+    /**
+     * 初期化.
+     * @param alg アルゴリズム
+     * @param password パスワード
+     * @param salt ソルト
+     */
     public void init(String alg, byte[] password, byte[] salt) {
         init(salt, 1); // PBKDFの初期化
         init(alg, password);

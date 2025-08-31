@@ -42,7 +42,7 @@ import net.siisise.iso.asn1.tag.SEQUENCEMap;
  */
 public class PrivateKeyInfo {
 //    static class Version extends INTEGER {}
-    
+
 //    static class Attributes extends SEQUENCEList {}
 
     /**
@@ -99,9 +99,9 @@ public class PrivateKeyInfo {
 
     /**
      * 汎用出力.
-     * @param <T> 
+     * @param <T> 出力型
      * @param format 出力型
-     * @return 
+     * @return 各種出力
      */
     public <T> T rebind(TypeFormat<T> format) {
         LinkedHashMap s = new LinkedHashMap();

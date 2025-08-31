@@ -78,8 +78,8 @@ public class PBES1 implements PBES {
 
     /**
      * OIDの
-     * @param block
-     * @param digest 
+     * @param block 暗号 DES/RC2
+     * @param digest KDF用ハッシュ関数
      */
     public void init(Block block, MessageDigest digest) {
         this.block = block;
@@ -112,7 +112,12 @@ public class PBES1 implements PBES {
         }
         init(new PKCS7Padding(new CBC(b)), md);
     }
-    
+
+    /**
+     * 初期設定.
+     * @param password パスワード
+     */
+    @Override
     public void init(byte[] password) {
         byte[] dk = kdf.kdf(password, 16);
         k = new byte[8];
@@ -181,7 +186,7 @@ public class PBES1 implements PBES {
      * @param password パスワード
      * @param salt 8オクテット
      * @param c 繰り返し 1000ぐらい
-     * @return 
+     * @return C 暗号文
      */
     public static byte[] encrypt(Block block, MessageDigest digest, byte[] message, byte[] password, byte[] salt, int c) {
         PBES1 pb = new PBES1();
@@ -191,7 +196,7 @@ public class PBES1 implements PBES {
     }
     
     /**
-     *
+     * 復号.
      * @param message padding されているもの
      * @return デコードされたもの
      */
@@ -204,11 +209,11 @@ public class PBES1 implements PBES {
      *
      * @param block DES CBC または RC2 CBC
      * @param digest MD2, MD5 または SHA-1
-     * @param message
-     * @param password
-     * @param salt
-     * @param c
-     * @return
+     * @param message 暗号メッセージ
+     * @param password ぱすわーど
+     * @param salt ソルト
+     * @param c カウント
+     * @return 平文
      */
     public static byte[] decrypt(Block block, MessageDigest digest, byte[] message, byte[] password, byte[] salt, int c) {
         PBES1 pb = new PBES1();

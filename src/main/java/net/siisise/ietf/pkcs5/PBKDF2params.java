@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 okome.
+ * Copyright 2023-2025 okome.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -76,9 +76,9 @@ public class PBKDF2params {
     }
     
     /**
-     * 
+     * ASN.1 AlgorithmIdentifier からパラメータを読み込む.
      * @param s AlgorithmIdentifier params
-     * @return 
+     * @return パラメータ
      */
     public static PBKDF2params decode(SEQUENCE s) {
         PBKDF2params params = new PBKDF2params();
@@ -158,7 +158,7 @@ public class PBKDF2params {
 
     /**
      * AES-CBC-Pad ぐらいの
-     * @return 
+     * @return 簡単生成パラメータ
      */
     public PBKDF2params gen() {
         PBKDF2params kdf2p = new PBKDF2params();
