@@ -81,6 +81,7 @@ public class DSAKeyGen {
 
     /**
      * 初期仮.
+     * 
      * @param md 鍵の種類により変更が必要かも
      */
     public DSAKeyGen(MessageDigest md) {
@@ -96,7 +97,6 @@ public class DSAKeyGen {
     public DSAKeyGen() {
         this(new SHA1());
     }
-    
 
     /**
      * ひととおりDSAで使える秘密鍵を生成する。
@@ -132,6 +132,7 @@ public class DSAKeyGen {
     /**
      * k または x の生成.
      * 0 &lt; k &lt; q
+     * 
      * @return ランダムなようなそうでないような.
      */
     private BigInteger genK(BigInteger q) {
@@ -344,7 +345,7 @@ public class DSAKeyGen {
      * @return g
      */
     private DSADomain a2gen(DSADomain d) {
-        if ( d instanceof DSADomainFull) {
+        if (d instanceof DSADomainFull) {
             BigInteger g = a23gen((DSADomainFull) d, md, index);
             return new DSADomainFull(d.getP(), d.getQ(), g, ((DSADomainFull) d).getDomainParameterSeed(), ((DSADomainFull) d).getCounter());
         } else {
@@ -355,7 +356,7 @@ public class DSAKeyGen {
     }
     
     private boolean a2valid(DSADomain d) {
-        if ( d instanceof DSADomainFull) {
+        if (d instanceof DSADomainFull) {
             return a24valid((DSADomainFull) d, md, index);
         }
         return a22valid(d);
@@ -394,6 +395,7 @@ public class DSAKeyGen {
     
     /**
      * A.2.3.
+     * 
      * @param d
      * @return 
      */
@@ -411,9 +413,9 @@ public class DSAKeyGen {
             if ( count == 0) return null; // 6.
             md.update(seed); // 7.
             md.update("ggen".getBytes());
-            md.update((byte)index);
-            md.update((byte)(count >>> 8));
-            md.update((byte)count);
+            md.update((byte) index);
+            md.update((byte) (count >>> 8));
+            md.update((byte) count);
             byte[] W = md.digest(); // 8.
             g = toNum(W).modPow(e, p);
         } while (g.compareTo(BigInteger.ONE) <= 0);
@@ -437,9 +439,9 @@ public class DSAKeyGen {
             if ( count == 0) return false;
             md.update(seed);
             md.update("ggen".getBytes());
-            md.update((byte)index);
-            md.update((byte)(count >>> 8));
-            md.update((byte)count);
+            md.update((byte) index);
+            md.update((byte) (count >>> 8));
+            md.update((byte) count);
             byte[] W = md.digest();
             computed_g = toNum(W).modPow(e, p);
         } while (computed_g.compareTo(BigInteger.ONE) <= 0);

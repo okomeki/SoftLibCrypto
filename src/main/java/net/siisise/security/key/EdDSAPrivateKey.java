@@ -32,8 +32,8 @@ public class EdDSAPrivateKey implements PrivateKey {
 
     final EdDSA.EdWards curve;
     byte[] key;
-    byte[] h;
     BigInteger s;
+    byte[] prefix;
     byte[] A;
 
     public EdDSAPrivateKey(byte[] k) {
@@ -48,7 +48,30 @@ public class EdDSAPrivateKey implements PrivateKey {
     public EdDSAPrivateKey(EdDSA.EdWards curve, byte[] k) {
         this.curve = curve;
         this.key = k.clone();
-        init();
+        byte[] h = curve.H().digest(key);
+        int hlen = curve.b / 8;
+        byte[] hc = Arrays.copyOfRange(h, 0, hlen);
+        s = curve.cuts(hc).mod(curve.L);
+        A = curve.nE(s);
+        prefix = Arrays.copyOfRange(h, hlen, hlen*2);
+    }
+
+    /**
+     * ハッシュ化された鍵
+     * EdDSAでは乱数の代わりに使われる
+     *
+     * @return ハッシュ化された秘密鍵
+     */
+    public byte[] getPrefix() {
+        return prefix;
+    }
+
+    public BigInteger gets() {
+        return s;
+    }
+
+    public byte[] getA() {
+        return A;
     }
 
     @Override
@@ -96,44 +119,6 @@ public class EdDSAPrivateKey implements PrivateKey {
     public <T> T rebind(TypeFormat<T> format) {
         OCTETSTRING k = new OCTETSTRING(this.key);
         return k.rebind(format);
-    }
-
-    /**
-     * ハッシュ化された鍵
-     * EdDSAでは乱数の代わりに使われる
-     *
-     * @return ハッシュ化された秘密鍵
-     */
-    public byte[] init() {
-        if (h == null) {
-            h = curve.H().digest(key);
-        }
-        if (A == null) {
-            int hlen = curve.b / 8;
-            byte[] hc = Arrays.copyOfRange(h, 0, hlen);
-            hc[0] &= 0xff << curve.c;
-            hc = EdDSA.rev(hc);
-            int n = hc.length - curve.n / 8 - 1;
-            for (int i = 0; i < n; i++) {
-                hc[i] = 0;
-            }
-            hc[n] &= 0xff >>> (7 - (curve.n % 8));
-            hc[n] |= 1 << (curve.n % 8);
-            // 01xxxxxx
-            // 1xxxxxxx
-
-            s = new BigInteger(hc).mod(curve.L);
-            A = curve.nE(s);
-        }
-        return h.clone();
-    }
-
-    public BigInteger gets() {
-        return s;
-    }
-
-    public byte[] getA() {
-        return A;
     }
 
     public EdDSAPublicKey getPublicKey() {
