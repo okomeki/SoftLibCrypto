@@ -19,7 +19,7 @@ ASN.1 DER対応なども別パッケージになっているので
 ぐらいなら気軽に対応している
 
 ## 公開鍵暗号,署名
-PKCS #1 ぜんぶ RSA系
+PKCS #1 RSA系
 - RSAEP
 - RSADP
 - RSASP1
@@ -30,11 +30,15 @@ PKCS #1 ぜんぶ RSA系
   - EME-PKCS1_v1_5
 - RSASSA-PSS
 - RSASSA-PKCS1_v1_5
-- DSA
-- EdDSA
-  - Ed25519
-  - Ed448
-など
+DSA
+EdDSA
+- Ed25519
+- Ed448
+
+## 鍵交換
+ECDH
+- X25519
+- X448
 
 ## 共通鍵 Block 暗号
 - AES
