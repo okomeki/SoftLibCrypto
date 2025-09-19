@@ -19,7 +19,7 @@ ASN.1 DER対応なども別パッケージになっているので
 ぐらいなら気軽に対応している
 
 ## 公開鍵暗号,署名
-PKCS #1 ぜんぶ RSA系
+RSA,DSA,EdDSA
 - RSAEP
 - RSADP
 - RSASP1
@@ -34,7 +34,11 @@ PKCS #1 ぜんぶ RSA系
 - EdDSA
   - Ed25519
   - Ed448
-など
+
+## 鍵交換
+ECDH
+- X25519
+- X448
 
 ## 共通鍵 Block 暗号
 - AES
@@ -57,8 +61,8 @@ PKCS #1 ぜんぶ RSA系
 
 認証付き
 
-- GCM 1.0.3くらいから スレッド対応
-- CCM 1.0.7くらい
+- GCM スレッド対応
+- CCM
 
 # padding
 - PKCS7Padding
