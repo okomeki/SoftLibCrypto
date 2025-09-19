@@ -29,7 +29,8 @@ public class MD4Test {
     }
 
     @Test
-    public void testSomeMethod() throws UnsupportedEncodingException {
+    public void testMD4() throws UnsupportedEncodingException {
+        System.out.println("MD4:");
         MD4 md = new MD4();
         byte[] d;
         

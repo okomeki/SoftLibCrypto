@@ -20,8 +20,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import net.siisise.lang.Bin;
 import net.siisise.security.padding.MGF;
 
@@ -51,7 +49,7 @@ public class EMSA_PSS implements EMSA {
         try {
             rnd = SecureRandom.getInstanceStrong();
         } catch (NoSuchAlgorithmException ex) {
-            Logger.getLogger(EMSA_PSS.class.getName()).log(Level.SEVERE, null, ex);
+            throw new IllegalStateException(ex);
         }
     }
 

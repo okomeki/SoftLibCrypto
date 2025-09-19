@@ -66,7 +66,7 @@ public class DSAKeyGen {
     }
 
     /**
-     * FIPS PUB 186-4 で指定可能なのは4種類のみ.
+     * FIPS PUB 186-4 4.2.で指定可能なのは4種類のみ.
      */
     public static final LNPair LN1016 = new LNPair(1024, 160, new SHA1());
     public static final LNPair LN2022 = new LNPair(2048, 224, new SHA224());
@@ -261,7 +261,9 @@ public class DSAKeyGen {
      * A.1.1.2 確率的手法.
      * pとqの生成 seedも保存する
      *
-     * @param ln
+     * @param ln LとNの長さ
+     * @param md
+     * @param seedlen N以上の長さ
      * @return DSADomainFull の g 以外を埋めたもの
      */
     private DSADomainFull a112gen(LNPair ln, MessageDigest md, int seedlen) {

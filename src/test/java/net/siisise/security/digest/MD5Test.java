@@ -30,6 +30,7 @@ public class MD5Test {
 
     @Test
     public void testSomeMethod() throws UnsupportedEncodingException {
+        System.out.println("MD5:");
         MD5 md = new MD5();
         //SiisiseJCA jca = new SiisiseJCA();
         byte[] d;

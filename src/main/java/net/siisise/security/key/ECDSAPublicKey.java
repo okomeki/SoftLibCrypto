@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 okome.
+ * Copyright 2024 okome.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,53 +16,49 @@
 package net.siisise.security.key;
 
 import java.math.BigInteger;
-import java.security.interfaces.DSAParams;
+import java.security.interfaces.ECPublicKey;
+import java.security.spec.ECParameterSpec;
+import java.security.spec.ECPoint;
+import net.siisise.security.ec.EllipticCurve;
 
 /**
- *
+ * まだ限定 ECCurvep
  */
-public class DSAPrivateKey implements java.security.interfaces.DSAPrivateKey {
-    private final BigInteger x;
-    private final DSAParams params;
+public class ECDSAPublicKey implements ECPublicKey {
 
-    public DSAPrivateKey(BigInteger x, BigInteger p, BigInteger q, BigInteger g) {
-        this.x = x;
-        params = new DSADomain(p,q,g);
-    }
+    EllipticCurve.ECCurvep curve;
+    ECParameterSpec spec;
 
-    /**
-     * 秘密鍵.
-     * @param x key
-     * @param params Domain parameter
-     */
-    public DSAPrivateKey(BigInteger x, DSAParams params) {
-        this.x = x;
-        this.params = params;
+    public ECDSAPublicKey(ECParameterSpec spec) {
+        this.spec = spec;
     }
     
+    public ECDSAPublicKey(EllipticCurve.ECCurvep curve, BigInteger x) {
+        this.curve = curve;
+    }
+    
+    
+
     @Override
-    public BigInteger getX() {
-        return x;
+    public ECPoint getW() {
+//        return new ECPoint();
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+    
+    public EllipticCurve.ECCurvep getCurve() {
+        return curve;
     }
 
     /**
-     * DSA秘密鍵/公開鍵共通部分
-     * @return 
+     * ECDSAなのかECなのか.
+     *
+     * @return ?
      */
-    @Override
-    public DSAParams getParams() {
-        return params;
-    }
-
     @Override
     public String getAlgorithm() {
-        return "DSA";
+        return "EC";
     }
 
-    /**
-     * X.509 または PKCS#8 など
-     * @return 
-     */
     @Override
     public String getFormat() {
         throw new UnsupportedOperationException("Not supported yet.");
@@ -72,9 +68,10 @@ public class DSAPrivateKey implements java.security.interfaces.DSAPrivateKey {
     public byte[] getEncoded() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-    
-    public DSAPublicKey getPublicKey() {
-        return new DSAPublicKey(params.getG().modPow(x, params.getP()), params);
+
+    @Override
+    public ECParameterSpec getParams() {
+        return spec;
     }
 
 }

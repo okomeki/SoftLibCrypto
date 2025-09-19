@@ -37,7 +37,7 @@ public class MD4 extends BlockMessageDigest {
     protected int engineGetDigestLength() {
         return 16;
     }
-    
+
     @Override
     public int getBitBlockLength() {
         return 512;
@@ -53,7 +53,12 @@ public class MD4 extends BlockMessageDigest {
     static final int[] S1 = {3, 19, 11, 7};
     static final int[] S2 = {3, 13, 9, 5};
     static final int[] S3 = {3, 15, 11, 9};
-    
+
+    /**
+     * (x∧y)∨(-x∧z)
+     * @param m
+     * @param i 0 から 15
+     */
     private void abcdf(int m, int i) {
         int e = -i & 3;
         int b = ad[(1 - i) & 3];

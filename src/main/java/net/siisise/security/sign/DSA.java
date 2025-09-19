@@ -27,12 +27,12 @@ import java.security.spec.DSAPublicKeySpec;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import net.siisise.bind.Rebind;
 import net.siisise.ietf.pkcs1.PKCS1;
 import net.siisise.io.Output;
 import net.siisise.iso.asn1.ASN1Util;
 import net.siisise.iso.asn1.tag.ASN1DERFormat;
 import net.siisise.iso.asn1.tag.SEQUENCE;
+import net.siisise.security.math.Modular;
 
 /**
  * FIPS PUB 186-4
@@ -197,8 +197,7 @@ public class DSA extends Output.AbstractOutput implements SignVerify {
     public boolean verify(byte[] sign) {
 //        try {
             SEQUENCE asn = (SEQUENCE) ASN1Util.toASN1(sign);
-            List l = Rebind.valueOf(asn, List.class);
-
+            
             DSAParams params = verifyKey.getParams();
             BigInteger p = params.getP();
             BigInteger q = params.getQ();
@@ -211,12 +210,14 @@ public class DSA extends Output.AbstractOutput implements SignVerify {
             BigInteger z = toNum(d);
 
             BigInteger r = (BigInteger) asn.get(0).getValue();
-            BigInteger s = (BigInteger) asn.get(1).getValue();
-            BigInteger w = s.modInverse(q);
-            BigInteger u1 = z.multiply(w).mod(q);
-            BigInteger u2 = r.multiply(w).mod(q);
+            Modular s = new Modular((BigInteger) asn.get(1).getValue(), q);
+            Modular w = s.inv();
+            Modular u1 = w.mul(z);
+            Modular u2 = w.mul(r);
+            Modular g = new Modular(params.getG(), p);
+            Modular y = new Modular( verifyKey.getY(), p);
             // v = (((g)^u1(y)^u2) mod p) mod q
-            BigInteger v = params.getG().modPow(u1, p).multiply(verifyKey.getY().modPow(u2, p)).mod(p).mod( q);
+            BigInteger v = g.pow(u1.val).mul(y.pow(u2.val)).val.mod( q);
             return v.equals(r);
 //        } catch (IOException ex) {
 //            return false;

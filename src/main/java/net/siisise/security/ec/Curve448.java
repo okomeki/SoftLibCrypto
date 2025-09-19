@@ -13,12 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.siisise.security.key;
+package net.siisise.security.ec;
+
+import java.math.BigInteger;
 
 /**
- * 謎のモンゴメリー曲線.
- * RFC 7748
+ * ECDH Curve448
  */
-public class ECDH {
+public class Curve448 extends Curve {
 
+    public Curve448() {
+        super(P448, 156326, L448, 2, 5);
+        
+    }
+
+    /**
+     * 仮.
+     */
+    @Override
+    BigInteger vCheck(BigInteger v, BigInteger a) {
+        BigInteger vv = v.modPow(BigInteger.TWO, p);
+        if (!vv.equals(a)) {
+            throw new IllegalStateException(vv.toString() +"!="+ a.toString());
+        }
+        return v;
+    }
+
+    @Override
+    protected byte[] clearFlag(byte[] bu) {
+        return bu;
+    }
+    
 }

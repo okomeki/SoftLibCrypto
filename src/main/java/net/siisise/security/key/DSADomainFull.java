@@ -18,7 +18,7 @@ package net.siisise.security.key;
 import java.math.BigInteger;
 
 /**
- *
+ * DSADomain.
  */
 public class DSADomainFull extends DSADomain {
 

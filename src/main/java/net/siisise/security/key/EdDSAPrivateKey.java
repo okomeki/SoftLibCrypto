@@ -23,6 +23,8 @@ import net.siisise.ietf.pkcs8.OneAsymmetricKey;
 import net.siisise.iso.asn1.tag.ASN1DERFormat;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
 import net.siisise.security.sign.EdDSA;
+import net.siisise.security.ec.EdWards;
+import net.siisise.security.ec.EdWards25519;
 
 /**
  * EdDSA 秘密鍵.
@@ -30,14 +32,14 @@ import net.siisise.security.sign.EdDSA;
  */
 public class EdDSAPrivateKey implements PrivateKey {
 
-    final EdDSA.EdWards curve;
+    final EdWards curve;
     byte[] key;
     BigInteger s;
     byte[] prefix;
     byte[] A;
 
     public EdDSAPrivateKey(byte[] k) {
-        this(new EdDSA.EdWards25519(), k);
+        this(new EdWards25519(), k);
     }
 
     /**
@@ -45,7 +47,7 @@ public class EdDSAPrivateKey implements PrivateKey {
      * @param curve 曲線
      * @param k 秘密鍵
      */
-    public EdDSAPrivateKey(EdDSA.EdWards curve, byte[] k) {
+    public EdDSAPrivateKey(EdWards curve, byte[] k) {
         this.curve = curve;
         this.key = k.clone();
         byte[] h = curve.H().digest(key);
@@ -125,7 +127,7 @@ public class EdDSAPrivateKey implements PrivateKey {
         return new EdDSAPublicKey(curve, A);
     }
 
-    public EdDSA.EdWards getCurve() {
+    public EdWards getCurve() {
         return curve;
     }
 }

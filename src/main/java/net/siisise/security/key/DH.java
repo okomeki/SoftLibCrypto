@@ -18,6 +18,7 @@ package net.siisise.security.key;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import net.siisise.security.math.Modular;
 
 /**
  * DHの基本形.
@@ -75,7 +76,7 @@ public class DH {
     // 公開 素数
     BigInteger p;
     // 自然数?
-    BigInteger g;
+    Modular g;
     // 秘密
     BigInteger prv;
 
@@ -86,7 +87,7 @@ public class DH {
      */
     public DH(BigInteger p, BigInteger g) {
         this.p = p;
-        this.g = g;
+        this.g = new Modular(g, p);
     }
     
     /**
@@ -101,7 +102,8 @@ public class DH {
         if ( h.compareTo(BigInteger.ONE) <= 0 ) {
             throw new IllegalStateException();
         }
-        g = h.modPow(p.subtract(BigInteger.ONE).divide(q), h);
+        g = new Modular(h, p).pow(p.subtract(BigInteger.ONE).divide(q));
+//        g = new Modular(h.modPow(p.subtract(BigInteger.ONE).divide(q), h), g);
 //        j = 
     }
 
@@ -115,14 +117,15 @@ public class DH {
     
     public void setP(BigInteger p) {
         this.p = p;
+        this.g = new Modular(this.g.val, p);
     }
     
     public BigInteger getG() {
-        return g;
+        return g.val;
     }
     
     public void setG(BigInteger g) {
-        this.g = g;
+        this.g = new Modular(g, p);
     }
 
     /**
@@ -135,7 +138,7 @@ public class DH {
         srnd.nextBytes(sbit);
         sbit[0] &= 0x7f;
         prv = new BigInteger(sbit).mod(p);
-        return g.modPow(prv, p);
+        return g.pow(prv).val;
     }
     
     /**

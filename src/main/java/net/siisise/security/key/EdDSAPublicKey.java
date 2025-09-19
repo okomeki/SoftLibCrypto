@@ -16,20 +16,21 @@
 package net.siisise.security.key;
 
 import net.siisise.security.sign.EdDSA;
+import net.siisise.security.ec.EdWards;
 
 /**
  * EdDSAの公開鍵.
  */
 public class EdDSAPublicKey {
-    EdDSA.EdWards curve;
+    EdWards curve;
     byte[] A;
 
-    public EdDSAPublicKey(EdDSA.EdWards curve, byte[] A) {
+    public EdDSAPublicKey(EdWards curve, byte[] A) {
         this.curve = curve;
         this.A = A;
     }
     
-    public EdDSA.EdWards getCurve() {
+    public EdWards getCurve() {
         return curve;
     }
     
