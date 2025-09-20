@@ -42,7 +42,7 @@ public class ECDHTest {
         byte[] exOut  = Bin.toByteArray("c3da55379de9c6908e94ea4df28d084f32eccf03491c71f754b4075577a28552");
         Curve c = new Curve25519();
         BigInteger gu = BigInteger.valueOf(9);
-        BigInteger v = c.v(gu);
+        BigInteger v = c.v(gu).getY();
         System.out.println("v:" + v.toString());
         scalar = c.cutk(scalar);
         System.out.println(Bin.lbtobi(scalar));
@@ -73,7 +73,7 @@ public class ECDHTest {
         byte[] u      = Bin.toByteArray("06fce640fa3487bfda5f6cf2d5263f8aad88334cbd07437f020f08f9814dc031ddbdc38c19c6da2583fa5429db94ada18aa7a7fb4ef8a086");
         byte[] exOut  = Bin.toByteArray("ce3e4ff95a60dc6697da1db1d85e6afbdf79b50a2412d7546d5f239fe14fbaadeb445fc66a01b0779d98223961111e21766282f73dd96b6f");
         Curve c = new Curve448();
-        BigInteger v = c.v(new BigInteger(c.Pu));
+        BigInteger v = c.v(new BigInteger(c.Pu)).getY();
         System.out.println("v:" + v.toString());
         scalar = c.cutk(scalar);
         System.out.println(Bin.lbtobi(scalar));

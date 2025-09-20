@@ -16,6 +16,8 @@
 package net.siisise.security.key;
 
 import java.math.BigInteger;
+import java.security.KeyPair;
+import java.security.KeyPairGeneratorSpi;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -34,7 +36,7 @@ import net.siisise.security.digest.SHA512256;
  * FIPS PUB 186-4 DSS Section 4
  *
  */
-public class DSAKeyGen {
+public class DSAKeyGen extends KeyPairGeneratorSpi {
 
     public static class LNPair {
 
@@ -67,6 +69,7 @@ public class DSAKeyGen {
 
     /**
      * FIPS PUB 186-4 4.2.で指定可能なのは4種類のみ.
+     * 公開鍵長L, 秘密鍵長 N
      */
     public static final LNPair LN1016 = new LNPair(1024, 160, new SHA1());
     public static final LNPair LN2022 = new LNPair(2048, 224, new SHA224());
@@ -75,9 +78,33 @@ public class DSAKeyGen {
     
     private SecureRandom srnd;
 
-    private final MessageDigest md;
+    private MessageDigest md;
     // 仮
     private final int index;
+
+    private LNPair ln;
+
+    @Override
+    public void initialize(int keysize, SecureRandom random) {
+        srnd = random;
+        if (keysize > 2048 ) {
+            ln = LN3025;
+        } else if (keysize > 1024+224) {
+            ln = LN2025;
+        } else if (keysize > 1024) {
+            ln = LN2022;
+        } else {
+            ln = LN1016;
+        }
+        md = ln.H;
+    }
+
+    @Override
+    public KeyPair generateKeyPair() {
+        DSAPrivateKey prv = gen(ln);
+        DSAPublicKey pub = prv.getPublicKey();
+        return new KeyPair(pub,prv);
+    }
 
     /**
      * 初期仮.

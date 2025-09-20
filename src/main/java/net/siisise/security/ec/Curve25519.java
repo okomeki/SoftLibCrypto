@@ -19,12 +19,12 @@ import java.math.BigInteger;
 
 /**
  * ECDH X25519のモンゴメリ曲線.
- * 
+ *
  */
 public class Curve25519 extends Curve {
 
     public Curve25519() {
-        super(P25519, 486662, L25519, 3, 9);
+        super("X25519", P25519, 486662, L25519, 3, 9);
     }
 
     /**
@@ -50,5 +50,5 @@ public class Curve25519 extends Curve {
         cu[cu.length - 1] &= 0x7f;
         return cu;
     }
-    
+
 }

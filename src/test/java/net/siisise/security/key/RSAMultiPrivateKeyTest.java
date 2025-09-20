@@ -130,7 +130,7 @@ public class RSAMultiPrivateKeyTest {
         System.out.println("getPKCS1ASN1 rebind");
         RSAMultiPrivateKey instance = (RSAMultiPrivateKey) RSAKeyGen.generatePrivateKey(256, srnd, 4);
         ASN1Tag expResult = instance.rebind(new ASN1Convert());
-        SEQUENCE result = instance.getPKCS1ASN1();
+        SEQUENCE result = instance.getPrivateASN1();
         try {
             System.out.println(ASN1Util.toString(ASN1Util.toXML(result)));
             System.out.println(ASN1Util.toString(ASN1Util.toXML(expResult)));

@@ -30,7 +30,11 @@ public abstract class Curve extends EllipticCurve.Curvep {
 
     static final BigInteger P448 = BigInteger.ONE.shiftLeft(448).subtract(BigInteger.ONE.shiftLeft(224).add(BigInteger.ONE));
     static final BigInteger L448 = BigInteger.ONE.shiftLeft(446).subtract(new BigInteger("8335dc163bb124b65129c96fde933d8d723a70aadc873d6d54a7bb0d", 16));
-    
+
+    public final String name;
+    /**
+     * bit length
+     */
     public final int b;
     public final BigInteger a;
     protected final BigInteger a24;
@@ -45,8 +49,9 @@ public abstract class Curve extends EllipticCurve.Curvep {
      * @param c 2^c = cofactor
      * @param u Pのuのみ
      */
-    protected Curve(BigInteger p, int A, BigInteger n, int c, int u) {
-        super(p, BigInteger.valueOf(u), BigInteger.ZERO, n, 1<<c);
+    protected Curve(String name, BigInteger p, int A, BigInteger n, int c, int u) {
+        super(p, BigInteger.valueOf(u), BigInteger.ZERO, n, 1 << c);
+        this.name = name;
         this.b = p.bitLength();
         this.a = BigInteger.valueOf(A);
         this.c = c;
@@ -67,6 +72,10 @@ public abstract class Curve extends EllipticCurve.Curvep {
         boolean u_0 = (bu[bu.length - 1] & 0x80) != 0;
         byte[] cu = clearFlag(bu);
         BigInteger u = Bin.lbtobi(cu).mod(p);
+        return v(u_0, u);
+    }
+
+    BigInteger v(boolean u_0, BigInteger u) {
         BigInteger vv = mul(u, add(mul(u, add(u, a)), BigInteger.ONE));
         BigInteger v = pow(vv, p.shiftRight(c).add(BigInteger.ONE));
         v = vCheck(v, vv);
@@ -79,17 +88,23 @@ public abstract class Curve extends EllipticCurve.Curvep {
         }
         return v;
     }
-    
+
     /**
      * フラグビットクリア.
      * X448 はフラグビットの余裕がないので参照するだけ.
+     *
      * @param bu UV
      * @return U
      */
     abstract protected byte[] clearFlag(byte[] bu);
 
-    public BigInteger v(BigInteger u) {
-        return v(Bin.bitolb(u, (b + 1) / 8));
+    /**
+     * 符号混合デコード.
+     * @param u 符号付きとみなし
+     * @return (u,v)
+     */
+    public Point v(BigInteger u) {
+        return new Point( u, v(Bin.bitolb(u, (b + 1) / 8)));
     }
 
     abstract BigInteger vCheck(BigInteger v, BigInteger a);
@@ -116,15 +131,15 @@ public abstract class Curve extends EllipticCurve.Curvep {
     /**
      * kPの計算.
      * u は Pの座標
+     *
      * @param k 数
      * @param u Pointのuのみ
      * @return 新しいu
      */
     public byte[] x(byte[] k, byte[] u) {
         BigInteger ik = Bin.lbtobi(k); //cuts(k);
-        byte[] uc = u.clone();
         //uc[uc.length - 1] &= 0x7f; // 互換 X25519のみ
-        BigInteger iu = Bin.lbtobi(uc);
+        BigInteger iu = Bin.lbtobi(u);
         BigInteger ia = x(ik, iu);
         return Bin.bitolb(ia, (b + 1) / 8);
     }
@@ -132,6 +147,7 @@ public abstract class Curve extends EllipticCurve.Curvep {
     /**
      * kPの計算.
      * u は Pの座標.
+     *
      * @param k 数
      * @param u Curve25519 9 Curve448 5 または相手の公開鍵
      * @return 公開鍵または共通鍵
@@ -163,11 +179,11 @@ public abstract class Curve extends EllipticCurve.Curvep {
             BigInteger C = add(x_3, z_3);
             BigInteger D = sub(x_3, z_3);
             BigInteger DA = mul(D, A);
-            BigInteger CB = mul(C,B);
+            BigInteger CB = mul(C, B);
             x_3 = pow(add(DA, CB), BigInteger.TWO);
-            z_3 = mul(x_1,pow(sub(DA,CB),BigInteger.TWO));
+            z_3 = mul(x_1, pow(sub(DA, CB), BigInteger.TWO));
             x_2 = mul(AA, BB);
-            z_2 = mul(E,add(AA,mul(E,a24)));
+            z_2 = mul(E, add(AA, mul(E, a24)));
         }
         BigInteger[] sw = cswap(swap, x_2, x_3);
         x_2 = sw[0];
@@ -175,7 +191,7 @@ public abstract class Curve extends EllipticCurve.Curvep {
         sw = cswap(swap, z_2, z_3);
         z_2 = sw[0];
         //z_3 = new Modular(sw[1],p);
-        return mul(x_2,pow(z_2,p.subtract(BigInteger.TWO)));
+        return mul(x_2, pow(z_2, p.subtract(BigInteger.TWO)));
     }
 
     private BigInteger[] cswap(boolean swap, BigInteger a, BigInteger b) {
@@ -186,5 +202,5 @@ public abstract class Curve extends EllipticCurve.Curvep {
         ab[1] = b.xor(dummy);
         return ab;
     }
-    
+
 }

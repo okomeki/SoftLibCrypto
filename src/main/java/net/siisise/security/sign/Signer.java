@@ -19,6 +19,7 @@ import net.siisise.io.Output;
 
 /**
  * 署名用.
+ * 型式別に分ける?
  */
 public interface Signer extends Output {
 

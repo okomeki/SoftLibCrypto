@@ -47,7 +47,7 @@ public class PKCS8 {
      * @return PrivateKeyInfo PKCS #8でラップした鍵
      */
     public static SEQUENCEMap getPrivateKeyInfo(RSAPrivateCrtKey key) {
-        PrivateKeyInfo info = new PrivateKeyInfo(rsaEncryption, key.getPKCS1Encoded());
+        PrivateKeyInfo info = new PrivateKeyInfo(rsaEncryption, key.getPrivateEncoded());
         return info.encodeASN1();
     }
 
@@ -90,7 +90,7 @@ public class PKCS8 {
     public EncryptedPrivateKeyInfo encryptedPrivateKeyInfo(PrivateKeyInfo info, byte[] pass) throws NoSuchAlgorithmException {
         return encryptPrivateKeyInfo(info.encodeASN1().encodeAll(), pass);
     }
-    
+
     EncryptedPrivateKeyInfo encryptPrivateKeyInfo(byte[] keyInfo, byte[] pass) throws NoSuchAlgorithmException {
         throw new UnsupportedOperationException();
     }

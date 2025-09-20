@@ -206,7 +206,7 @@ public class EdDSA extends Output.AbstractOutput implements SignVerify {
         EdWards.Point R = curve.decXY(Rb);
         EdWards.Point A = curve.decXY(Ab);
         EdWards.Point RkA = R.add(A.nE(k));
-        EdWards.Point SB = curve.B.nE(S);
+        EdWards.Point SB = curve.G.nE(S);
         return SB.equals(RkA);
     }
 }

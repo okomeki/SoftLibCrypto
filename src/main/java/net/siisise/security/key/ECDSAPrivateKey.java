@@ -29,23 +29,34 @@ import net.siisise.security.sign.ECDSA;
 public class ECDSAPrivateKey implements ECPrivateKey {
 
     final EllipticCurve.ECCurvep curve;
-    ECParameterSpec spec;
-    final BigInteger x;
+//    ECParameterSpec spec;
+    final BigInteger d;
 
-    public ECDSAPrivateKey(EllipticCurve.ECCurvep c, BigInteger x) {
+    /**
+     * 曲線と秘密鍵.
+     * FIPS 186-5 A.2
+     * @param c 楕円曲線.
+     * @param d 秘密鍵
+     */
+    public ECDSAPrivateKey(EllipticCurve.ECCurvep c, BigInteger d) {
         curve = c;
-        this.x = x;//.mod(c.n);
+        this.d = d;//.mod(c.n);
     }
-    
-    public ECDSAPrivateKey(ECParameterSpec spec, BigInteger x) {
-        this.spec = spec;
+
+    /**
+     * 
+     * @param spec 楕円曲線Fp
+     * @param d 秘密鍵
+     */
+    public ECDSAPrivateKey(ECParameterSpec spec, BigInteger d) {
+//        this.spec = spec;
         curve = ECDSA.toCurve(spec);
-        this.x = x;
+        this.d = d;
     }
 
     @Override
     public String getAlgorithm() {
-        return "ECDSA";
+        return "EC";
     }
 
     @Override
@@ -54,26 +65,70 @@ public class ECDSAPrivateKey implements ECPrivateKey {
     }
 
     /**
-     * x のみ.
+     * d のみ.
      *
-     * @return x
+     * @return d
      */
     @Override
     public byte[] getEncoded() {
-        return PKCS1.I2OSP(x, 0);
+        return PKCS1.I2OSP(d, 0);
     }
 
     public EllipticCurve.ECCurvep getCurve() {
         return curve;
     }
 
+    /**
+     * 非公開値S.
+     * FIPS 186-5 d
+     * 
+     * @return 秘密鍵の値
+     */
     @Override
     public BigInteger getS() {
-        return x;
+        return d;
+    }
+
+    /**
+     * 曲線.
+     * {
+     *  curve: {
+     *     field: {
+     *        p
+     *     }
+     *     a,
+     *     b
+     *  }
+     *  g,
+     *  n,
+     *  h
+     * }
+     * 
+     * 
+     * @return 曲線
+     */
+    @Override
+    public ECParameterSpec getParams() {
+        return ECDSA.toSpec(curve);
+    }
+
+    /**
+     * FIPS 186-5 Q.
+     * FIPS 186-5 A.2
+     * 
+     * 
+     * @return Publick Key
+     */
+    public ECDSAPublicKey getPublicKey() {
+        return new ECDSAPublicKey(curve,curve.xG(d));
     }
 
     @Override
-    public ECParameterSpec getParams() {
-        return spec;
+    public boolean equals(Object o) {
+        if ( o instanceof ECDSAPrivateKey) {
+            ECDSAPrivateKey p = (ECDSAPrivateKey)o;
+            return d.equals(p.d) && curve.equals(p.getCurve());
+        }
+        return false;
     }
 }

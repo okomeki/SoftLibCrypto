@@ -172,7 +172,7 @@ public class RSAMiniPrivateKey implements PrivateKey, java.security.interfaces.R
      */
     @Override
     public byte[] getEncoded() {
-        SEQUENCEMap seq = getPKCS1ASN1();
+        SEQUENCEMap seq = getPrivateASN1();
         return (byte[]) seq.rebind(new ASN1DERFormat());
     }
 
@@ -180,7 +180,7 @@ public class RSAMiniPrivateKey implements PrivateKey, java.security.interfaces.R
      * 公開鍵の形式を借り
      * @return 
      */
-    SEQUENCEMap getPKCS1ASN1() {
+    public SEQUENCEMap getPrivateASN1() {
         SEQUENCEMap seq = new SEQUENCEMap();
         seq.put("modulus", new INTEGER(modulus)); // n
         seq.put("privateExponent", new INTEGER(privateExponent)); // e

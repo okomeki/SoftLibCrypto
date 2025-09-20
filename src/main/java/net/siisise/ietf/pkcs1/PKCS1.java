@@ -1,11 +1,18 @@
 package net.siisise.ietf.pkcs1;
 
 import java.math.BigInteger;
+import java.security.interfaces.RSAMultiPrimePrivateCrtKey;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.spec.RSAOtherPrimeInfo;
+import java.util.ArrayList;
+import java.util.List;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.security.block.RSAES;
 import net.siisise.security.block.RSAES_OAEP;
 import net.siisise.security.block.RSAES_PKCS1_v1_5;
 import net.siisise.security.key.RSAMiniPrivateKey;
+import net.siisise.security.key.RSAMultiPrivateKey;
+import net.siisise.security.key.RSAPrivateCrtKey;
 import net.siisise.security.key.RSAPublicKey;
 import net.siisise.security.sign.RSASSA;
 import net.siisise.security.sign.RSASSA_PKCS1_v1_5;
@@ -177,5 +184,44 @@ public class PKCS1 {
 
     private BigInteger RSASP1(java.security.interfaces.RSAPrivateKey K, BigInteger m) {
         return m.modPow(K.getPrivateExponent(), K.getModulus());
+    }
+
+    public static RSAMiniPrivateKey toCrt(RSAPrivateKey k) {
+        if (k instanceof RSAMultiPrimePrivateCrtKey) {
+            RSAMultiPrimePrivateCrtKey mk = (RSAMultiPrimePrivateCrtKey) k;
+            RSAOtherPrimeInfo[] op = mk.getOtherPrimeInfo();
+            List<RSAMultiPrivateKey.OtherPrimeInfo> s = new ArrayList<>();
+            for ( RSAOtherPrimeInfo o : op) {
+                RSAMultiPrivateKey.OtherPrimeInfo oi = new RSAMultiPrivateKey.OtherPrimeInfo();
+                oi.prime = o.getPrime();
+                oi.exponent = o.getExponent();
+                oi.coefficient = o.getCrtCoefficient();
+                s.add(oi);
+            }
+            return new RSAMultiPrivateKey(mk.getModulus(),
+                    mk.getPublicExponent(),
+                    mk.getPrivateExponent(),
+                    mk.getPrimeP(),
+                    mk.getPrimeQ(),
+                    mk.getPrimeExponentP(),
+                    mk.getPrimeExponentQ(),
+                    mk.getCrtCoefficient(), s);
+        } else if (k instanceof java.security.interfaces.RSAPrivateCrtKey) {
+            java.security.interfaces.RSAPrivateCrtKey ck = (java.security.interfaces.RSAPrivateCrtKey)k;
+            return new RSAPrivateCrtKey(
+                    ck.getModulus(),
+                    ck.getPublicExponent(),
+                    ck.getPrivateExponent(),
+                    ck.getPrimeP(),
+                    ck.getPrimeQ(),
+                    ck.getPrimeExponentP(),
+                    ck.getPrimeExponentQ(),
+                    ck.getCrtCoefficient());
+        }
+        return new RSAMiniPrivateKey(k.getModulus(), k.getPrivateExponent());
+    }
+    
+    public static RSAPublicKey toPub(java.security.interfaces.RSAPublicKey pub) {
+        return new RSAPublicKey(pub.getModulus(), pub.getPublicExponent());
     }
 }

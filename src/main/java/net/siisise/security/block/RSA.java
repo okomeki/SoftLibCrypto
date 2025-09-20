@@ -16,6 +16,7 @@
 package net.siisise.security.block;
 
 import java.math.BigInteger;
+import net.siisise.ietf.pkcs1.PKCS1;
 import net.siisise.security.key.RSAMiniPrivateKey;
 import net.siisise.security.key.RSAPublicKey;
 
@@ -66,13 +67,13 @@ public class RSA extends OneBlock {
      */
     @Override
     public void init(byte[]... keyandparam) {
-        pub = new RSAPublicKey(os2ip(keyandparam[1]), os2ip(keyandparam[0]));
+        pub = new RSAPublicKey(PKCS1.OS2IP(keyandparam[1]), PKCS1.OS2IP(keyandparam[0]));
         nlen = pub.getModulus().bitLength() / 8;  // keyandparam[1].length - 1; // ToDo: 仮
         if ( keyandparam[1][0] == 0 ) {
             nlen--; // padding 付きなら1つ下げ?
         }
         if ( keyandparam.length > 2) { // 秘密鍵
-            key = new RSAMiniPrivateKey(os2ip(keyandparam[1]), os2ip(keyandparam[2]));
+            key = new RSAMiniPrivateKey(PKCS1.OS2IP(keyandparam[1]), PKCS1.OS2IP(keyandparam[2]));
         }
     }
 
@@ -87,26 +88,14 @@ public class RSA extends OneBlock {
     /**
      * Integer to Octet String primitive
      * RFC 8017 4.1. I2OSP
+     * @deprecated net.siisise.ietf.pkcs1.PKCS1#I2OSP(BigInteger,int)
      * @param x データ
      * @param xLen 長さ
      * @return 長さ
      */
+    @Deprecated
     public static byte[] i2osp(BigInteger x, int xLen) {
-        byte[] xnum = x.toByteArray();
-        if ( xnum.length != xLen ) {
-            if ( xnum.length < xLen ) { // 短い
-                byte[] t = new byte[xLen];
-                System.arraycopy(xnum, 0, t, xLen - xnum.length, xnum.length);
-                xnum = t;
-            } else if (xnum.length == xLen + 1 && xnum[0] == 0) { // delete flag
-                byte[] t = new byte[xLen];
-                System.arraycopy(xnum, 1, t, 0, xnum.length);
-                xnum = t;
-            } else if ( xnum.length > xLen ) {
-                throw new SecurityException("integer too large");
-            }
-        }
-        return xnum;
+        return PKCS1.I2OSP(x, xLen);
     }
 
     /**
@@ -118,12 +107,7 @@ public class RSA extends OneBlock {
      * @return 符号なしBigInteger
      */
     public static BigInteger os2ip(byte[] em) {
-        if ( em[0] < 0) {
-            byte[] unum = new byte[em.length + 1];
-            System.arraycopy(em, 0, unum, 1, em.length);
-            return new BigInteger(unum);
-        }
-        return new BigInteger(em);
+        return PKCS1.OS2IP(em);
     }
 
     @Override

@@ -27,6 +27,7 @@ import net.siisise.security.digest.BlockMessageDigest;
  */
 public abstract class EdWards {
 
+    public final String name;
     public final OBJECTIDENTIFIER oid;
     // 1. GF(p) 奇数
     final BigInteger p;
@@ -41,8 +42,8 @@ public abstract class EdWards {
     final BigInteger d;
     // 8. GF(p)の非ゼロの正方形要素
     private final BigInteger a;
-    // 9. B
-    public final Point B;
+    // 9. E を ECDSAと同じGにする
+    public final Point G;
     final Point ZP;
     // 10. 素数
     public final BigInteger L;
@@ -69,7 +70,8 @@ public abstract class EdWards {
      * @param SIG
      * @param IC 
      */
-    EdWards(OBJECTIDENTIFIER oid, BigInteger p, int b, int c, int n, int a, BigInteger d, BigInteger Bx, BigInteger By, BigInteger L, byte[] SIG, byte[] IC) {
+    EdWards(String name, OBJECTIDENTIFIER oid, BigInteger p, int b, int c, int n, int a, BigInteger d, BigInteger Bx, BigInteger By, BigInteger L, byte[] SIG, byte[] IC) {
+        this.name = name;
         this.oid = oid;
         this.p = p;
         this.b = b;
@@ -77,13 +79,12 @@ public abstract class EdWards {
         this.n = n;
         this.a = BigInteger.valueOf(a);
         this.d = d;
-        //            this.B = decXY(itob(By,b));
-        this.B = toPoint(Bx, By);
+        this.G = toPoint(Bx, By);
         this.ZP = toPoint(BigInteger.ZERO, BigInteger.ONE);
         this.L = L;
         this.SIG = SIG;
         this.ID = dom(0, IC);
-    } //            this.B = decXY(itob(By,b));
+    } //            this.G = decXY(itob(By,b));
 
     /**
      * ハッシュの頭.
@@ -144,10 +145,6 @@ public abstract class EdWards {
     public byte[] ENC(BigInteger s) {
         return Bin.bitolb(s.mod(L), b / 8);
     }
-    
-    BigInteger add(BigInteger a, BigInteger b) {
-        return a.add(b).mod(p);
-    }
 
     BigInteger addP(BigInteger a, BigInteger b) {
         return a.add(b).mod(p);
@@ -171,6 +168,9 @@ public abstract class EdWards {
         protected BigInteger Y;
         protected BigInteger Z;
 
+        /**
+         * Zを1にしてXとYを読める座標にする
+         */
         void reset() {
             if (!Z.equals(BigInteger.ONE)) {
                 BigInteger r = Z.modInverse(p);
@@ -268,7 +268,7 @@ public abstract class EdWards {
     abstract Point toPoint(BigInteger x, BigInteger y);
 
     public byte[] nE(BigInteger x) {
-        return B.nE(x).encXY();
+        return G.nE(x).encXY();
     }
     
 }

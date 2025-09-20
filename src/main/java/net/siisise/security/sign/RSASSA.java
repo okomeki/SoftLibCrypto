@@ -34,7 +34,7 @@ public abstract class RSASSA extends Output.AbstractOutput implements SignVerify
     RSASSA(EMSA emsa) {
         this.emsa = emsa;
     }
-    
+
     /**
      * 秘密鍵の事前設定.
      * @param key 秘密鍵
@@ -54,7 +54,7 @@ public abstract class RSASSA extends Output.AbstractOutput implements SignVerify
     }
 
     /**
-     * 仮.
+     * 鍵生成用仮.
      * @return バイト長
      */
     @Override

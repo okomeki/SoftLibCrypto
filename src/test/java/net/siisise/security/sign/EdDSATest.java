@@ -15,6 +15,9 @@
  */
 package net.siisise.security.sign;
 
+import net.siisise.security.ec.EdWards25519;
+import net.siisise.security.ec.EdWards448;
+import net.siisise.security.ec.EdWards;
 import net.siisise.iso.asn1.ASN1Util;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
 import net.siisise.lang.Bin;
@@ -58,7 +61,7 @@ public class EdDSATest {
     public void testGetKeyLength() {
         System.out.println("getKeyLength");
         EdDSA instance = new EdDSA();
-        instance.genPrvKey(new EdDSA.EdWards25519());
+        instance.genPrvKey(new EdWards25519());
         int expResult = 256/8;
         int result = instance.getKeyLength();
         assertEquals(expResult, result);
@@ -85,7 +88,7 @@ public class EdDSATest {
     public void testGenPrvKey() {
         System.out.println("genPrvKey");
         EdDSA instance = new EdDSA();
-        EdDSA.EdWards25519 curve = instance.init25519();
+        EdWards25519 curve = instance.init25519();
         int expResult = 32;
         byte[] result = instance.genPrvKey(curve);
         OCTETSTRING oct = (OCTETSTRING) ASN1Util.toASN1(result);
@@ -107,7 +110,7 @@ public class EdDSATest {
         }
     }
 
-    void GenPubKey(EdDSA.EdWards ed, Ptn ptn) {
+    void GenPubKey(EdWards ed, Ptn ptn) {
         System.out.println(" GenPubKey:");
         EdDSAPrivateKey pkey = new EdDSAPrivateKey(ed, ptn.key);
         EdDSA instance = new EdDSA(pkey);
@@ -119,7 +122,7 @@ public class EdDSATest {
         assertArrayEquals(ptn.pub, result);
     }
 
-    void Sign(EdDSA.EdWards ed, Ptn ptn) {
+    void Sign(EdWards ed, Ptn ptn) {
         System.out.println(" Sign:");
         EdDSAPrivateKey pkey = new EdDSAPrivateKey(ed, ptn.key);
         EdDSA instance = new EdDSA(pkey);
@@ -130,7 +133,7 @@ public class EdDSATest {
         assertArrayEquals(ptn.sig, result);
     }
 
-    void Verify(EdDSA.EdWards ed, Ptn ptn) {
+    void Verify(EdWards ed, Ptn ptn) {
         System.out.println(" Verify");
         EdDSAPublicKey pubKey = new EdDSAPublicKey(ed, ptn.pub);
         EdDSA instance = new EdDSA(pubKey);
@@ -140,7 +143,7 @@ public class EdDSATest {
         assertEquals(expResult, result);
     }
 
-    void tall(EdDSA.EdWards ed, Ptn ptn) {
+    void tall(EdWards ed, Ptn ptn) {
         GenPubKey(ed, ptn);
         Sign(ed, ptn);
         Verify(ed, ptn);
@@ -156,7 +159,7 @@ public class EdDSATest {
     @Test
     public void testKey255191() {
         System.out.println("genPubKey25519 1");
-        EdDSA.EdWards ed = new EdDSA.EdWards25519();
+        EdWards ed = new EdWards25519();
         Ptn ptn = new Ptn(KEY1, PUB1, new byte[0], SIG1);
         tall(ed, ptn);
     }
@@ -172,7 +175,7 @@ public class EdDSATest {
     @Test
     public void testKey255192() {
         System.out.println("genPubKey25519 2");
-        EdDSA.EdWards ed = new EdDSA.EdWards25519();
+        EdWards ed = new EdWards25519();
         Ptn ptn = new Ptn(KEY2, PUB2, MSG2, SIG2);
         tall(ed, ptn);
     }
@@ -188,7 +191,7 @@ public class EdDSATest {
     @Test
     public void testKey255193() {
         System.out.println("genPubKey25519 3");
-        EdDSA.EdWards ed = new EdDSA.EdWards25519();
+        EdWards ed = new EdWards25519();
         Ptn ptn = new Ptn(KEY3, PUB3, MSG3, SIG3);
         tall(ed, ptn);
     }
@@ -236,7 +239,7 @@ public class EdDSATest {
     @Test
     public void testKey255194() {
         System.out.println("genPubKey25519 4");
-        EdDSA.EdWards ed = new EdDSA.EdWards25519();
+        EdWards ed = new EdWards25519();
         Ptn ptn = new Ptn(KEY4, PUB4, MSG4, SIG4);
         tall(ed, ptn);
     }
@@ -252,7 +255,7 @@ public class EdDSATest {
     @Test
     public void testKey255195() {
         System.out.println("genPubKey25519 5");
-        EdDSA.EdWards ed = new EdDSA.EdWards25519();
+        EdWards ed = new EdWards25519();
         Ptn ptn = new Ptn(KEY5, PUB5, MSG5, SIG5);
         tall(ed, ptn);
     }
@@ -267,7 +270,7 @@ public class EdDSATest {
     @Test
     public void testKey4481() {
         System.out.println("genPubKey448 1 -----Blank");
-        EdDSA.EdWards ed = new EdDSA.EdWards448();
+        EdWards ed = new EdWards448();
         Ptn ptn = new Ptn(KEY4481, PUB4481, new byte[0], SIG4481);
         tall(ed, ptn);
     }
@@ -284,7 +287,7 @@ public class EdDSATest {
     @Test
     public void testKey4482() {
         System.out.println("genPubKey448 2 -----1 octet");
-        EdDSA.EdWards ed = new EdDSA.EdWards448();
+        EdWards ed = new EdWards448();
         Ptn ptn = new Ptn(KEY4482, PUB4482, MSG4482, SIG4482);
         tall(ed, ptn);
     }
@@ -299,7 +302,7 @@ public class EdDSATest {
     @Test
     public void testKey4484() {
         System.out.println("genPubKey448 4 11 octets");
-        EdDSA.EdWards ed = new EdDSA.EdWards448();
+        EdWards ed = new EdWards448();
         Ptn ptn = new Ptn(KEY4484, PUB4484, MSG4484, SIG4484);
         tall(ed, ptn);
     }
@@ -315,7 +318,7 @@ public class EdDSATest {
     @Test
     public void testKey4485() {
         System.out.println("genPubKey448 5 12 octet");
-        EdDSA.EdWards ed = new EdDSA.EdWards448();
+        EdWards ed = new EdWards448();
         Ptn ptn = new Ptn(KEY4485, PUB4485, MSG4485, SIG4485);
         tall(ed, ptn);
     }
@@ -331,7 +334,7 @@ public class EdDSATest {
     @Test
     public void testKey4486() {
         System.out.println("genPubKey448 6 13 octet");
-        EdDSA.EdWards ed = new EdDSA.EdWards448();
+        EdWards ed = new EdWards448();
         Ptn ptn = new Ptn(KEY4486, PUB4486, MSG4486, SIG4486);
         tall(ed, ptn);
     }

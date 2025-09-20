@@ -63,7 +63,7 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
      * @param dQ exponent2
      * @param c coefficient
      */
-    RSAPrivateCrtKey(BigInteger n, BigInteger e, BigInteger d, BigInteger p, BigInteger q,
+    public RSAPrivateCrtKey(BigInteger n, BigInteger e, BigInteger d, BigInteger p, BigInteger q,
             BigInteger dP, BigInteger dQ, BigInteger c) {
         super(n,d);
         publicExponent = e;
@@ -190,7 +190,7 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
     @Override
     public byte[] getEncoded() {
         if (format == Format.PKCS1) { // RSA PRIVATE KEY
-            return getPKCS1Encoded();
+            return getPrivateEncoded();
         }
         return getPKCS8Encoded(); // PRIVATE KEY
     }
@@ -229,7 +229,7 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
      * @return 形を真似しただけ
      */
     public PrivateKeyInfo getPKCS8PrivateKeyInfo() {
-        byte[] body = getPKCS1Encoded(); // privateKey PrivateKey (BER / RFC 5208)
+        byte[] body = getPrivateEncoded(); // privateKey PrivateKey (BER / RFC 5208)
         return new PrivateKeyInfo(PKCS1.rsaEncryption, body);
     }
 
@@ -257,7 +257,7 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
      * @return  
      */
     public <T> T rebind(TypeFormat<T> format) {
-        SEQUENCEMap prv = getPKCS1ASN1();
+        SEQUENCEMap prv = getPrivateASN1();
         return (T)prv.rebind(format);
     }
 
@@ -267,8 +267,8 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
      * 鍵の要素だけを格納したもの
      * @return ASN.1 DER 出力
      */
-    public byte[] getPKCS1Encoded() {
-        return rebind(new ASN1DERFormat());
+    public byte[] getPrivateEncoded() {
+        return (byte[]) getPrivateASN1().rebind(new ASN1DERFormat());
     }
 
     /**
@@ -277,7 +277,7 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
      * @return 
      */
     @Override
-    public SEQUENCEMap getPKCS1ASN1() {
+    public SEQUENCEMap getPrivateASN1() {
         SEQUENCEMap prv = new SEQUENCEMap();
         prv.put("version", 0); // 0: prime 1: multi 
         prv.put("modulus", modulus);
@@ -290,7 +290,7 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
         prv.put("coefficient", coefficient);
         return prv;
     }
-    
+
     /**
      * SSH系の鍵をいくつか出力できるようにしておくといいかもしれず
      * @return SSHの方式っぽい鍵

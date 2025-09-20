@@ -23,8 +23,7 @@ import java.math.BigInteger;
 public class Curve448 extends Curve {
 
     public Curve448() {
-        super(P448, 156326, L448, 2, 5);
-        
+        super("X448", P448, 156326, L448, 2, 5);
     }
 
     /**

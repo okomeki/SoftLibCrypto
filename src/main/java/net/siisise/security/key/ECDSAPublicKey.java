@@ -19,40 +19,91 @@ import java.math.BigInteger;
 import java.security.interfaces.ECPublicKey;
 import java.security.spec.ECParameterSpec;
 import java.security.spec.ECPoint;
+import net.siisise.bind.format.TypeFormat;
+import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
+import net.siisise.iso.asn1.tag.BITSTRING;
+import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
+import net.siisise.iso.asn1.tag.SEQUENCEMap;
 import net.siisise.security.ec.EllipticCurve;
+import net.siisise.security.sign.ECDSA;
 
 /**
- * まだ限定 ECCurvep
+ * まだ限定 ECCurvep FIPS 186-5 Public Key Q
  */
 public class ECDSAPublicKey implements ECPublicKey {
 
+    public static final OBJECTIDENTIFIER ecPublicKey = new OBJECTIDENTIFIER("1.2.840.10045.2.1");
+    public static final OBJECTIDENTIFIER ecDH = new OBJECTIDENTIFIER("1.3.132.1.12");
+    public static final OBJECTIDENTIFIER ecMQV = new OBJECTIDENTIFIER("1.3.132.1.13");
+
+    AlgorithmIdentifier algorithm;
     EllipticCurve.ECCurvep curve;
     ECParameterSpec spec;
+    final EllipticCurve.ECCurvep.ECPointp Q;
 
-    public ECDSAPublicKey(ECParameterSpec spec) {
+    public ECDSAPublicKey(ECParameterSpec spec, ECPoint p) {
         this.spec = spec;
+        curve = ECDSA.toCurve(spec);
+        Q = curve.toPoint(p.getAffineX(), p.getAffineY());
     }
-    
-    public ECDSAPublicKey(EllipticCurve.ECCurvep curve, BigInteger x) {
-        this.curve = curve;
-    }
-    
-    
 
+    public ECDSAPublicKey(EllipticCurve.ECCurvep curve, BigInteger x, BigInteger y) {
+        this.curve = curve;
+        Q = curve.toPoint(x, y);
+    }
+
+    /**
+     *
+     * @param curve
+     * @param q 公開鍵座標 add,y
+     */
+    public ECDSAPublicKey(EllipticCurve.ECCurvep curve, EllipticCurve.ECCurvep.ECPointp q) {
+        this.curve = curve;
+        Q = q;
+    }
+
+    /**
+     * 同じ曲線バラメータであるか
+     *
+     * @param o
+     * @return
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof ECPublicKey) {
+            ECPublicKey p = (ECPublicKey) o;
+            return p.getAlgorithm().equals("EC") && p.getParams().equals(ECDSA.toSpec(curve)) && p.getW().equals(getW());
+        }
+        return false;
+    }
+
+    /**
+     * 公開鍵座標 for Java
+     *
+     * @return 公開鍵
+     */
     @Override
     public ECPoint getW() {
-//        return new ECPoint();
-        throw new UnsupportedOperationException("Not supported yet.");
+        return new ECPoint(Q.getX(), Q.getY());
     }
-    
+
+    /**
+     * FIPS 186-5 Q. 公開鍵座標
+     *
+     * @return
+     */
+    public EllipticCurve.ECCurvep.ECPointp getY() {
+        return Q;
+    }
+
     public EllipticCurve.ECCurvep getCurve() {
         return curve;
     }
 
     /**
-     * ECDSAなのかECなのか.
+     * ECDSAはEC.
      *
-     * @return ?
+     * @return "EC"
      */
     @Override
     public String getAlgorithm() {
@@ -69,9 +120,33 @@ public class ECDSAPublicKey implements ECPublicKey {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    public <T> T rebind(TypeFormat<T> format) {
+        // RFC 5480 2.
+        // SubjectPublicKeyInfo
+        SEQUENCEMap info = new SEQUENCEMap();
+
+        AlgorithmIdentifier ai;
+        if (algorithm == null) {
+            ai = new AlgorithmIdentifier(ecPublicKey, null);
+        } else {
+            ai = algorithm;
+        }
+        OBJECTIDENTIFIER alg = algorithm.algorithm;
+        // RFC 5480 2.1.1
+        if (curve.oid != null) {
+            ai.parameters = curve.oid;
+        } else {
+            throw new UnsupportedOperationException("RFC 5480 2.1.1 MUST NOT");
+        }
+        info.put("algorithm", ai);
+        byte[] oct = Q.encXY(); // 非圧縮04XY
+        info.put("subjectPublicKey", new BITSTRING(oct));
+        return (T) info.rebind(format);
+    }
+
     @Override
     public ECParameterSpec getParams() {
-        return spec;
+        return spec == null ? ECDSA.toSpec(curve) : spec;
     }
 
 }

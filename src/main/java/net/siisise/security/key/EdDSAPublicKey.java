@@ -15,13 +15,16 @@
  */
 package net.siisise.security.key;
 
-import net.siisise.security.sign.EdDSA;
+import java.security.PublicKey;
 import net.siisise.security.ec.EdWards;
+import net.siisise.security.ec.EdWards25519;
+import net.siisise.security.ec.EdWards448;
 
 /**
  * EdDSAの公開鍵.
+ * JDKの対応は15以降ぐらい
  */
-public class EdDSAPublicKey {
+public class EdDSAPublicKey implements PublicKey {
     EdWards curve;
     byte[] A;
 
@@ -33,8 +36,32 @@ public class EdDSAPublicKey {
     public EdWards getCurve() {
         return curve;
     }
-    
+
+    /**
+     * 公開鍵.
+     * @return 公開鍵 
+     */
     public byte[] getA() {
+        return A.clone();
+    }
+
+    @Override
+    public String getAlgorithm() {
+        if ( curve instanceof EdWards25519) {
+            return "Ed25519";
+        } else if (curve instanceof EdWards448) {
+            return "Ed448";
+        }
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public String getFormat() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public byte[] getEncoded() {
         return A.clone();
     }
 }

@@ -27,6 +27,7 @@ import net.siisise.security.sign.EdDSA;
  */
 public class EdWards448 extends EdWards {
 
+    public static final String NAME = "Ed448";
     // RFC 8032 5.2. Ed448
     // Ed448-Goldilocks 側の値を使用する
     static final BigInteger P448 = BigInteger.ONE.shiftLeft(448).subtract(BigInteger.ONE.shiftLeft(224).add(BigInteger.ONE));
@@ -42,7 +43,7 @@ public class EdWards448 extends EdWards {
     static final byte[] SIG448 = "SigEd448".getBytes(StandardCharsets.ISO_8859_1);
 
     public EdWards448() {
-        super(EdDSA.Ed448, P448, 456, 2, 447, 1, D448G, B448GX, B448GY, L448, SIG448, new byte[0]); // 448 + 8
+        super("Ed448", EdDSA.Ed448, P448, 456, 2, 447, 1, D448G, B448GX, B448GY, L448, SIG448, new byte[0]); // 448 + 8
     } // 448 + 8
 
     /**

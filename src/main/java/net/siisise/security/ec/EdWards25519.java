@@ -27,6 +27,7 @@ import net.siisise.security.sign.EdDSA;
  */
 public class EdWards25519 extends EdWards {
 
+    public static final String NAME = "Ed25519";
     static final BigInteger P25519 = BigInteger.ONE.shiftLeft(255).subtract(BigInteger.valueOf(19));
     static final BigInteger D25519 = new BigInteger("37095705934669439343138083508754565189542113879843219016388785533085940283555");
     static final BigInteger B25519X = new BigInteger("15112221349535400772501151409588531511454012693041857206046113283949847762202");
@@ -35,7 +36,7 @@ public class EdWards25519 extends EdWards {
     static final byte[] SIG25519 = "SigEd25519 no Ed25519 collisions".getBytes(StandardCharsets.ISO_8859_1);
 
     public EdWards25519() {
-        super(EdDSA.Ed25519, P25519, 256, 3, 254, -1, D25519, B25519X, B25519Y, L25519, SIG25519, null);
+        super(NAME, EdDSA.Ed25519, P25519, 256, 3, 254, -1, D25519, B25519X, B25519Y, L25519, SIG25519, null);
     }
 
     @Override
@@ -110,7 +111,7 @@ public class EdWards25519 extends EdWards {
             BigInteger B = pow(Y, BigInteger.TWO);
             BigInteger C = Z.modPow(BigInteger.TWO, p).shiftLeft(1);
             BigInteger H = addP(A, B);
-            BigInteger E = sub(H, pow(addP(X,Y),BigInteger.TWO)); // B
+            BigInteger E = sub(H, pow(addP(X,Y),BigInteger.TWO)); // G
             BigInteger G = sub(A, B);
             BigInteger F = addP(G,C);
             BigInteger X2 = mul(E, F);

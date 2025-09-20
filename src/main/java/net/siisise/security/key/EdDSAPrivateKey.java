@@ -22,7 +22,6 @@ import net.siisise.bind.format.TypeFormat;
 import net.siisise.ietf.pkcs8.OneAsymmetricKey;
 import net.siisise.iso.asn1.tag.ASN1DERFormat;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
-import net.siisise.security.sign.EdDSA;
 import net.siisise.security.ec.EdWards;
 import net.siisise.security.ec.EdWards25519;
 
@@ -78,16 +77,7 @@ public class EdDSAPrivateKey implements PrivateKey {
 
     @Override
     public String getAlgorithm() {
-        if (curve.oid.equals(EdDSA.Ed25519)) {
-            return "Ed25519";
-        } else if (curve.oid.equals(EdDSA.Ed448)) {
-            return "Ed448";
-        } else if (curve.oid.equals(EdDSA.X25519)) {
-            return "X25519";
-        } else if (curve.oid.equals(EdDSA.X448)) {
-            return "X448";
-        }
-        throw new IllegalStateException();
+        return curve.name;
     }
 
     @Override
@@ -105,6 +95,10 @@ public class EdDSAPrivateKey implements PrivateKey {
         return rebind(new ASN1DERFormat());
     }
 
+    /**
+     * ToDo: いらない?
+     * @return 
+     */
     public byte[] getPKCS8Encoded() {
         ASN1DERFormat af = new ASN1DERFormat();
         OneAsymmetricKey k = new OneAsymmetricKey(curve.oid, rebind(af));

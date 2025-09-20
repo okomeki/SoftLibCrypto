@@ -24,7 +24,7 @@ import net.siisise.security.ec.EllipticCurve;
  * FIPS PUB 186-5 ?
  */
 public class ECDSAKeyGen {
-    
+
     public ECDSAPrivateKey genPrivateKey(EllipticCurve.ECCurvep curve) {
         BigInteger x;
         try {
