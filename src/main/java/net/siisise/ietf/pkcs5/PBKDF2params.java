@@ -19,6 +19,7 @@ import java.math.BigInteger;
 import net.siisise.bind.format.TypeFormat;
 import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.iso.asn1.ASN1Tag;
+import net.siisise.iso.asn1.tag.ASN1Convert;
 import net.siisise.iso.asn1.tag.INTEGER;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
@@ -82,9 +83,9 @@ public class PBKDF2params {
      */
     public static PBKDF2params decode(SEQUENCE s) {
         PBKDF2params params = new PBKDF2params();
-        params.salt = s.get(0); // choice specified OCTET STRING
+        params.salt = s.get("salt", 0); // choice specified OCTET STRING
         // otherSource AlgorithmIdentifier {{PBKDF2-SaltSources}}
-        params.iterationCount = ((INTEGER) s.get(1)).getValue();
+        params.iterationCount = ((INTEGER) s.get("iterationCount", 1)).getValue();
         int offset = 2;
         if (s.get(2) instanceof INTEGER) {
             params.keyLength = ((INTEGER) s.get(2)).getValue(); // OPTIONAL
@@ -99,8 +100,8 @@ public class PBKDF2params {
     }
 
     public SEQUENCEMap encodeASN1() {
-//        return (SEQUENCE)rebind(new ASN1Convert());
-
+        return (SEQUENCEMap)rebind(new ASN1Convert());
+/*
         SEQUENCEMap params = new SEQUENCEMap();
         params.put("salt", salt); // specified OCTET STRING または otherSource AlgorithmIdentifier
         params.put("iterationCount", iterationCount);
@@ -109,6 +110,7 @@ public class PBKDF2params {
         }
         params.put("prf", prf); // DEFAULT algid-hmacWithSHA1
         return params;
+*/
     }
 
     /**

@@ -86,7 +86,7 @@ public class RSAMultiPrivateKeyTest {
     public void testGetPrivateKey() {
         System.out.println("getPrivateKey");
         RSAPrivateCrtKey instance = RSAKeyGen.generatePrivateKey(keylen, srnd, 2);
-        RSAMiniPrivateKey result = instance.getPrivateKey();
+        RSAMiniPrivateKey result = instance.getMiniPrivateKey();
         assertEquals(instance.getModulus(), result.getModulus());
         assertEquals(instance.getPrivateExponent(), result.getPrivateExponent());
     }

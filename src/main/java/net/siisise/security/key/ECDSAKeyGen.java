@@ -18,6 +18,10 @@ package net.siisise.security.key;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.HashMap;
+import java.util.Map;
+import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
+import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.security.ec.EllipticCurve;
 
 /**
@@ -36,5 +40,55 @@ public class ECDSAKeyGen {
             throw new IllegalStateException(ex);
         }
     }
+
+    /**
+     * PKCS #8 の privateKey  OCTETSTRING からデコード.
+     * @param ai
+     * @param prv privateKey OCTETSTRING の中身
+     * @return 
+     */
+    public static ECDSAPrivateKey decodePrivate(AlgorithmIdentifier ai, byte[] prv) {
+        EllipticCurve.ECCurvep curve = toCurve(ai);
+        return new ECDSAPrivateKey(curve, prv);
+    }
+
+    /**
+     * 公開鍵変換.
+     * @param ai 曲線
+     * @param pub 点 publicKey BITSTRING の中相当
+     * @return 公開鍵
+     */
+    public ECDSAPublicKey decodePublic(AlgorithmIdentifier ai, byte[] pub) {
+        EllipticCurve.ECCurvep curve = toCurve(ai);
+        EllipticCurve.ECCurvep.ECPointp p = curve.toPoint(pub);
+        return new ECDSAPublicKey(curve, p);
+    }
+
+    /**
+     * アルゴリズムから曲線の取得.
+     * @param ai 
+     * @return 
+     */
+    static EllipticCurve.ECCurvep toCurve(AlgorithmIdentifier ai) {
+        if ( ai.parameters instanceof OBJECTIDENTIFIER) {
+            return getCurve((OBJECTIDENTIFIER)ai.parameters);
+        }
+        
+        throw new UnsupportedOperationException();
+    }
+
+    static Map<OBJECTIDENTIFIER,EllipticCurve.ECCurvep> curves = new HashMap<>();
     
+    static {
+        curves.put(EllipticCurve.P192.oid, EllipticCurve.P192);
+        curves.put(EllipticCurve.P224.oid, EllipticCurve.P224);
+        curves.put(EllipticCurve.P256.oid, EllipticCurve.P256);
+        curves.put(EllipticCurve.P384.oid, EllipticCurve.P384);
+        curves.put(EllipticCurve.P521.oid, EllipticCurve.P521);
+        curves.put(EllipticCurve.secp256k1.oid, EllipticCurve.secp256k1);
+    }
+
+    private static EllipticCurve.ECCurvep getCurve(OBJECTIDENTIFIER oid) {
+        return curves.get(oid);
+    }
 }

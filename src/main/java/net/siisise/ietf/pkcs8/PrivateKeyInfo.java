@@ -133,10 +133,10 @@ public class PrivateKeyInfo {
      * @return PrivateKeyInfo
      */
     public static PrivateKeyInfo decode(SEQUENCE seq) {
-        INTEGER ver = (INTEGER) seq.get(0);
-        AlgorithmIdentifier privateKeyAlg = AlgorithmIdentifier.decode((SEQUENCE) seq.get(1));
+        INTEGER ver = (INTEGER) seq.get("version", 0);
+        AlgorithmIdentifier privateKeyAlg = AlgorithmIdentifier.decode((SEQUENCE) seq.get("privateKeyAlgorithm", 1));
         if ( ver.getValue().equals(BigInteger.ZERO)) {
-            PrivateKeyInfo info = new PrivateKeyInfo(privateKeyAlg, ((OCTETSTRING)seq.get(2)).getValue());
+            PrivateKeyInfo info = new PrivateKeyInfo(privateKeyAlg, ((OCTETSTRING)seq.get( "privateKey", 2)).getValue());
             if (seq.size() == 3) {
                 return info;
             }

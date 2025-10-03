@@ -57,19 +57,19 @@ public class RSAES_OAEP_params {
     }
 
     public void decode(SEQUENCE seq) {
-        SEQUENCE s = (SEQUENCE) seq.getContextSpecific(0, ASN1.SEQUENCE);
+        SEQUENCE s = (SEQUENCE) seq.getContextSpecific("hashAlgorithm", 0, ASN1.SEQUENCE);
         if (s != null) {
             hashAlgorithm = AlgorithmIdentifier.decode(s);
         } else {
             hashAlgorithm = new AlgorithmIdentifier(SHA1.OBJECTIDENTIFIER);
         }
-        s = (SEQUENCE) seq.getContextSpecific(1, ASN1.SEQUENCE);
+        s = (SEQUENCE) seq.getContextSpecific("hashGenAlgorithm", 1, ASN1.SEQUENCE);
         if (s != null) {
             maskGenAlgorithm = AlgorithmIdentifier.decode(s);
         } else {
             maskGenAlgorithm = new AlgorithmIdentifier(MGF1.OID);
         }
-        s = (SEQUENCE) seq.getContextSpecific(2, ASN1.SEQUENCE);
+        s = (SEQUENCE) seq.getContextSpecific("pSourceAlgorithm", 2, ASN1.SEQUENCE);
         if ( s != null) {
             pSourceAlgorithm = AlgorithmIdentifier.decode(s);
         } else {

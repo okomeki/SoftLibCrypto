@@ -57,8 +57,8 @@ public class EncryptedPrivateKeyInfo {
      */
     public static EncryptedPrivateKeyInfo decode(SEQUENCE seq) {
         if (seq.size() == 2) {
-            AlgorithmIdentifier alg = AlgorithmIdentifier.decode((SEQUENCE) seq.get(0));
-            return new EncryptedPrivateKeyInfo(alg, (OCTETSTRING) seq.get(1));
+            AlgorithmIdentifier alg = AlgorithmIdentifier.decode((SEQUENCE) seq.get("encryptionAlgorithm", 0));
+            return new EncryptedPrivateKeyInfo(alg, (OCTETSTRING) seq.get("encryptedData", 1));
         }
         throw new IllegalStateException();
     }

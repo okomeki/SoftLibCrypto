@@ -13,6 +13,7 @@ import net.siisise.iso.asn1.tag.SEQUENCEMap;
  * RFC 5280 X.509v3 Certificate 4.1.1.2
  * RFC 8017 Appendix C. ASN.1 Module
  * RFC 5911 
+ * RFC 5912 最新版?
  */
 public class AlgorithmIdentifier {
     public OBJECTIDENTIFIER algorithm;
@@ -47,15 +48,20 @@ public class AlgorithmIdentifier {
         return (T)s.rebind(format);
     }
 
+    /**
+     * ASN.1 decode
+     * @param s ASN.1
+     * @return AI
+     */
     public static AlgorithmIdentifier decode(SEQUENCE s) {
         AlgorithmIdentifier id = new AlgorithmIdentifier();
-        id.algorithm = (OBJECTIDENTIFIER) s.get(0);
+        id.algorithm = (OBJECTIDENTIFIER) s.get("algorithm", 0);
         switch (s.size()) {
             case 1:
                 id.parameters = null;
                 break;
             case 2:
-                id.parameters = s.get(1);
+                id.parameters = s.get("parameters", 1);
                 break;
             default:
                 throw new IllegalStateException();

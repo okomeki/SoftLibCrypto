@@ -150,14 +150,14 @@ public class OneAsymmetricKey extends PrivateKeyInfo {
      * @return デコードされた型
      */
     public static PrivateKeyInfo decode(SEQUENCE s) {
-        INTEGER ver = (INTEGER) s.get(0);
+        INTEGER ver = (INTEGER) s.get("version", 0);
         long longVer = ver.longValue();
         if (longVer == 1) {
             OneAsymmetricKey key = new OneAsymmetricKey();
             key.version = ver.intValueExact();
-            key.privateKeyAlgorithm = AlgorithmIdentifier.decode((SEQUENCE) s.get(1));
-            key.privateKey = ((OCTETSTRING) s.get(2)).getValue();
-            key.publicKey = ((BITSTRING) s.getContextSpecific(0, ASN1.BITSTRING)).getValue();
+            key.privateKeyAlgorithm = AlgorithmIdentifier.decode((SEQUENCE) s.get("privateKeyAlgorithm", 1));
+            key.privateKey = ((OCTETSTRING) s.get("privateKey", 2)).getValue();
+            key.publicKey = ((BITSTRING) s.getContextSpecific("publicKey",1, ASN1.BITSTRING)).getValue();
             return key;
         } else {
             return PrivateKeyInfo.decode(s);

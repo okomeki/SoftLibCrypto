@@ -68,9 +68,9 @@ public class MD2 extends BlockMessageDigest {
     
     /**
      * length 不要
-     * @param data
-     * @param offset
-     * @param length 
+     * @param data メッセージ
+     * @param offset 開始位置
+     * @param length 長さ
      */
     @Override
     public void engineUpdate(byte[] data, int offset, int length) {

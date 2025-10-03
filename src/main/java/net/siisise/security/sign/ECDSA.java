@@ -29,6 +29,7 @@ import java.security.spec.ECPoint;
 import java.util.Arrays;
 import net.siisise.ietf.pkcs1.PKCS1;
 import net.siisise.io.Output;
+import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.security.ec.EllipticCurve;
 import net.siisise.security.key.ECDSAPrivateKey;
 import net.siisise.security.key.ECDSAPublicKey;
@@ -39,6 +40,11 @@ import net.siisise.security.key.ECDSAPublicKey;
  * 曲線と署名用ハッシュ関数、秘密鍵または公開鍵を持つ
  */
 public class ECDSA extends Output.AbstractOutput implements SignVerify {
+    
+    // RFC 8692 with SHA3
+    static final OBJECTIDENTIFIER PKIX_ALGORITHMS = new OBJECTIDENTIFIER("1.3.6.1.5.5.7.6");
+    public static final OBJECTIDENTIFIER ECDSA_SHAKE128 = PKIX_ALGORITHMS.sub(32);
+    public static final OBJECTIDENTIFIER ECDSA_SHAKE256 = PKIX_ALGORITHMS.sub(33);
 
     MessageDigest md;
     ECDSAPrivateKey prv;
@@ -164,31 +170,48 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
         byte[] digest = md.digest();
         BigInteger h = PKCS1.OS2IP(digest);
 
-        int blen = (E.p.bitLength() + 7) / 8;
         BigInteger q = E.n;
         do {
             // 0 < k < q = q = order
             BigInteger k = rnd().mod(q.subtract(BigInteger.ONE)).add(BigInteger.ONE);
             // 2.
-            EllipticCurve.Point R = E.xG(k);
-            // 3. s1 = R_x mod q
-            BigInteger r = R.getX().mod(q);
-            if (r.equals(BigInteger.ZERO)) {
-                continue;
+            try {
+                return sign(h,k);
+            } catch (SecurityException e) {
             }
-            // 4. s2 = (h(m) + 秘密鍵z * s1)/k mod q
-            BigInteger s = h.add(prv.getS().multiply(r)).mod(q).multiply(k.modInverse(q)).mod(q);
-            if (s.equals(BigInteger.ZERO)) {
-                continue;
-            }
-
-            byte[] SS = new byte[blen*2];
-            byte[] S = r.toByteArray();
-            System.arraycopy(S, 0, SS, blen - S.length, S.length);
-            S = s.toByteArray();
-            System.arraycopy(S, 0, SS, blen*2 - S.length, S.length);
-            return SS;
         } while (true);
+    }
+
+    /**
+     * テスト用署名乱数指定可能版.
+     * 
+     * @param h ハッシュ済み値
+     * @param k 乱数を固定
+     * @return 署名
+     */
+    public byte[] sign(BigInteger h, BigInteger k) {
+        BigInteger q = E.n;
+        // 2.
+        EllipticCurve.Point R = E.xG(k);
+        // 3. s1 = R_x mod q
+        BigInteger r = R.getX().mod(q);
+        if (r.equals(BigInteger.ZERO)) {
+            throw new SecurityException();
+        }
+
+        // 4. s2 = (h(m) + 秘密鍵z * s1)/k mod q
+        BigInteger s = h.add(prv.getS().multiply(r)).mod(q).multiply(k.modInverse(q)).mod(q);
+        if (s.equals(BigInteger.ZERO)) {
+            throw new SecurityException();
+        }
+
+        int blen = (E.p.bitLength() + 7) / 8;
+        byte[] SS = new byte[blen*2];
+        byte[] S = PKCS1.I2OSP(r, blen);
+        System.arraycopy(S, 0, SS, 0, blen);
+        S = PKCS1.I2OSP(s, blen);
+        System.arraycopy(S, 0, SS, blen, blen);
+        return SS;
     }
 
     /**

@@ -18,6 +18,7 @@ package net.siisise.security.key;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import net.siisise.bind.format.TypeFormat;
+import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.ietf.pkcs1.PKCS1;
 import net.siisise.ietf.pkcs8.EncryptedPrivateKeyInfo;
 import net.siisise.ietf.pkcs8.PrivateKeyInfo;
@@ -36,7 +37,7 @@ import net.siisise.iso.asn1.tag.SEQUENCEMap;
  * 
  * ToDo: まだ全部public
  */
-public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security.interfaces.RSAPrivateCrtKey {
+public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements ASN1PrivateKey, java.security.interfaces.RSAPrivateCrtKey {
 
     private static final long serialVersionUID = 1L;
 
@@ -133,10 +134,10 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
      *
      * @return n, dのみ
      */
-    public RSAMiniPrivateKey getPrivateKey() {
+    public RSAMiniPrivateKey getMiniPrivateKey() {
         return new RSAMiniPrivateKey(modulus, privateExponent);
     }
-
+    
     /**
      * 公開鍵要素も持っている.
      * @return 公開鍵(鍵のみ)
@@ -229,8 +230,14 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements java.security
      * @return 形を真似しただけ
      */
     public PrivateKeyInfo getPKCS8PrivateKeyInfo() {
+        AlgorithmIdentifier ai = getAlgorithmIdentifier();
         byte[] body = getPrivateEncoded(); // privateKey PrivateKey (BER / RFC 5208)
-        return new PrivateKeyInfo(PKCS1.rsaEncryption, body);
+        return new PrivateKeyInfo(ai, body);
+    }
+
+    @Override
+    public AlgorithmIdentifier getAlgorithmIdentifier() {
+        return new AlgorithmIdentifier(PKCS1.rsaEncryption);
     }
 
     /**

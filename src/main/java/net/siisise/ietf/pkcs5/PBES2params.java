@@ -76,8 +76,8 @@ public class PBES2params {
      */
     public static PBES2params decode(SEQUENCE s) {
         PBES2params params = new PBES2params();
-        params.keyDerivationFunc = AlgorithmIdentifier.decode((SEQUENCE) s.get(0));
-        params.encryptionScheme = AlgorithmIdentifier.decode((SEQUENCE) s.get(1));
+        params.keyDerivationFunc = AlgorithmIdentifier.decode((SEQUENCE) s.get("keyDerivationFunc", 0));
+        params.encryptionScheme = AlgorithmIdentifier.decode((SEQUENCE) s.get("encryptionScheme", 1));
         return params;
     }
 

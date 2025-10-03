@@ -94,7 +94,7 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
         } else {
             fkey = generatePrivateKey(keysize, srnd, 2);
         }
-        return new KeyPair(fkey.getPublicKey(), fkey.getPrivateKey());
+        return new KeyPair(fkey.getPublicKey(), fkey.getMiniPrivateKey());
     }
 
     /**

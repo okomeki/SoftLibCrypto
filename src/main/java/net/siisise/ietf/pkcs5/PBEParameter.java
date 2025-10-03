@@ -46,8 +46,8 @@ public class PBEParameter {
     
     public static PBEParameter decode(SEQUENCE ps) {
         PBEParameter pbe = new PBEParameter();
-        pbe.salt = ((OCTETSTRING) ps.get(0)).getValue();
-        pbe.iterationCount = ((INTEGER)ps.get(1)).intValue();
+        pbe.salt = ((OCTETSTRING) ps.get("salt", 0)).getValue();
+        pbe.iterationCount = ((INTEGER)ps.get("iterationCount", 1)).intValue();
         return pbe;
     }
     

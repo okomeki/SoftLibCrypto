@@ -17,13 +17,17 @@ package net.siisise.ietf.pkcs8;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import net.siisise.ietf.pkcs5.PBES2;
 import net.siisise.iso.asn1.ASN1Util;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.SEQUENCE;
 import net.siisise.iso.asn1.tag.SEQUENCEMap;
+import net.siisise.security.key.ECDSAKeyGen;
+import net.siisise.security.key.ECDSAPublicKey;
 import net.siisise.security.key.RSAPrivateCrtKey;
 import net.siisise.security.key.RSAKeyGen;
+import net.siisise.security.sign.ECDSA;
 
 /**
  * しばらく5958より5208重視.
@@ -33,13 +37,18 @@ import net.siisise.security.key.RSAKeyGen;
  *  Private-Key Information Syntax Specification Version 1.2
  * RFC 5958 Asymmetric Key Packages
  * RFC 8479
+ * RFC 8692
  */
 public class PKCS8 {
     
     public static final OBJECTIDENTIFIER PKCS = net.siisise.ietf.pkcs1.PKCS1.PKCS; // new OBJECTIDENTIFIER("1.2.840.113549.1");
     public static final OBJECTIDENTIFIER PKCS1 = net.siisise.ietf.pkcs1.PKCS1.PKCS1;
     public static final OBJECTIDENTIFIER rsaEncryption = net.siisise.ietf.pkcs1.PKCS1.rsaEncryption;
+    public static final OBJECTIDENTIFIER RSASSA_PSS_SHAKE128 = net.siisise.security.sign.RSASSA_PSS.RSASSA_PSS_SHAKE128;
+    public static final OBJECTIDENTIFIER RSASSA_PSS_SHAKE256 = net.siisise.security.sign.RSASSA_PSS.RSASSA_PSS_SHAKE256;
     public static final OBJECTIDENTIFIER PKCS8 = PKCS.sub(8);
+    public static final OBJECTIDENTIFIER ecDSA_SHAKE128 = ECDSA.ECDSA_SHAKE128;
+    public static final OBJECTIDENTIFIER ecDSA_SHAKE256 = ECDSA.ECDSA_SHAKE256;
     
     /**
      * 5. Private-Key Information Syntax
@@ -57,10 +66,20 @@ public class PKCS8 {
      * @return Java 鍵型
      * @throws IOException 未サポート等
      */
-    public static RSAPrivateCrtKey setPrivateKeyInfo(byte[] src) throws IOException {
+    public static PrivateKey setPrivateKeyInfo(byte[] src) throws IOException {
         PrivateKeyInfo info = PrivateKeyInfo.decode((SEQUENCE) ASN1Util.toASN1(src));
-        if ( info.version == 0 && rsaEncryption.equals(info.privateKeyAlgorithm.algorithm) ) {
-            return RSAKeyGen.decodeSecret1(info.privateKey);
+        if ( info.version <= 1) {
+            OBJECTIDENTIFIER alg = info.privateKeyAlgorithm.algorithm;
+        
+            if ( rsaEncryption.equals(alg)
+                || RSASSA_PSS_SHAKE128.equals(alg)
+                || RSASSA_PSS_SHAKE256.equals(alg) ) {
+                return RSAKeyGen.decodeSecret1(info.privateKey);
+            } else if (ECDSAPublicKey.ecPublicKey.equals(alg)
+                    || ecDSA_SHAKE128.equals(alg)) {
+                return ECDSAKeyGen.decodePrivate(info.privateKeyAlgorithm, info.privateKey);
+            }
+                
         }
         throw new java.lang.UnsupportedOperationException("Invalid OID");
     }
@@ -76,7 +95,7 @@ public class PKCS8 {
      */
     @Deprecated
     public SEQUENCEMap encryptedPrivateKeyInfoASN1(RSAPrivateCrtKey key, byte[] pass) throws NoSuchAlgorithmException {
-        return encryptedPrivateKeyInfo(key.getPKCS8PrivateKeyInfo(), pass).encode();
+        return encryptedPrivateKeyInfo(new PrivateKeyInfo(key.getAlgorithmIdentifier(), key.getPrivateEncoded()), pass).encode();
     }
 
     /**

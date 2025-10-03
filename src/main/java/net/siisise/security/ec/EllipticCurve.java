@@ -163,7 +163,11 @@ public class EllipticCurve {
     /**
      * 仮 F2^m
      */
-    static class Curvet extends EllipticCurve {
+    static class Curvet<P extends Curvet.Pointt> extends EllipticCurve {
+
+        class Pointt {
+        }
+
         Curvet(BigInteger p, BigInteger order, int h) {
             super(p,order,h);
         }
@@ -217,7 +221,12 @@ public class EllipticCurve {
         // y^2 = add^3 + ax + b
         public final BigInteger a;
         public final BigInteger b;
-        public final ECPointp NULL;
+        public final ECPointp NULL = new ECPointp(BigInteger.ZERO,BigInteger.ONE, BigInteger.ZERO) {
+            @Override
+            public ECPointp add(ECPointp a) {
+                return a;
+            }
+        };
         /**
          * cofactor. n * h = p ぐらい?
          */
@@ -241,32 +250,20 @@ public class EllipticCurve {
             super(oid, p, Gx, Gy, order, h);
             this.a = add(p, a);
             this.b = b;
-            BigInteger np = p.negate();
-            NULL = new ECPointp(np, np);
         }
 
         public ECCurvep(OBJECTIDENTIFIER oid, BigInteger p, long a, BigInteger b, BigInteger Gx, BigInteger Gy, BigInteger n, int h) {
-            super(oid, p, Gx, Gy, n, h);
-            this.a = p.add(BigInteger.valueOf(a)).mod(p);
-            this.b = p.add(b).mod(p);
-            BigInteger np = p.negate();
-            NULL = new ECPointp(np, np);
+            this(oid, p, BigInteger.valueOf(a), b, Gx, Gy, n, h);
         }
 
         public ECCurvep(BigInteger p, BigInteger a, BigInteger b, BigInteger Gx, BigInteger Gy, BigInteger order, int h) {
             super(p, Gx, Gy, order, h);
             this.a = add(p, a);
             this.b = b;
-            BigInteger np = p.negate();
-            NULL = new ECPointp(np, np);
         }
 
         public ECCurvep(BigInteger p, long a, BigInteger b, BigInteger Gx, BigInteger Gy, BigInteger n, int h) {
-            super(p, Gx, Gy, n, h);
-            this.a = p.add(BigInteger.valueOf(a)).mod(p);
-            this.b = p.add(b).mod(p);
-            BigInteger np = p.negate();
-            NULL = new ECPointp(np, np);
+            this(p, BigInteger.valueOf(a), b, Gx, Gy, n, h);
         }
         
         public class ECPointp extends Pointp {
@@ -343,41 +340,40 @@ public class EllipticCurve {
             }
             
             BigInteger y(boolean yf, BigInteger x) {
-                BigInteger y2 = ECCurvep.this.add(ECCurvep.this.add(x.modPow(BigInteger.valueOf(3), p), mul(a,x)),b);
+                BigInteger y2 = add(add(x.modPow(BigInteger.valueOf(3), p), mul(a,x)),b);
                 BigInteger y = y2.sqrt();
                 throw new UnsupportedOperationException();
             }
-
+            
             /**
              * 加算.
+             * 
              * Z考慮版.
              * @param p 点P
              * @param q 点Q
              * @return P * Q
              */
             public ECPointp add(ECPointp q) {
-                if (equals(NULL)) {
-                    return q;
-                } else if (q.equals(NULL)) {
+                if (q.equals(NULL)) {
                     return this;
                 }
+                BigInteger u = sub(mul(z, q.y), mul(y, q.z));
                 BigInteger THREE = BigInteger.valueOf(3);
-                if (!equals(q)) {
-                    if (x.equals(q.x)) {
+                if (!u.equals(BigInteger.ZERO)) {
+                    BigInteger v = sub(mul(q.x,z),mul(x,q.z));
+                    if (v.equals(BigInteger.ZERO)) {
                         return NULL;
                     } else {
-                        BigInteger u = sub(mul(q.y,z),mul(y,q.z));
+//                        BigInteger u = sub(mul(q.y,z),mul(y,q.z));
                         BigInteger u2 = pow(u,2);
                         BigInteger u3 = pow(u,3);
-                        BigInteger v = sub(mul(q.x,z),mul(x, q.z));
+//                        BigInteger v = sub(mul(q.x,z),mul(x, q.z));
                         BigInteger v2 = pow(v,2);
                         BigInteger v3 = pow(v,3);
                         
                         BigInteger X3 = mul(v, sub(mul(q.z,sub(mul(z,u2),mul(x.shiftLeft(1),v2))),v3));
-                        BigInteger Y3 = ECCurvep.this.add(mul(q.z, sub(sub(mul(THREE.multiply(x),mul(u, v2)),mul(y,v3)),mul(z,u3))),mul(u,v3));
+                        BigInteger Y3 = add(mul(q.z, sub(sub(mul(THREE.multiply(x),mul(u, v2)),mul(y,v3)),mul(z,u3))),mul(u,v3));
                         BigInteger Z3 = mul(mul(v3,z), q.z);
-//                        BigInteger x3 = sub(sub(pow(div(sub(q.y, y), sub(q.x, x)), BigInteger.TWO), x), q.x);
-//                        BigInteger y3 = sub(div(mul(sub(x, x3), sub(q.y, y)), sub(q.x, x)), y);
                         return new ECPointp(X3, Y3, Z3);
                     }
                 }
@@ -388,11 +384,18 @@ public class EllipticCurve {
                 BigInteger zz = pow(z,2);
                 BigInteger y2 = y.shiftLeft(1);
                 BigInteger yz2 = mul(y2,z);
-                BigInteger w = ECCurvep.this.add(mul(THREE, pow(x,2)),mul(a,zz));
+                BigInteger w = add(mul(THREE, pow(x,2)),mul(a,zz));
                 BigInteger X3 = mul(yz2, sub(pow(w,2),mul(BigInteger.TWO.multiply(x), mul(yz2,y2))));
                 BigInteger Y3 = sub(mul(pow(y2,2),mul(z, sub(mul(mul(THREE,w),x),mul(yz2,y)))), pow(w,3));
                 BigInteger Z3 = pow(yz2,3);
                 return new ECPointp(X3, Y3, Z3);
+            }
+
+            BigInteger add(BigInteger a, BigInteger... b) {
+                for (BigInteger i : b) {
+                    a = a.add(i);
+                }
+                return a.mod(p);
             }
 
             /**
@@ -429,6 +432,7 @@ public class EllipticCurve {
 */
             /**
              * 乗算.
+             * nG だったり nEだったり
              * @param n
              * @param E
              * @return 

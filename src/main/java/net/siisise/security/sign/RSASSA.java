@@ -66,17 +66,6 @@ public abstract class RSASSA extends Output.AbstractOutput implements SignVerify
      * 署名/検証用メッセージをハッシュにかける.
      * MessageDigestのupdateと同じ
      * 本文を分割して繰り返し利用可能.
-     * @param M メッセージまたはその一部
-     */
-    @Override
-    public void update(byte[] M) {
-        emsa.update(M);
-    }
-    
-    /**
-     * 署名/検証用メッセージをハッシュにかける.
-     * MessageDigestのupdateと同じ
-     * 本文を分割して繰り返し利用可能.
      * @param M メッセージを含む配列
      * @param offset 開始位置
      * @param length 長さ
