@@ -40,7 +40,7 @@ import net.siisise.security.key.ECDSAPublicKey;
  * 曲線と署名用ハッシュ関数、秘密鍵または公開鍵を持つ
  */
 public class ECDSA extends Output.AbstractOutput implements SignVerify {
-    
+
     // RFC 8692 with SHA3
     static final OBJECTIDENTIFIER PKIX_ALGORITHMS = new OBJECTIDENTIFIER("1.3.6.1.5.5.7.6");
     public static final OBJECTIDENTIFIER ECDSA_SHAKE128 = PKIX_ALGORITHMS.sub(32);
@@ -77,8 +77,9 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
 
     /**
      * Java Spec への変換.
+     *
      * @param curve
-     * @return 
+     * @return
      */
     public static ECParameterSpec toSpec(EllipticCurve.ECCurvep curve) {
         ECFieldFp Fp = new ECFieldFp(curve.p);
@@ -95,8 +96,9 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
 
     /**
      * Public Key の変換.
+     *
      * @param pub
-     * @return 
+     * @return
      */
     public static ECDSAPublicKey toECDSAKey(ECPublicKey pub) {
         EllipticCurve.ECCurvep curve = toCurve(pub.getParams());
@@ -111,7 +113,8 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
      */
     public ECDSA(EllipticCurve.ECCurvep e, MessageDigest h) {
         this.E = e;
-        this.md = h;
+        md = h;
+        md.reset();
     }
 
     /**
@@ -163,12 +166,12 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
     /**
      * KT-I sign 方式.
      * Rx,
+     *
      * @return (s1,s2) FIPS (r,s)
      */
     @Override
     public byte[] sign() {
-        byte[] digest = md.digest();
-        BigInteger h = PKCS1.OS2IP(digest);
+        byte[] h = md.digest();
 
         BigInteger q = E.n;
         do {
@@ -176,7 +179,7 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
             BigInteger k = rnd().mod(q.subtract(BigInteger.ONE)).add(BigInteger.ONE);
             // 2.
             try {
-                return sign(h,k);
+                return sign(h, k);
             } catch (SecurityException e) {
             }
         } while (true);
@@ -184,29 +187,36 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
 
     /**
      * テスト用署名乱数指定可能版.
-     * 
+     *
      * @param h ハッシュ済み値
      * @param k 乱数を固定
      * @return 署名
      */
-    public byte[] sign(BigInteger h, BigInteger k) {
+    public byte[] sign(byte[] h, BigInteger k) {
         BigInteger q = E.n;
+
         // 2.
+        // SEC.1 4.1.3. 1. kとRのペアを生成
+        k = k.mod(q);
         EllipticCurve.Point R = E.xG(k);
         // 3. s1 = R_x mod q
+        // SEC.1 4.1.3. 2. R_x を 変換 3. r
         BigInteger r = R.getX().mod(q);
         if (r.equals(BigInteger.ZERO)) {
             throw new SecurityException();
         }
 
+        int blen = (E.p.bitLength() + 7) / 8;
         // 4. s2 = (h(m) + 秘密鍵z * s1)/k mod q
-        BigInteger s = h.add(prv.getS().multiply(r)).mod(q).multiply(k.modInverse(q)).mod(q);
+        // SEC.1 4.1.3 4. ハッシュ(パラメータhで済) 5. eの計算
+        BigInteger e = PKCS1.OS2IP(Arrays.copyOf(h, Integer.min(h.length, blen))); // hを切り詰めた値
+        BigInteger d = prv.getS();
+        BigInteger s = e.add(d.multiply(r)).mod(q).multiply(k.modInverse(q)).mod(q);
         if (s.equals(BigInteger.ZERO)) {
             throw new SecurityException();
         }
 
-        int blen = (E.p.bitLength() + 7) / 8;
-        byte[] SS = new byte[blen*2];
+        byte[] SS = new byte[blen * 2];
         byte[] S = PKCS1.I2OSP(r, blen);
         System.arraycopy(S, 0, SS, 0, blen);
         S = PKCS1.I2OSP(s, blen);
@@ -216,13 +226,13 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
 
     /**
      * KT-I verify
+     *
      * @param sign (s1,s2)
      * @return 成否
      */
     @Override
     public boolean verify(byte[] sign) {
-        byte[] digest = md.digest();
-        BigInteger h = PKCS1.OS2IP(digest);
+        byte[] h = md.digest();
         int blen = (E.p.bitLength() + 7) / 8;
         if (sign.length != blen * 2) {
             return false;
@@ -234,17 +244,18 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
         if (s1.equals(BigInteger.ZERO) || s1.compareTo(q) >= 0) {
             return false;
         }
-        S = Arrays.copyOfRange(sign, blen, blen*2);
+        S = Arrays.copyOfRange(sign, blen, blen * 2);
         BigInteger s2 = PKCS1.OS2IP(S);
         if (s2.equals(BigInteger.ZERO) || s2.compareTo(q) >= 0) {
             return false;
         }
-        BigInteger s2_inv = s2.modInverse(q);
+        BigInteger s2Inv = s2.modInverse(q);
 
-        BigInteger u1 = h.multiply(s2_inv).mod(q);
-        BigInteger u2 = s1.multiply(s2_inv).mod(q);
+        BigInteger e = PKCS1.OS2IP(Arrays.copyOf(h, Integer.min(h.length, blen))); // hを切り詰めた値
+        BigInteger u1 = e.multiply(s2Inv).mod(q);
+        BigInteger u2 = s1.multiply(s2Inv).mod(q);
         EllipticCurve.ECCurvep.ECPointp Y = pub.getY();
-        EllipticCurve.ECCurvep.ECPointp R = E.xG(u1).add( Y.x(u2));
+        EllipticCurve.ECCurvep.ECPointp R = E.xG(u1).add(Y.x(u2));
         return R.getX().equals(s1);
     }
 }
