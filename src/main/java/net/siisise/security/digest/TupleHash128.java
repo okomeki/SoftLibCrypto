@@ -31,10 +31,6 @@ public class TupleHash128 extends TupleHash {
         super(128, L, S);
     }
 
-    protected TupleHash128(int L, int Ltag, String S) {
-        super(128, L, Ltag, S);
-    }
-
     /**
      * 出力サイズ256bitとオプションの文字列指定.
      *

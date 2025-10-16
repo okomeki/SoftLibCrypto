@@ -45,10 +45,10 @@ public class MGFXOF implements MGF {
      */
     @Override
     public byte[] generate(byte[] seed, long maskLen) {
-        int org = xof.getDigestLength();
+        long org = xof.getBitDigestLength();
         xof.setDigestLength((int)maskLen);
         byte[] digest = xof.digest(seed);
-        xof.setDigestLength(org);
+        xof.setBitDigestLength(org);
         return digest;
     }
     

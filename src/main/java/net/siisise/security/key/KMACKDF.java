@@ -79,7 +79,7 @@ public class KMACKDF implements KDF {
 
     @Override
     public byte[] kdf(byte[] password, int len) {
-        mac.setMacLength(len);
+        mac.setMacBitLength(len*8l);
         return Arrays.copyOf(kdf(password), len);
     }
 

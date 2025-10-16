@@ -29,7 +29,7 @@ public class TupleHashXOF256 extends TupleHash256 implements XOF {
      * any length, including zero.
      */
     public TupleHashXOF256(int L, String S) {
-        super(L, 0, S);
+        super(L, S);
     }
 
     /**
@@ -39,6 +39,6 @@ public class TupleHashXOF256 extends TupleHash256 implements XOF {
      * any length, including zero.
      */
     public TupleHashXOF256(String S) {
-        super(512, 0, S);
+        super(512, S);
     }
 }

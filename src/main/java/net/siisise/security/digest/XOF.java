@@ -15,6 +15,8 @@
  */
 package net.siisise.security.digest;
 
+import net.siisise.io.Output;
+
 /**
  * extendable-output function.
  * SHA-3 SHAKE系 XOF型.
@@ -31,12 +33,27 @@ public interface XOF {
     int getDigestLength();
 
     /**
+     * ビット単位の出力長.
+     * 
+     * @return ビット単位の出力長
+     */
+    long getBitDigestLength();
+
+    /**
      * XOFの出力サイズをあとから変更する.
      * 後から変更できないものはException出したい.
      *
      * @param length 出力バイト長
      */
     void setDigestLength(int length);
+
+    /**
+     * XOFの出力サイズをあとから変更する.
+     * 後から変更できないものはException出したい.
+     * 
+     * @param length 出力ビット長
+     */
+    void setBitDigestLength(long length);
     
     /**
      * ハッシュ偽装用.
@@ -47,7 +64,21 @@ public interface XOF {
     void update(byte[] src);
     void update(byte[] src, int offset, int length);
 
+    /**
+     * MessageDigest 互換.
+     * @return ハッシュ出力
+     */
     byte[] digest();
+    /**
+     * MessageDigest 互換.
+     * @param src 入力の最後
+     * @return ハッシュ出力
+     */
     byte[] digest(byte[] src);
+    /**
+     * 連続出力が可能な型式.
+     * @param out 出力先
+     */
+    void digest(Output out);
 
 }

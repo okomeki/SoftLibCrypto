@@ -108,13 +108,31 @@ public class Keccak extends BlockMessageDigest {
     }
 
     /**
+     * ビット単位の出力長.
+     * ビット単位で調整可能なので追加.
+     * @return bit length
+     */
+    public long getBitDigestLength() {
+        return d;
+    }
+
+    /**
      * 出力長をあとで調整する.
      * 変更できないものもあるので注意.
      * getDigestLength にあわせたのでバイト単位.
      * @param length 出力バイト長
      */
     public void setDigestLength(int length) {
-        d = length * 8;
+        d = length*8l;
+    }
+
+    /**
+     * 出力長をあとで調整する.
+     * 変更できないものもあるので注意.
+     * @param length 出力ビット長
+     */
+    public void setBitDigestLength(long length) {
+        d = length;
     }
 
     /**
@@ -250,8 +268,10 @@ public class Keccak extends BlockMessageDigest {
     }
     
     /**
+     * XOF可能な出力.
+     * ビット単位に調整されて残りビットは0埋めされている.
      * Algorithm 8
-     * @param d 出力長 bit
+     * @param d output bit length
      * @return dサイズになったn
      */
     private byte[] sponge(long d) {
@@ -259,30 +279,36 @@ public class Keccak extends BlockMessageDigest {
         pac.write(pad);
         
         byte[] ret = new byte[(int)((d + 7) / 8)];
-        int offset = 0;
-        while ( d - offset*8 > r ) {
-            toB(a, ret, offset, r);
-            offset += r/8;
+        long offset = 0;
+        while ( d - offset > r ) {
+            toB(a, ret, (int)(offset/8), r);
+            offset += r;
             keccak_f(a);
         }
-        toB(a, ret, offset, d - offset*8);
+        toB(a, ret, (int)(offset/8), d - offset);
         return ret;
     }
-    
+
+    /**
+     * XOF可能な出力.
+     * ビット単位に調整されて残りビットは0埋めされている.
+     * @param out 出力先
+     * @param d output bit length
+     */
     private void sponge(Output out, long d) {
         byte[] pad = pad10x1();
         out.write(pad);
         
         byte[] outb = new byte[r/8];
-        long offset = 0;
-        while ( d - offset > r ) {
+        while ( d > r ) {
             toB(a, outb, 0, r);
             out.write(outb);
-            offset += r;
+            d -= r;
             keccak_f(a);
         }
-        toB(a, outb, 0, d - offset);
-        out.write(outb,0, (int)(((d - offset) + 7) / 8));
+        toB(a, outb, 0, d);
+        
+        out.write(outb,0, (int)((d + 7) / 8));
     }
 
     /**
@@ -302,18 +328,18 @@ public class Keccak extends BlockMessageDigest {
     /**
      * SHA-512と逆
      *
-     * @param src
-     * @param len
-     * @return
+     * @param src ソース
+     * @param ret 出力先
+     * @param offset 出力バイト位置
+     * @param len 長さ(ビット)
      */
     static void toB(long[] src, byte[] ret, int offset, long len) {
         int blen = (int)((len + 7) / 8);
         int nlen = (int)(len % 8);
-//        byte[] ret = new byte[blen];
         for (int i = 0; i < blen; i++) {
             ret[offset + i] = (byte) (src[i / 8] >>> ((i % 8) * 8));
         }
-        if ( nlen > 0 ) { // 仮 逆かもしれない
+        if ( nlen > 0 ) {
             ret[offset + blen - 1] &= (1 << nlen) - 1;
         }
     }

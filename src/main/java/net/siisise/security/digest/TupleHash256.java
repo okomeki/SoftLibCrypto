@@ -29,10 +29,6 @@ public class TupleHash256 extends TupleHash {
     public TupleHash256(int L, String S) {
         super(256, L, S);
     }
-    
-    protected TupleHash256(int L, int Ltag, String S) {
-        super(256,L, Ltag, S);
-    }
 
     /**
      * 出力サイズ512bitでオプションの文字列指定.

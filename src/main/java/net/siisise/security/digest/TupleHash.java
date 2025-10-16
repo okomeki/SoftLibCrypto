@@ -31,7 +31,7 @@ public class TupleHash extends cSHAKE {
      */
     protected TupleHash(int c, int L, String S) {
         super(c, L, "TupleHash", S);
-        this.L = L;
+        this.L = this instanceof XOF ? 0 : L;
     }
 
     /**

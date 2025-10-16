@@ -93,8 +93,22 @@ public abstract class KMAC extends Output.AbstractOutput implements MAC, KDF {
         return cshake.getDigestLength();
     }
     
+    /**
+     * 出力長の変更.
+     * @param d バイト長
+     */
     public void setMacLength(long d) {
-        cshake.setDigestLength((int) d);
+        cshake.setBitDigestLength(d*8);
+        L = d*8;
+    }
+
+    /**
+     * 出力長をビット指定する.
+     * 最後は下から埋め、上は0padding
+     * @param d 出力ビット長
+     */
+    public void setMacBitLength(long d) {
+        cshake.setBitDigestLength(d);
         L = d;
     }
 
@@ -128,7 +142,7 @@ public abstract class KMAC extends Output.AbstractOutput implements MAC, KDF {
      */
     @Override
     public byte[] kdf(byte[] password, int len) {
-        setMacLength(len);
+        setMacBitLength(len*8l);
 //        L = 0; // でいいのか?
         update(password);
         return sign();
