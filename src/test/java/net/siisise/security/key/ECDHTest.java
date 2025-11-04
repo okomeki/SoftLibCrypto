@@ -42,7 +42,8 @@ public class ECDHTest {
         byte[] exOut  = Bin.toByteArray("c3da55379de9c6908e94ea4df28d084f32eccf03491c71f754b4075577a28552");
         Curve c = new Curve25519();
         BigInteger gu = BigInteger.valueOf(9);
-        BigInteger v = c.v(gu).getY();
+        
+        BigInteger v = c.new Pointu(gu).getY();
         System.out.println("v:" + v.toString());
         scalar = c.cutk(scalar);
         System.out.println(Bin.lbtobi(scalar));

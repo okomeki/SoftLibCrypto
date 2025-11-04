@@ -23,7 +23,7 @@ import net.siisise.ietf.pkcs1.PKCS1;
 import net.siisise.iso.asn1.ASN1Tag;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
-import net.siisise.security.ec.EllipticCurve;
+import net.siisise.security.ec.ECCurve;
 import net.siisise.security.sign.ECDSA;
 
 /**
@@ -33,7 +33,7 @@ import net.siisise.security.sign.ECDSA;
  */
 public class ECDSAPrivateKey implements ECPrivateKey {
 
-    final EllipticCurve.ECCurvep curve;
+    final ECCurve curve;
     final BigInteger d;
 
     /**
@@ -42,12 +42,12 @@ public class ECDSAPrivateKey implements ECPrivateKey {
      * @param c 楕円曲線.
      * @param d 秘密鍵
      */
-    public ECDSAPrivateKey(EllipticCurve.ECCurvep c, BigInteger d) {
+    public ECDSAPrivateKey(ECCurve c, BigInteger d) {
         curve = c;
         this.d = d;//.mod(c.n);
     }
 
-    public ECDSAPrivateKey(EllipticCurve.ECCurvep c, byte[] d) {
+    public ECDSAPrivateKey(ECCurve c, byte[] d) {
         curve = c;
         this.d = PKCS1.OS2IP(d);//.mod(c.n);
     }
@@ -95,8 +95,9 @@ public class ECDSAPrivateKey implements ECPrivateKey {
     public AlgorithmIdentifier getAlgorithmIdentifier() {
         OBJECTIDENTIFIER oid = ECDSAPublicKey.ecPublicKey;
         ASN1Tag params;
-        if (curve.oid != null) {
-            params = curve.oid;
+        OBJECTIDENTIFIER coid = curve.getOID();
+        if (coid != null) {
+            params = coid;
         } else {
             // implicitCurve
             // specifiedCurve
@@ -110,10 +111,10 @@ public class ECDSAPrivateKey implements ECPrivateKey {
      * @return 秘密鍵
      */
     public OCTETSTRING getPrivateKey() {
-        return new OCTETSTRING(PKCS1.I2OSP(d, (curve.p.bitLength()+7)/8));
+        return new OCTETSTRING(PKCS1.I2OSP(d, (curve.getP().bitLength()+7)/8));
     }
 
-    public EllipticCurve.ECCurvep getCurve() {
+    public ECCurve getCurve() {
         return curve;
     }
 

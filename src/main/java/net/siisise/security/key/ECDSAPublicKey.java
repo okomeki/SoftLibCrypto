@@ -24,6 +24,7 @@ import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.iso.asn1.tag.BITSTRING;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.SEQUENCEMap;
+import net.siisise.security.ec.ECCurve;
 import net.siisise.security.ec.EllipticCurve;
 import net.siisise.security.sign.ECDSA;
 
@@ -37,9 +38,9 @@ public class ECDSAPublicKey implements ECPublicKey {
     public static final OBJECTIDENTIFIER ecMQV = new OBJECTIDENTIFIER("1.3.132.1.13");
 
     AlgorithmIdentifier algorithm;
-    EllipticCurve.ECCurvep curve;
+    ECCurve curve;
     ECParameterSpec spec;
-    final EllipticCurve.ECCurvep.ECPointp Q;
+    final EllipticCurve.ECPoint Q;
 
     public ECDSAPublicKey(ECParameterSpec spec, ECPoint p) {
         this.spec = spec;
@@ -47,7 +48,7 @@ public class ECDSAPublicKey implements ECPublicKey {
         Q = curve.toPoint(p.getAffineX(), p.getAffineY());
     }
 
-    public ECDSAPublicKey(EllipticCurve.ECCurvep curve, BigInteger x, BigInteger y) {
+    public ECDSAPublicKey(ECCurve curve, BigInteger x, BigInteger y) {
         this.curve = curve;
         Q = curve.toPoint(x, y);
     }
@@ -57,7 +58,7 @@ public class ECDSAPublicKey implements ECPublicKey {
      * @param curve
      * @param q 公開鍵座標 add,y
      */
-    public ECDSAPublicKey(EllipticCurve.ECCurvep curve, EllipticCurve.ECCurvep.ECPointp q) {
+    public ECDSAPublicKey(ECCurve curve, EllipticCurve.ECPoint q) {
         this.curve = curve;
         Q = q;
     }
@@ -92,11 +93,11 @@ public class ECDSAPublicKey implements ECPublicKey {
      *
      * @return
      */
-    public EllipticCurve.ECCurvep.ECPointp getY() {
+    public EllipticCurve.ECPoint getY() {
         return Q;
     }
 
-    public EllipticCurve.ECCurvep getCurve() {
+    public ECCurve getCurve() {
         return curve;
     }
 
@@ -133,8 +134,8 @@ public class ECDSAPublicKey implements ECPublicKey {
         }
         OBJECTIDENTIFIER alg = algorithm.algorithm;
         // RFC 5480 2.1.1
-        if (curve.oid != null) {
-            ai.parameters = curve.oid;
+        if (curve.getOID() != null) {
+            ai.parameters = curve.getOID();
         } else {
             throw new UnsupportedOperationException("RFC 5480 2.1.1 MUST NOT");
         }

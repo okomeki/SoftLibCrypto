@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
+import net.siisise.security.ec.ECCurvep;
 import net.siisise.security.ec.EllipticCurve;
 
 /**
@@ -29,7 +30,7 @@ import net.siisise.security.ec.EllipticCurve;
  */
 public class ECDSAKeyGen {
 
-    public ECDSAPrivateKey genPrivateKey(EllipticCurve.ECCurvep curve) {
+    public ECDSAPrivateKey genPrivateKey(ECCurvep curve) {
         BigInteger x;
         try {
             SecureRandom srnd = SecureRandom.getInstanceStrong();
@@ -48,7 +49,7 @@ public class ECDSAKeyGen {
      * @return 
      */
     public static ECDSAPrivateKey decodePrivate(AlgorithmIdentifier ai, byte[] prv) {
-        EllipticCurve.ECCurvep curve = toCurve(ai);
+        ECCurvep curve = toCurve(ai);
         return new ECDSAPrivateKey(curve, prv);
     }
 
@@ -59,8 +60,8 @@ public class ECDSAKeyGen {
      * @return 公開鍵
      */
     public ECDSAPublicKey decodePublic(AlgorithmIdentifier ai, byte[] pub) {
-        EllipticCurve.ECCurvep curve = toCurve(ai);
-        EllipticCurve.ECCurvep.ECPointp p = curve.toPoint(pub);
+        ECCurvep curve = toCurve(ai);
+        ECCurvep.ECPointp p = curve.toPoint(pub);
         return new ECDSAPublicKey(curve, p);
     }
 
@@ -69,7 +70,7 @@ public class ECDSAKeyGen {
      * @param ai 
      * @return 
      */
-    static EllipticCurve.ECCurvep toCurve(AlgorithmIdentifier ai) {
+    static ECCurvep toCurve(AlgorithmIdentifier ai) {
         if ( ai.parameters instanceof OBJECTIDENTIFIER) {
             return getCurve((OBJECTIDENTIFIER)ai.parameters);
         }
@@ -77,7 +78,7 @@ public class ECDSAKeyGen {
         throw new UnsupportedOperationException();
     }
 
-    static Map<OBJECTIDENTIFIER,EllipticCurve.ECCurvep> curves = new HashMap<>();
+    static Map<OBJECTIDENTIFIER, ECCurvep> curves = new HashMap<>();
     
     static {
         curves.put(EllipticCurve.P192.oid, EllipticCurve.P192);
@@ -88,7 +89,7 @@ public class ECDSAKeyGen {
         curves.put(EllipticCurve.secp256k1.oid, EllipticCurve.secp256k1);
     }
 
-    private static EllipticCurve.ECCurvep getCurve(OBJECTIDENTIFIER oid) {
+    private static ECCurvep getCurve(OBJECTIDENTIFIER oid) {
         return curves.get(oid);
     }
 }

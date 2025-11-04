@@ -19,6 +19,7 @@ import java.nio.ByteBuffer;
 import net.siisise.security.digest.DigestAlgorithm;
 import java.security.MessageDigest;
 import java.util.Arrays;
+import net.siisise.iso.asn1.tag.ASN1DERFormat;
 
 /**
  * RFC 8017 PKCS #1
@@ -70,7 +71,7 @@ public class EMSA_PKCS1_v1_5 implements EMSA {
         // DigestInfo
         DigestAlgorithm alg = new DigestAlgorithm(DigestAlgorithm.toOID(md));
         DigestInfo info = new DigestInfo(alg, H);
-        byte[] T = info.encodeASN1().encodeAll();
+        byte[] T = info.rebind(new ASN1DERFormat());
         if ( emLen < T.length + 11 ) {
             throw new SecurityException("intended encoded message length too short");
         }

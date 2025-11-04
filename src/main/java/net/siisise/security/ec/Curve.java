@@ -23,7 +23,7 @@ import net.siisise.lang.Bin;
  * Curve25519 Curve448
  * v^2 = u^3 + Au^2 + u
  */
-public abstract class Curve extends EllipticCurve.Curvep {
+public abstract class Curve extends Curvep {
 
     static final BigInteger P25519 = BigInteger.ONE.shiftLeft(255).subtract(BigInteger.valueOf(19));
     static final BigInteger L25519 = BigInteger.ONE.shiftLeft(252).add(new BigInteger("14def9dea2f79cd65812631a5cf5d3ed", 16));
@@ -40,6 +40,96 @@ public abstract class Curve extends EllipticCurve.Curvep {
     protected final BigInteger a24;
     protected final int c;
     public byte[] Pu;
+    
+    /**
+     * 仮uv曲線.
+     * vを使わない
+     */
+    public class Pointu extends Curvep.Pointp {
+        
+        public Pointu(BigInteger u) {
+            super(u, BigInteger.ONE);
+        }
+        
+        public Pointu(byte[] bu) {
+            super(Bin.lbtobi(clearFlag(bu)).mod(p),(bu[bu.length - 1] & 0x80) != 0 ? BigInteger.ONE : BigInteger.ZERO);
+//            boolean u_0 = (bu[bu.length - 1] & 0x80) != 0;
+        }
+
+        /**
+         * kPの計算.
+         * u は Pの座標.
+         *
+         * @param k 数
+         * @param u Curve25519 9 Curve448 5 または相手の公開鍵
+         * @return 公開鍵または共通鍵
+         */
+        @Override
+        public Pointu x(BigInteger k) {
+            BigInteger u = x.clearBit(b).mod(p);
+            BigInteger x_1 = u;
+            BigInteger x_2 = BigInteger.ONE;
+            BigInteger z_2 = BigInteger.ZERO;
+            BigInteger x_3 = u;
+            BigInteger z_3 = x_2;
+            boolean swap = false;
+            for (int t = b - 1; t >= 0; t--) {
+                boolean k_t = k.testBit(t);
+                swap = swap ^ k_t;
+                // 条件付きswap
+                BigInteger[] sw = cswap(swap, x_2, x_3);
+                x_2 = sw[0];
+                x_3 = sw[1];
+                sw = cswap(swap, z_2, z_3);
+                z_2 = sw[0];
+                z_3 = sw[1];
+                swap = k_t;
+                BigInteger A = add(x_2, z_2);
+                BigInteger AA = pow(A, BigInteger.TWO);
+                BigInteger B = sub(x_2, z_2);
+                BigInteger BB = pow(B, BigInteger.TWO);
+                BigInteger E = sub(AA, BB);
+                BigInteger C = add(x_3, z_3);
+                BigInteger D = sub(x_3, z_3);
+                BigInteger DA = mul(D, A);
+                BigInteger CB = mul(C, B);
+                x_3 = pow(add(DA, CB), BigInteger.TWO);
+                z_3 = mul(x_1, pow(sub(DA, CB), BigInteger.TWO));
+                x_2 = mul(AA, BB);
+                z_2 = mul(E, add(AA, mul(E, a24)));
+            }
+            BigInteger[] sw = cswap(swap, x_2, x_3);
+            x_2 = sw[0];
+            //x_3 = new Modular(sw[1],p);
+            sw = cswap(swap, z_2, z_3);
+            z_2 = sw[0];
+            //z_3 = new Modular(sw[1],p);
+            return new Pointu(mul(x_2, pow(z_2, p.subtract(BigInteger.TWO))));
+        }
+
+        private BigInteger[] cswap(boolean swap, BigInteger a, BigInteger b) {
+            BigInteger mask = BigInteger.valueOf(swap ? -1l : 0l);
+            BigInteger dummy = mask.and(a.xor(b));
+            BigInteger[] ab = new BigInteger[2];
+            ab[0] = a.xor(dummy);
+            ab[1] = b.xor(dummy);
+            return ab;
+        }
+
+        BigInteger getV(boolean u_0) {
+            BigInteger vv = mul(x, add(mul(x, add(x, a)), BigInteger.ONE));
+            BigInteger v = pow(vv, p.shiftRight(c).add(BigInteger.ONE));
+            v = vCheck(v, vv);
+            if (u_0 && BigInteger.ZERO.equals(v)) {
+                throw new IllegalStateException();
+            }
+            if (u_0 != v.testBit(0)) {
+                // 適当な仮
+                v = p.subtract(v);
+            }
+            return v;
+        }
+    }
 
     /**
      *
@@ -70,23 +160,7 @@ public abstract class Curve extends EllipticCurve.Curvep {
      */
     public BigInteger v(byte[] bu) {
         boolean u_0 = (bu[bu.length - 1] & 0x80) != 0;
-        byte[] cu = clearFlag(bu);
-        BigInteger u = Bin.lbtobi(cu).mod(p);
-        return v(u_0, u);
-    }
-
-    BigInteger v(boolean u_0, BigInteger u) {
-        BigInteger vv = mul(u, add(mul(u, add(u, a)), BigInteger.ONE));
-        BigInteger v = pow(vv, p.shiftRight(c).add(BigInteger.ONE));
-        v = vCheck(v, vv);
-        if (u_0 && BigInteger.ZERO.equals(v)) {
-            throw new IllegalStateException();
-        }
-        if (u_0 != v.testBit(0)) {
-            // 適当な仮
-            v = p.subtract(v);
-        }
-        return v;
+        return new Pointu(bu).getV(u_0);
     }
 
     /**
@@ -140,7 +214,7 @@ public abstract class Curve extends EllipticCurve.Curvep {
         BigInteger ik = Bin.lbtobi(k); //cuts(k);
         //uc[uc.length - 1] &= 0x7f; // 互換 X25519のみ
         BigInteger iu = Bin.lbtobi(u);
-        BigInteger ia = x(ik, iu);
+        BigInteger ia = new Pointu(iu).x(ik).x;
         return Bin.bitolb(ia, (b + 1) / 8);
     }
 
@@ -154,53 +228,6 @@ public abstract class Curve extends EllipticCurve.Curvep {
      */
     public BigInteger x(BigInteger k, BigInteger u) {
         u = u.clearBit(b).mod(p);
-        BigInteger x_1 = u;
-        BigInteger x_2 = BigInteger.ONE;
-        BigInteger z_2 = BigInteger.ZERO;
-        BigInteger x_3 = u;
-        BigInteger z_3 = x_2;
-        boolean swap = false;
-        for (int t = b - 1; t >= 0; t--) {
-            boolean k_t = k.testBit(t);
-            swap = swap ^ k_t;
-            // 条件付きswap
-            BigInteger[] sw = cswap(swap, x_2, x_3);
-            x_2 = sw[0];
-            x_3 = sw[1];
-            sw = cswap(swap, z_2, z_3);
-            z_2 = sw[0];
-            z_3 = sw[1];
-            swap = k_t;
-            BigInteger A = add(x_2, z_2);
-            BigInteger AA = pow(A, BigInteger.TWO);
-            BigInteger B = sub(x_2, z_2);
-            BigInteger BB = pow(B, BigInteger.TWO);
-            BigInteger E = sub(AA, BB);
-            BigInteger C = add(x_3, z_3);
-            BigInteger D = sub(x_3, z_3);
-            BigInteger DA = mul(D, A);
-            BigInteger CB = mul(C, B);
-            x_3 = pow(add(DA, CB), BigInteger.TWO);
-            z_3 = mul(x_1, pow(sub(DA, CB), BigInteger.TWO));
-            x_2 = mul(AA, BB);
-            z_2 = mul(E, add(AA, mul(E, a24)));
-        }
-        BigInteger[] sw = cswap(swap, x_2, x_3);
-        x_2 = sw[0];
-        //x_3 = new Modular(sw[1],p);
-        sw = cswap(swap, z_2, z_3);
-        z_2 = sw[0];
-        //z_3 = new Modular(sw[1],p);
-        return mul(x_2, pow(z_2, p.subtract(BigInteger.TWO)));
+        return new Pointu(u).x(k).x;
     }
-
-    private BigInteger[] cswap(boolean swap, BigInteger a, BigInteger b) {
-        BigInteger mask = BigInteger.valueOf(swap ? -1l : 0l);
-        BigInteger dummy = mask.and(a.xor(b));
-        BigInteger[] ab = new BigInteger[2];
-        ab[0] = a.xor(dummy);
-        ab[1] = b.xor(dummy);
-        return ab;
-    }
-
 }

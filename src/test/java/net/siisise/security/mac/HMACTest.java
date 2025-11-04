@@ -28,6 +28,7 @@ import net.siisise.security.digest.MD5;
 import net.siisise.security.digest.SHA1;
 import net.siisise.security.digest.SHA224;
 import net.siisise.security.digest.SHA256;
+import net.siisise.security.digest.SHA3256;
 import net.siisise.security.digest.SHA384;
 import net.siisise.security.digest.SHA512;
 import static org.junit.jupiter.api.Assertions.*;
@@ -362,5 +363,34 @@ public class HMACTest {
         result = instance.doFinal(src);
         dump(result);
         assertArrayEquals(expResult, result, "HMAC-SHA-256:おまけ");
+    }
+
+    /**
+     * Test of hmac method, of class HMAC.
+     */
+    @Test
+    public void testHmacSHA3() {
+        System.out.println("hmac SHA3");
+        byte[] key;
+        byte[] src;
+        byte[] result;
+        byte[] expResult;
+
+        MessageDigest md = new SHA3256();
+        key = toHex("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+        src = "Sample message for keylen<blocklen".getBytes();
+        expResult = toHex("4fe8e202c4f058e8dddc23d8c34e467343e23555e24fc2f025d598f558f67205");
+        HMAC instance = new HMAC(md, key);
+        result = instance.doFinal(src);
+        dump(result);
+        assertArrayEquals(expResult, result, "HMAC-SHA3-256:1");
+
+        key = toHex("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f8081828384858687");
+        src = "Sample message for keylen=blocklen".getBytes();
+        expResult = toHex("68b94e2e538a9be4103bebb5aa016d47961d4d1aa906061313b557f8af2c3faa");
+        instance = new HMAC(md, key);
+        result = instance.doFinal(src);
+        dump(result);
+        assertArrayEquals(expResult, result, "HMAC-SHA3-256:1");
     }
 }

@@ -30,6 +30,9 @@ import java.util.Arrays;
 import net.siisise.ietf.pkcs1.PKCS1;
 import net.siisise.io.Output;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
+import net.siisise.security.ec.ECCurve;
+import net.siisise.security.ec.ECCurvep;
+import net.siisise.security.ec.ECCurvet;
 import net.siisise.security.ec.EllipticCurve;
 import net.siisise.security.key.ECDSAPrivateKey;
 import net.siisise.security.key.ECDSAPublicKey;
@@ -50,7 +53,7 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
     ECDSAPrivateKey prv;
     ECDSAPublicKey pub;
 
-    EllipticCurve.ECCurvep E;
+    ECCurve E;
 
     /**
      * Java ECDSA Specからの変換.
@@ -58,13 +61,13 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
      * @param spec Spec
      * @return 曲線
      */
-    public static EllipticCurve.ECCurvep toCurve(ECParameterSpec spec) {
+    public static ECCurve toCurve(ECParameterSpec spec) {
         java.security.spec.EllipticCurve c = spec.getCurve();
         ECField field = c.getField();
         if (field instanceof ECFieldFp) {
             ECFieldFp fp = (ECFieldFp) field;
             ECPoint g = spec.getGenerator();
-            return new EllipticCurve.ECCurvep(fp.getP(),
+            return new ECCurvep(fp.getP(),
                     c.getA(), c.getB(),
                     g.getAffineX(), g.getAffineY(),
                     spec.getOrder(), spec.getCofactor());
@@ -77,19 +80,36 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
 
     /**
      * Java Spec への変換.
+     * pとtあとでまとめる?
      *
      * @param curve
      * @return
      */
-    public static ECParameterSpec toSpec(EllipticCurve.ECCurvep curve) {
+    public static ECParameterSpec toSpec(ECCurvep curve) {
         ECFieldFp Fp = new ECFieldFp(curve.p);
         java.security.spec.EllipticCurve c = new java.security.spec.EllipticCurve(Fp, curve.a, curve.b);
         ECPoint g = new ECPoint(curve.G.getX(), curve.G.getY());
         return new ECParameterSpec(c, g, curve.n, curve.h);
     }
 
+    public static ECParameterSpec toSpec(ECCurvet curve) {
+        ECFieldF2m F2m = new ECFieldF2m(curve.p.bitLength(),curve.p);
+        java.security.spec.EllipticCurve c = new java.security.spec.EllipticCurve(F2m, curve.a, curve.b);
+        ECPoint g = new ECPoint(curve.getG().getX(), curve.getG().getY());
+        return new ECParameterSpec(c, g, curve.n, curve.h);
+    }
+
+    public static ECParameterSpec toSpec(ECCurve curve) {
+        if (curve instanceof ECCurvep) {
+            return toSpec((ECCurvep)curve);
+        } else if (curve instanceof ECCurvet) {
+            return toSpec((ECCurvet)curve);
+        }
+        throw new IllegalStateException();
+    }
+    
     public static ECDSAPrivateKey toECDSAKey(ECPrivateKey prv) {
-        EllipticCurve.ECCurvep curve = toCurve(prv.getParams());
+        ECCurve curve = toCurve(prv.getParams());
         BigInteger s = prv.getS();
         return new ECDSAPrivateKey(curve, s);
     }
@@ -101,7 +121,7 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
      * @return
      */
     public static ECDSAPublicKey toECDSAKey(ECPublicKey pub) {
-        EllipticCurve.ECCurvep curve = toCurve(pub.getParams());
+        ECCurve curve = toCurve(pub.getParams());
         ECPoint Y = pub.getW();
         return new ECDSAPublicKey(curve, Y.getAffineX(), Y.getAffineY());
     }
@@ -111,7 +131,7 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
      * @param e 楕円曲線E
      * @param h ハッシュ関数
      */
-    public ECDSA(EllipticCurve.ECCurvep e, MessageDigest h) {
+    public ECDSA(ECCurvep e, MessageDigest h) {
         this.E = e;
         md = h;
         md.reset();
@@ -143,7 +163,7 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
 
     @Override
     public int getKeyLength() {
-        return (E.p.bitLength() + 7) / 8;
+        return (E.getP().bitLength() + 7) / 8;
     }
 
     @Override
@@ -152,7 +172,7 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
     }
 
     BigInteger rnd() {
-        int bit = prv.getCurve().p.bitLength(); // てきとうに増やす
+        int bit = E.getP().bitLength(); // てきとうに増やす
         byte[] rnd = new byte[(bit + 9) / 8];
         try {
             SecureRandom.getInstanceStrong().nextBytes(rnd);
@@ -173,7 +193,7 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
     public byte[] sign() {
         byte[] h = md.digest();
 
-        BigInteger q = E.n;
+        BigInteger q = E.getN();
         do {
             // 0 < k < q = q = order
             BigInteger k = rnd().mod(q.subtract(BigInteger.ONE)).add(BigInteger.ONE);
@@ -193,12 +213,12 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
      * @return 署名
      */
     public byte[] sign(byte[] h, BigInteger k) {
-        BigInteger q = E.n;
+        BigInteger q = E.getN();
 
         // 2.
         // SEC.1 4.1.3. 1. kとRのペアを生成
         k = k.mod(q);
-        EllipticCurve.Point R = E.xG(k);
+        EllipticCurve.ECPoint R = E.xG(k);
         // 3. s1 = R_x mod q
         // SEC.1 4.1.3. 2. R_x を 変換 3. r
         BigInteger r = R.getX().mod(q);
@@ -206,7 +226,7 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
             throw new SecurityException();
         }
 
-        int blen = (E.p.bitLength() + 7) / 8;
+        int blen = getKeyLength(); //(E.p.bitLength() + 7) / 8;
         // 4. s2 = (h(m) + 秘密鍵z * s1)/k mod q
         // SEC.1 4.1.3 4. ハッシュ(パラメータhで済) 5. eの計算
         BigInteger e = PKCS1.OS2IP(Arrays.copyOf(h, Integer.min(h.length, blen))); // hを切り詰めた値
@@ -233,11 +253,11 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
     @Override
     public boolean verify(byte[] sign) {
         byte[] h = md.digest();
-        int blen = (E.p.bitLength() + 7) / 8;
+        int blen = getKeyLength();
         if (sign.length != blen * 2) {
             return false;
         }
-        BigInteger q = E.n;
+        BigInteger q = E.getN();
 
         byte[] S = Arrays.copyOfRange(sign, 0, blen);
         BigInteger s1 = PKCS1.OS2IP(S);
@@ -254,8 +274,8 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
         BigInteger e = PKCS1.OS2IP(Arrays.copyOf(h, Integer.min(h.length, blen))); // hを切り詰めた値
         BigInteger u1 = e.multiply(s2Inv).mod(q);
         BigInteger u2 = s1.multiply(s2Inv).mod(q);
-        EllipticCurve.ECCurvep.ECPointp Y = pub.getY();
-        EllipticCurve.ECCurvep.ECPointp R = E.xG(u1).add(Y.x(u2));
+        ECCurvep.ECPoint Y = pub.getY();
+        ECCurvep.ECPoint R = E.xG(u1).add(Y.x(u2));
         return R.getX().equals(s1);
     }
 }

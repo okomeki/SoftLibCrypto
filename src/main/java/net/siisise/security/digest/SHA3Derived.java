@@ -167,7 +167,7 @@ public class SHA3Derived {
         } else {
         }
         byte[] tmp = new byte[(int)((b - a + 7) / 8)];
-        BitPacket f = X.readPac((int)a);
+        BitPacket f = X.readPac(a);
         X.readBit(tmp, 0, b - a);
         X.backWriteBit(tmp, 0, b - a);
         X.backWriteBit(f);
