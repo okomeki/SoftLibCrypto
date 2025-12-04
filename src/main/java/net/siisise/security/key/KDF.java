@@ -21,12 +21,22 @@ package net.siisise.security.key;
  * ASN.1 から出力まで繋げる予定
  */
 public interface KDF {
+
     /**
      * 共通鍵のようなものを生成する.
      * 他の要素はASN.1 などから読み込む想定.
+     *
      * @param password パスワードのようなもの(可変長)
      * @return DK 共通鍵的なもの(指定サイズ)
      */
     byte[] kdf(byte[] password);
+
+    /**
+     * 共通鍵的なものを生成.
+     *
+     * @param password パスワードのようなもの
+     * @param len 出力サイズバスト
+     * @return DK 共通鍵的なもの
+     */
     byte[] kdf(byte[] password, int len);
 }

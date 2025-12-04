@@ -15,19 +15,23 @@
  */
 package net.siisise.security.key;
 
-import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.util.Arrays;
-import net.siisise.io.BASE64;
-import net.siisise.security.block.Blowfish;
 
 /**
  * bcrypt の適当な実装.
  * 文字コードはUTF-8まで想定する. $2a$
  * opensshで使われていたりするのでつついておく.
+ * 
+ * @deprecated net.siisise.security.key.mcf.BCrypt MCFでまとめたので移行
  */
+@Deprecated
 public class BCrypt {
+
+    private final net.siisise.security.key.mcf.BCrypt bf;
+    
+    public BCrypt() {
+        bf = new net.siisise.security.key.mcf.BCrypt();
+    }
 
     /**
      * 生成用.
@@ -38,9 +42,7 @@ public class BCrypt {
      * @throws NoSuchAlgorithmException 
      */
     public String gen(int cost, String pass) throws NoSuchAlgorithmException {
-        byte[] salt = new byte[16];
-        SecureRandom.getInstanceStrong().nextBytes(salt);
-        return encode(cost, salt, pass);
+        return bf.gen(cost, pass);
     }
     
     /**
@@ -51,50 +53,10 @@ public class BCrypt {
      * @return 
      */
     public String encode(int cost, byte[] salt, String pass) {
-
-        Blowfish fish = EksBlowfishSetup(cost, salt, pass);
-
-        String ctext = "OrpheanBeholderScryDoubt"; // 3block
-        byte[] btext = ctext.getBytes(StandardCharsets.UTF_8);
-
-        for ( int i = 0; i < 64; i++ ) {
-            btext = fish.encrypt(btext);
-        }
-
-        BASE64 mcf = new BASE64(BASE64.BCRYPT, 0 );
-        // checksum 23byte 何故か1バイト減らす
-        String checksum = mcf.encode(btext, 0, 23);
-        return "$2b$" + cost + "$" + mcf.encode(salt) + checksum;
-    }
-
-    /**
-     * Wikipedia
-     * @param cost 繰り返しビット長
-     * @param salt 塩 128bit
-     * @param pass
-     * @return 
-     */
-    Blowfish EksBlowfishSetup(int cost, byte[] salt, String pass) {
-        Blowfish fish = new Blowfish();
-        byte[] bytePass = pass.getBytes(StandardCharsets.UTF_8);
-        byte[] bytezPass = Arrays.copyOf(bytePass, bytePass.length + 1); // \0 追加
-        
-        fish.initBcrypt(cost, salt, bytezPass);
-        return fish;
+        return bf.encode(cost, salt, pass);
     }
 
     public boolean veryfy(String pass, String code) {
-        String[] spp = code.split("\\x24");
-        if ( spp[1].equals("2a") || spp[1].equals("2b") ) {
-            int cost = Integer.parseInt(spp[2]);
-            String textsalt = spp[3].substring(0, 22);
-            BASE64 mcf = new BASE64(BASE64.BCRYPT, 0);
-            byte[] salt = mcf.decode(textsalt);
-            
-//            String p = spp[3].substring(22);
-            String e = encode(cost, salt, pass);
-            return code.equals(e);
-        }
-        throw new UnsupportedOperationException("まだ");
+        return bf.verify(pass, code);
     }
 }

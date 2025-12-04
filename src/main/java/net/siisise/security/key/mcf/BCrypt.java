@@ -19,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.List;
 import net.siisise.io.BASE64;
 import net.siisise.lang.Bin;
 import net.siisise.security.block.Blowfish;
@@ -30,21 +31,35 @@ import net.siisise.security.block.Blowfish;
  * opensshで使われていたりするのでつついておく.
  */
 public class BCrypt implements ModularCryptFormat {
-    
+
     public static final int DEFAULT_COST = 12;
-    
+    private int cost;
+
+    public BCrypt() {
+        cost = DEFAULT_COST;
+    }
+
+    /**
+     *
+     * @param count cost
+     */
+    public BCrypt(int count) {
+        cost = count;
+    }
+
     @Override
     public String generate(String pass) {
-        return gen(DEFAULT_COST, pass);
+        return gen(cost, pass);
     }
 
     /**
      * 生成用.
      * saltを中で作る.
+     *
      * @param cost 繰り返しのビット数 1&lt;&lt;cost 4..31
      * @param pass UTF-8パスワード 1 から 72バイト
      * @return MCF
-     * @throws NoSuchAlgorithmException 
+     * @throws NoSuchAlgorithmException
      */
     public String gen(int cost, String pass) {
         byte[] salt = new byte[16];
@@ -58,6 +73,7 @@ public class BCrypt implements ModularCryptFormat {
 
     /**
      * 生成/照合用.
+     *
      * @param cost 繰り返しのビット数 1&lt;&lt;cost 4..31
      * @param salt 16byte 乱数
      * @param pass UTF-8パスワード 1 から 72バイト
@@ -69,11 +85,11 @@ public class BCrypt implements ModularCryptFormat {
 
         String ctext = "OrpheanBeholderScryDoubt"; // 3block
         int[] itext = Bin.btoi(ctext.getBytes(StandardCharsets.UTF_8));
-        for ( int i = 0; i < 64; i++ ) {
+        for (int i = 0; i < 64; i++) {
             itext = fish.encrypt(itext);
         }
 
-        BASE64 mcf = new BASE64(BASE64.BCRYPT, 0 );
+        BASE64 mcf = new BASE64(BASE64.Type.BCRYPT, 0);
         // checksum 23byte 何故か1バイト減らす
         String checksum = mcf.encode(Bin.itob(itext), 0, 23);
         return "$2b$" + cost + "$" + mcf.encode(salt) + checksum;
@@ -81,16 +97,17 @@ public class BCrypt implements ModularCryptFormat {
 
     /**
      * BCrypt用Blowfish初期化.
+     *
      * @param cost 繰り返しビット長
      * @param salt 塩 128bit
      * @param pass パスワード
-     * @return 
+     * @return
      */
     Blowfish EksBlowfishSetup(int cost, byte[] salt, String pass) {
         Blowfish fish = new Blowfish();
         byte[] bytePass = pass.getBytes(StandardCharsets.UTF_8);
         byte[] bytezPass = Arrays.copyOf(bytePass, bytePass.length + 1); // \0 追加
-        
+
         fish.initBcrypt(cost, salt, bytezPass);
         return fish;
     }
@@ -98,20 +115,22 @@ public class BCrypt implements ModularCryptFormat {
     /**
      * パスワード照合.
      * 2a または 2b で一致したときのみtrue
+     *
      * @param pass ユーザ入力パスワード
      * @param code　MCF code
      * @return MCFが2a または 2bの場合の照合結果，どちらでもない場合はfalse
      */
     @Override
     public boolean verify(String pass, String code) {
+        List<String> hds = List.of("2", "2a", "2x", "2y", "2b");
         String[] spp = code.split("\\x24");
-        if ( spp[1].equals("2a") || spp[1].equals("2b") ) {
-            int cost = Integer.parseInt(spp[2]);
+        if (hds.contains(spp[1])) {
+            int mcfCost = Integer.parseInt(spp[2]);
             String textsalt = spp[3].substring(0, 22);
-            BASE64 mcf = new BASE64(BASE64.BCRYPT, 0);
+            BASE64 mcf = new BASE64(BASE64.Type.BCRYPT, 0);
             byte[] salt = mcf.decode(textsalt);
-            
-            String e = encode(cost, salt, pass);
+
+            String e = encode(mcfCost, salt, pass);
             return code.equals(e);
         }
         return false;
