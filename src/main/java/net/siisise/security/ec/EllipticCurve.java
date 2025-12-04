@@ -166,9 +166,7 @@ public class EllipticCurve {
 
     public static ECCurvep secp256k1;
 
-    @Deprecated
     public static final ECCurvet B283;
-    @Deprecated
     public static final ECCurvet B409;
 
     // EdDSA / ECDH

@@ -31,6 +31,8 @@ import net.siisise.iso.asn1.tag.SEQUENCEMap;
  */
 public class ECCurvep<P extends ECCurvep.ECPointp> extends Curvep<P> implements ECCurve {
 
+    static final BigInteger THREE = BigInteger.valueOf(3);
+
     // y^2 = add^3 + ax + b
     public final BigInteger a;
     public final BigInteger b;
@@ -178,30 +180,29 @@ public class ECCurvep<P extends ECCurvep.ECPointp> extends Curvep<P> implements 
          */
         @Override
         public ECPointp add(ECPointp q) {
-            if (q.equals(NULL)) {
+            if (q.equals(NULL)) { // 2.
                 return this;
             }
-            BigInteger u = sub(mul(z, q.y), mul(y, q.z));
-            BigInteger THREE = BigInteger.valueOf(3);
-            if (!u.equals(BigInteger.ZERO)) {
-                BigInteger v = sub(mul(q.x, z), mul(x, q.z));
-                if (v.equals(BigInteger.ZERO)) {
-                    return NULL;
-                } else {
-//                    BigInteger u = sub(mul(q.y,z),mul(y,q.z));
-                    BigInteger u2 = pow(u, 2);
-                    BigInteger u3 = pow(u, 3);
-//                    BigInteger v = sub(mul(q.x,z),mul(x, q.z));
-                    BigInteger v2 = pow(v, 2);
-                    BigInteger v3 = pow(v, 3);
-                    BigInteger X3 = mul(v, sub(mul(q.z, sub(mul(z, u2), mul(x.shiftLeft(1), v2))), v3));
-                    BigInteger Y3 = add(mul(q.z, sub(sub(mul(THREE.multiply(x), mul(u, v2)), mul(y, v3)), mul(z, u3))), mul(u, v3));
-                    BigInteger Z3 = mul(mul(v3, z), q.z);
-                    return new ECPointp(X3, Y3, Z3);
-                }
+            // 3.
+            BigInteger v = sub(mul(q.x, z), mul(x, q.z));
+            BigInteger u = sub(mul(q.y, z), mul(y, q.z));
+            if ( v.equals(BigInteger.ZERO)) {
+                return u.equals(BigInteger.ZERO) ? x2() : NULL;
             }
+            // 4. xが異なる2点
+            BigInteger u2 = pow(u, 2);
+            BigInteger zu2 = mul(z, u2);
+            BigInteger v2 = pow(v, 2);
+            BigInteger v3 = pow(v, 3);
+            BigInteger X3 = mul(v, sub(mul(q.z, sub(zu2, mul(x.shiftLeft(1), v2))), v3));
+            BigInteger Y3 = add(mul(q.z, sub(sub(mul(THREE.multiply(x), mul(u, v2)), mul(y, v3)), mul(zu2, u))), mul(u, v3));
+            BigInteger Z3 = mul(mul(v3, z), q.z);
+            return new ECPointp(X3, Y3, Z3);
+        }
+        
+        ECPointp x2() {
             // x2?
-            if (q.y.equals(BigInteger.ZERO)) {
+            if (y.equals(BigInteger.ZERO)) {
                 return NULL;
             }
             BigInteger zz = pow(z, 2);
@@ -237,17 +238,28 @@ public class ECCurvep<P extends ECCurvep.ECPointp> extends Curvep<P> implements 
                 if (n.testBit(i)) {
                     r = r.add(V);
                 }
-                V = V.add(V); // add *= 2
+                V = V.x2(); // add *= 2
             }
             return (P) r;
         }
     }
 
+    /**
+     * 座標型変換.
+     * @param x X座標
+     * @param y Y座標
+     * @return Point
+     */
     @Override
     public P toPoint(BigInteger x, BigInteger y) {
         return (P) new ECPointp(x, y);
     }
 
+    /**
+     * バイナリから座標変換.
+     * @param code
+     * @return 座標Point
+     */
     public P toPoint(byte[] code) {
         PacketA c = new PacketA(code);
         int type = c.read();

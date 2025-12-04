@@ -25,6 +25,9 @@ public class Curvet<P extends Curvet.Pointt> extends EllipticCurve {
 
     public class Pointt extends Point {
 
+        long[] bx;
+        long[] by;
+
         public Pointt(BigInteger x, BigInteger y) {
             super(x, y);
         }
@@ -38,5 +41,5 @@ public class Curvet<P extends Curvet.Pointt> extends EllipticCurve {
     Curvet(OBJECTIDENTIFIER oid, BigInteger p, BigInteger order, int h) {
         super(oid, p, order, h);
     }
-    
+
 }

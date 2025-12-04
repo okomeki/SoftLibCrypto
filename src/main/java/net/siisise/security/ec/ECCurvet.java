@@ -21,6 +21,7 @@ import net.siisise.lang.Bin;
 import net.siisise.math.GFL;
 
 /**
+ * SEC 1 2.2.2 F_2^m 上の楕円曲線
  * B系
  * y^2 + xy = x^3 + ax^2 + b
  */
@@ -28,6 +29,10 @@ public class ECCurvet<P extends ECCurvet.ECPointt> extends Curvet<P> implements 
 
     public final ECPointt NULL = new ECPointt(BigInteger.ZERO, BigInteger.ONE) {
         @Override
+        /**
+         * 1. O + O = O
+         * 2. (x,y) + O = O + (x, y) = (x, y)
+         */
         public ECPointt add(ECPointt a) {
             return a;
         }
@@ -68,29 +73,76 @@ public class ECCurvet<P extends ECCurvet.ECPointt> extends Curvet<P> implements 
                 if (n.testBit(i)) {
                     r = r.add(V);
                 }
-                V = V.add(V); // add *= 2
+                V = V.x2(); // add *= 2
             }
             return (P) r;
         }
 
         /**
          * SEC 1 2.2.2. F_2^m 上の楕円曲線 加法規則
+         * 
          * @param q
          * @return 
          */
         @Override
         public ECPointt add(ECPointt q) {
-            if (q.equals(NULL)) { // 3.
+            if (q.equals(NULL)) { // 2. (x, y) + O = O + (x, y) = (x, y)
                 return this;
             }
-            if ( !x.equals(q.x) || x.equals(BigInteger.ZERO)) {
-                
+            // 3.
+            //gf.
+            
+            BigInteger v = getX().subtract(q.getX());
+            if (v.equals(BigInteger.ZERO)) {
+                return getY().equals(q.getY()) ? x2() : NULL;
             }
-            throw new UnsupportedOperationException("Not supported yet.");
+            // 4.
+            BigInteger yy = add(y, q.y);
+            BigInteger xx = add(x, q.x);
+            BigInteger ixx = inv(xx);
+            BigInteger λ = mul(yy, ixx);
+            BigInteger λ2 = pow(λ, BigInteger.TWO);
+            BigInteger x3 = add(λ2,λ,x,q.x,a);
+            BigInteger y3 = add(mul(λ,add(x,x3)),x3,y);
+            return new ECPointt(x3,y3);
         }
+
+        ECPointt x2() {
+            // 5.
+            BigInteger ix = inv(x);
+            BigInteger λ = add(x, mul(y, ix));
+            BigInteger λ2 = pow(λ,BigInteger.TWO);
+                    
+            BigInteger x3 = add(λ2,λ,a);
+            BigInteger y3 = add(pow(x,BigInteger.TWO),mul(add(λ, BigInteger.ONE), x3));
+            return new ECPointt(x3, y3);
+        }
+
+        BigInteger add(BigInteger a, BigInteger... b) {
+            for ( BigInteger n : b ) {
+                a = a.add(n);
+            }
+            return a.mod(p);
+        }
+
+        BigInteger mul(BigInteger a, BigInteger b) {
+            return a.multiply(b).mod(p);
+        }
+
+        BigInteger pow(BigInteger a, BigInteger n) {
+            return a.modPow(n, p);
+        }
+
+        BigInteger inv(BigInteger a) {
+            return a.modInverse(p);
+        }
+
     }
+
     public final BigInteger a;
     public final BigInteger b;
+    // long[l]
+    int l;
     GFL gf;
     private ECPointt G;
 
@@ -109,7 +161,7 @@ public class ECCurvet<P extends ECCurvet.ECPointt> extends Curvet<P> implements 
         super(oid, p, order, h);
         this.a = BigInteger.valueOf(a);
         this.b = b;
-        int l = (p.bitLength() + 63) / 64;
+        l = (p.bitLength() + 63) / 64;
         long[] lp = Bin.btol(Bin.toByteArray(p, l * 8));
         gf = new GFL(lp);
         G = toPoint(gx, gy);
