@@ -38,15 +38,16 @@ public class Certificate {
         Certificate cert = new Certificate();
         cert.tbsCertificate = tbs;
         cert.signatureAlgorithm = tbs.signature;
+        
         throw new IllegalStateException();
     }
     
     /**
-     * 
-     * @param cert
+     * 検証 validate.
+     * @param cert 証明書
      * @param pub 公開鍵
      */
     public static void validate(Certificate cert, Object pub) {
-        
+        throw new IllegalStateException();
     }
 }
