@@ -31,6 +31,10 @@ RSA,DSA,EdDSA
 - RSASSA-PSS
 - RSASSA-PKCS1_v1_5
 - DSA
+- ECDSA
+  - P-256
+  - P-384
+  - P-521
 - EdDSA
   - Ed25519
   - Ed448
