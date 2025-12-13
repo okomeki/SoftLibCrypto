@@ -25,8 +25,8 @@ import net.siisise.io.Input;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
 import net.siisise.iso.asn1.tag.SEQUENCEMap;
+import net.siisise.security.io.BlockOutput;
 import net.siisise.security.io.BlockListener;
-import net.siisise.security.io.BlockOutputStream;
 
 /**
  *
@@ -34,12 +34,11 @@ import net.siisise.security.io.BlockOutputStream;
 public abstract class BlockMessageDigest extends MessageDigest implements BlockListener {
 
     protected OBJECTIDENTIFIER oid;
-    protected BlockOutputStream pac;
+    protected BlockOutput pac;
     protected long length;
 
     protected BlockMessageDigest(String name) {
         super(name);
-//        pac = new BlockOutputStream(getBitBlockLength() / 8, this);
     }
 
     @Override
@@ -54,7 +53,7 @@ public abstract class BlockMessageDigest extends MessageDigest implements BlockL
     }
 
     public void update(Input in) {
-        pac.update(in);
+        pac.write(in);
     }
 
     public static BlockMessageDigest getInstance(String alg) {

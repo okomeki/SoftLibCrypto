@@ -16,7 +16,7 @@
 package net.siisise.security.digest;
 
 import java.util.Arrays;
-import net.siisise.security.io.BlockOutputStream;
+import net.siisise.security.io.BlockOutput;
 
 /**
  * RFC 1319
@@ -123,7 +123,7 @@ public class MD2 extends BlockMessageDigest {
 
     @Override
     protected final void engineReset() {
-        pac = new BlockOutputStream(this);
+        pac = new BlockOutput(this);
         l = 0;
         Arrays.fill(c,(byte)0);
         // Step 3.

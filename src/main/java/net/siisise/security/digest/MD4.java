@@ -16,7 +16,7 @@
 package net.siisise.security.digest;
 
 import net.siisise.lang.Bin;
-import net.siisise.security.io.BlockOutputStream;
+import net.siisise.security.io.BlockOutput;
 
 /**
  * RFC 1320
@@ -47,7 +47,7 @@ public class MD4 extends BlockMessageDigest {
     protected void engineReset() {
         ad = IV.clone();
         length = 0;
-        pac = new BlockOutputStream(this);
+        pac = new BlockOutput(this);
     }
 
     static final int[] S1 = {3, 19, 11, 7};

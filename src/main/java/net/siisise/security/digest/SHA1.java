@@ -16,7 +16,7 @@
 package net.siisise.security.digest;
 
 import net.siisise.lang.Bin;
-import net.siisise.security.io.BlockOutputStream;
+import net.siisise.security.io.BlockOutput;
 
 /**
  * RFC 3174 SHA-1.
@@ -65,7 +65,7 @@ public final class SHA1 extends BlockMessageDigest {
         h[2] = 0x98badcfe;
         h[3] = 0x10325476;
         h[4] = 0xc3d2e1f0;
-        pac = new BlockOutputStream(this);
+        pac = new BlockOutput(this);
         length = 0;
     }
 

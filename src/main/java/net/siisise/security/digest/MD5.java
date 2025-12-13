@@ -16,7 +16,7 @@
 package net.siisise.security.digest;
 
 import net.siisise.lang.Bin;
-import net.siisise.security.io.BlockOutputStream;
+import net.siisise.security.io.BlockOutput;
 
 /**
  * RFC 1321 MD5の実装.
@@ -102,7 +102,7 @@ public class MD5 extends BlockMessageDigest {
     protected void engineReset() {
         ad = IV.clone();
         length = 0;
-        pac = new BlockOutputStream(this);
+        pac = new BlockOutput(this);
     }
 
     private void abcdf(int m, int i) {

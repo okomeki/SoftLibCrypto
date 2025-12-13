@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.lang.Bin;
-import net.siisise.security.io.BlockOutputStream;
+import net.siisise.security.io.BlockOutput;
 
 /**
  * NIST FIPS PUB 180-4.
@@ -146,7 +146,7 @@ public class SHA512 extends BlockMessageDigest {
     @Override
     protected void engineReset() {
         System.arraycopy(IV, 0, H, 0, IV.length);
-        pac = new BlockOutputStream(this);
+        pac = new BlockOutput(this);
         length = BigInteger.valueOf(0);
     }
 

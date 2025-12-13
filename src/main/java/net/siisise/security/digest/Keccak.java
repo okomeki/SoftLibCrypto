@@ -17,7 +17,7 @@ package net.siisise.security.digest;
 
 import java.util.Arrays;
 import net.siisise.io.Output;
-import net.siisise.security.io.BlockOutputStream;
+import net.siisise.security.io.BitBlockOutput;
 
 /**
  * Keccak-f[1600].
@@ -146,7 +146,7 @@ public class Keccak extends BlockMessageDigest {
 
     @Override
     protected void engineReset() {
-        pac = new BlockOutputStream(this);
+        pac = new BitBlockOutput(this);
         Arrays.fill(a, 0l);
     }
 
@@ -266,6 +266,16 @@ public class Keccak extends BlockMessageDigest {
     protected void engineUpdate(byte[] input, int offset, int len) {
         pac.write(input, offset, len);
     }
+
+    /**
+     * ビット入力にも対応している(仮)
+     * @param input データ (Little Endian)
+     * @param bitOffset ビット位置
+     * @param bitLen ビット長
+     */
+    public void updateBit(byte[] input, int bitOffset, int bitLen) {
+        ((BitBlockOutput)pac).writeBit(input, bitOffset, bitLen);
+    }
     
     /**
      * XOF可能な出力.
@@ -275,8 +285,7 @@ public class Keccak extends BlockMessageDigest {
      * @return dサイズになったn
      */
     private byte[] sponge(long d) {
-        byte[] pad = pad10x1();
-        pac.write(pad);
+        pad10x1();
         
         byte[] ret = new byte[(int)((d + 7) / 8)];
         long offset = 0;
@@ -296,8 +305,7 @@ public class Keccak extends BlockMessageDigest {
      * @param d output bit length
      */
     private void sponge(Output out, long d) {
-        byte[] pad = pad10x1();
-        out.write(pad);
+        pad10x1();
         
         byte[] outb = new byte[r/8];
         while ( d > r ) {
@@ -316,13 +324,13 @@ public class Keccak extends BlockMessageDigest {
      * Algorithm 9:
      * padding バイト長で計算
      */
-    byte[] pad10x1() {
+    void pad10x1() {
         int rblen = r / 8; // R * 8;
         int padlen = rblen - (pac.size() % rblen);
         byte[] pad = new byte[padlen];
         pad[0] |= padstart; // 種類判定用おまけbitが付く
         pad[padlen - 1] |= 0x80;
-        return pad;
+        pac.write(pad);
     }
 
     /**
