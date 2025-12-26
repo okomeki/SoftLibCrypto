@@ -31,19 +31,32 @@ import net.siisise.security.block.Blowfish;
  * opensshで使われていたりするのでつついておく.
  */
 public class BCrypt implements ModularCryptFormat {
+    
+    static final byte[] CTEXT = "OrpheanBeholderScryDoubt".getBytes(StandardCharsets.UTF_8);
 
+    String prefix;
     public static final int DEFAULT_COST = 12;
     private int cost;
-
+    
     public BCrypt() {
-        cost = DEFAULT_COST;
+        this("$2b$", DEFAULT_COST);
     }
 
     /**
-     *
+     * 
      * @param count cost
      */
     public BCrypt(int count) {
+        this("$2b$", count);
+    }
+
+    /**
+     * 
+     * @param prefix $2b$ から置き換えたい?
+     * @param count cost
+     */
+    public BCrypt(String prefix, int count) {
+        this.prefix = prefix;
         cost = count;
     }
 
@@ -59,7 +72,6 @@ public class BCrypt implements ModularCryptFormat {
      * @param cost 繰り返しのビット数 1&lt;&lt;cost 4..31
      * @param pass UTF-8パスワード 1 から 72バイト
      * @return MCF
-     * @throws NoSuchAlgorithmException
      */
     public String gen(int cost, String pass) {
         byte[] salt = new byte[16];
@@ -83,8 +95,7 @@ public class BCrypt implements ModularCryptFormat {
 
         Blowfish fish = EksBlowfishSetup(cost, salt, pass);
 
-        String ctext = "OrpheanBeholderScryDoubt"; // 3block
-        int[] itext = Bin.btoi(ctext.getBytes(StandardCharsets.UTF_8));
+        int[] itext = Bin.btoi(CTEXT);
         for (int i = 0; i < 64; i++) {
             itext = fish.encrypt(itext);
         }
@@ -92,7 +103,7 @@ public class BCrypt implements ModularCryptFormat {
         BASE64 mcf = new BASE64(BASE64.Type.BCRYPT, 0);
         // checksum 23byte 何故か1バイト減らす
         String checksum = mcf.encode(Bin.itob(itext), 0, 23);
-        return "$2b$" + cost + "$" + mcf.encode(salt) + checksum;
+        return prefix + cost + "$" + mcf.encode(salt) + checksum;
     }
 
     /**
@@ -131,7 +142,8 @@ public class BCrypt implements ModularCryptFormat {
             byte[] salt = mcf.decode(textsalt);
 
             String e = encode(mcfCost, salt, pass);
-            return code.equals(e);
+            String[] espp = e.split("\\x24");
+            return spp[3].equals(espp[3]);
         }
         return false;
     }

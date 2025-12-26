@@ -32,6 +32,7 @@ module net.siisise.crypto {
     exports net.siisise.security.block;
     exports net.siisise.security.digest;
     exports net.siisise.security.key;
+    exports net.siisise.security.key.mcf;
     exports net.siisise.security.mac;
     exports net.siisise.security.mode;
     exports net.siisise.security.padding;

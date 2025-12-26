@@ -34,12 +34,13 @@ public class BCryptTest {
     public void testGen() throws Exception {
         System.out.println("gen");
         int cost = BCrypt.DEFAULT_COST;
-        String pass = "test";
+//        String pass = "test";
+        String pass = "Abcde123";
         BCrypt instance = new BCrypt();
         String expResult = "";
         String result = instance.gen(cost, pass);
         System.out.println(result);
-//        assertEquals(expResult, result);
+        assertTrue(instance.verify(pass, result));
     }
 
     /**

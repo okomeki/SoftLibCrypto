@@ -32,20 +32,21 @@ public class BitBlockOutput extends BlockOutput {
     @Override
     public Output put(byte[] data, int offset, int length) {
         pac.put(data, offset, length);
-        while (pac.readable(max)) {
-            byte[] d = new byte[max];
-            pac.read(d);
-            try {
-                listener.blockWrite(d, 0, max);
-            } catch (IOException ex) {
-                throw new IllegalStateException(ex);
-            }
-        }
+        out();
         return this;
     }
 
     public void writeBit(byte[] data, long bitOffset, long bitLength) {
         ((LittleBitPacket) pac).writeBit(data, bitOffset, bitLength);
+        out();
+    }
+    
+    public void writeBit(int data, int bitLength) {
+        ((LittleBitPacket)pac).writeBit(data, bitLength);
+        out();
+    }
+    
+    private void out() {
         while (pac.readable(max)) {
             byte[] d = new byte[max];
             pac.read(d);

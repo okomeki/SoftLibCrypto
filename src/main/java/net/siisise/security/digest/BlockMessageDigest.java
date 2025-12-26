@@ -25,8 +25,8 @@ import net.siisise.io.Input;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
 import net.siisise.iso.asn1.tag.SEQUENCEMap;
-import net.siisise.security.io.BlockOutput;
 import net.siisise.security.io.BlockListener;
+import net.siisise.security.io.BlockOutput;
 
 /**
  *

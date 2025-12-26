@@ -109,6 +109,9 @@ public class BlockOutput extends Output.AbstractOutput {
                 this.offset = 0;
             }
             while (length >= max) {
+//                byte[] t = new byte[max];
+//                System.arraycopy(data, offset, t, 0, max);
+//                System.out.println("bbb:" + Bin.toHex(t));
                 listener.blockWrite(data, offset, max);
                 offset += max;
                 length -= max;
