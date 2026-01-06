@@ -45,6 +45,7 @@ public class DigestCryptTest {
     /**
      * Test of verify method, of class DigestCrypt.
      */
+/*
     @Test
     public void testVerify1() {
         System.out.println("verify md5");
@@ -56,7 +57,7 @@ public class DigestCryptTest {
         System.out.println(code);
 //        assertTrue(result);
     }
-
+*/
     /**
      * Test of verify method, of class DigestCrypt.
      */
@@ -68,7 +69,7 @@ public class DigestCryptTest {
         DigestCrypt instance = new DigestCrypt("5", "sha-256");
         boolean expResult = true;
         boolean result = instance.verify(pass, code);
-        System.out.println(code);
+        System.out.println("      :" + code);
         assertTrue(result);
     }
 
@@ -83,7 +84,7 @@ public class DigestCryptTest {
         DigestCrypt instance = new DigestCrypt("5", "sha-256");
         boolean expResult = true;
         boolean result = instance.verify(pass, code);
-        System.out.println(code);
+        System.out.println("ex    :" + code);
         assertTrue(result);
     }
 
@@ -92,13 +93,12 @@ public class DigestCryptTest {
      */
     @Test
     public void testVerify6() {
-        System.out.println("verify sha512");
+        System.out.println("verify sha-512");
         String pass = "test";
         String code = "$6$salt$xdLuw21n.5WciQUUpHTTPfR6QwS..Z1Q/4xGfiyYa51WSQktzSXYXSk2zBp.Is5r9WiXrGqRmHpEG0iG0HaSk.";
         DigestCrypt instance = new DigestCrypt("6", "sha-512");
-        boolean expResult = true;
         boolean result = instance.verify(pass, code);
-        System.out.println(code);
+        System.out.println("      :" + code);
         assertTrue(result);
     }
 }

@@ -32,21 +32,21 @@ import net.siisise.security.digest.BlockMessageDigest;
 
 /**
  * SHA-crypt.
- * 1:MD5 5:SHA-256 6:SHA-512
- * まだ未完成
+ * 1:MD5 未対応
+ * 5:SHA-256
+ * 6:SHA-512
  */
-@Deprecated
 public class DigestCrypt implements ModularCryptFormat {
 
     private final String pre;
     private final String alg;
     // 仕様初期値
-    private long encodeRounds = 5000;
+    private int encodeRounds = 5000;
 
     /**
-     * 
+     *
      * @param prefix
-     * @param digestName 
+     * @param digestName
      */
     public DigestCrypt(String prefix, String digestName) {
         pre = prefix;
@@ -77,9 +77,9 @@ public class DigestCrypt implements ModularCryptFormat {
             throw new IllegalStateException(ex);
         }
         BASE64 passenc = new BASE64(BASE64.PASSWORD, false, 0);
-        String saltt = passenc.encode(salt);
+        String saltt = passenc.encode(salt); // 仮
         //saltt = "saltABCDsaltEFGH";
-        return encode(encodeRounds, saltt, pass);
+        return encode(0, saltt, pass);
     }
 
     /**
@@ -88,119 +88,96 @@ public class DigestCrypt implements ModularCryptFormat {
      *
      * ラウンド数の変更 rounds=<N>$ rounds N 最小 1000 デフォルト 5000 最大 999,999,999
      *
-     * @param rounds N
+     * @param rounds N &lt;= 0: default 5000
      * @param salt MD5 最大8文字　SHA 最大16文字
      * @param pass utf-8 72オクテットくらいまでのパスワード
      * @return
      */
-    String encode(long rounds, String salt, String pass) {
+    String encode(int rounds, String salt, String pass) {
         byte[] passbin = pass.getBytes(StandardCharsets.UTF_8);
-        // ToDo: 72オクテット制限を入れる
-        if (passbin.length > 72) {
-            throw new IllegalStateException();
+
+        byte[] saltbin;
+        byte[] salttmp = salt.getBytes(StandardCharsets.UTF_8);
+        if (salttmp.length > 16) { // 8bit以外考慮せず
+            saltbin = new byte[16];
+            System.arraycopy(salttmp, 0, saltbin, 0, 16);
+        } else {
+            saltbin = salttmp;
         }
-        
-        if (salt.length() > 16) { // 8bit以外考慮せず
-            salt = salt.substring(0, 16);
-        }
-        byte[] saltbin = salt.getBytes(StandardCharsets.UTF_8);
-        // digest Bの計算 ビット長と同じサイズに分ける?
-        MessageDigest mda = algorithm(); // 1.
+
+        MessageDigest mdA = algorithm(); // 4. alt_ctx
+
+        mdA.update(passbin); // 5. Add key.
+        mdA.update(saltbin); // 6. Add salt.
+        mdA.update(passbin); // 7. Add key again.
+        byte[] digestB = mdA.digest(); // 8. Now get result of this (32bytes) and add it to the other context.
+
+        /* Prepare for the real work.  */
+        //mdA = algorithm(); // 1. ctx
 
         // digest Aの計算
-        mda.update(passbin);  // 2.
-        mda.update(saltbin);  // 3.
+        /* 2. Add the key string.  */
+        mdA.update(passbin);
+        /* 3. The last part is the salt string. This must be at must 16
+           characters and it ends at the first '$' character (for
+           compatibility with existing implementations).  */
+        mdA.update(saltbin);  // 3. salt
 
-        MessageDigest mdb = algorithm(); // 4.
-
-        mdb.update(passbin); // 5.
-        mdb.update(saltbin); // 6.
-        mdb.update(passbin); // 7.
-        byte[] digestB = mdb.digest(); // 8.
-
-        // 9.
-        int dl = mda.getDigestLength(); // bytres
-        int bl = passbin.length / dl;
-        for (int i = 0; i < bl; i++ ) {
-            mda.update(digestB);
-        }
-//        mda.update(passbin);
+        // 9. Add for any character in the key one byte of the alternate sum.
+        mdA.update(fill(digestB, passbin.length));
         // 10.
-        int r = passbin.length % dl;
-        mda.update(digestB, 0, r);
 
         // 11.
-
-        int plen = passbin.length;
-
-        while ( plen > 0) {
+        int plen;
+        for (plen = passbin.length; plen > 0; plen >>>= 1) {
             if ((plen & 1) != 0) { // a
-                mda.update(digestB);
+                mdA.update(digestB);
             } else {               // b
-                mda.update(passbin);
+                mdA.update(passbin);
             }
-            plen >>>= 1;
         }
 
-        // 11. パターン2?
-/*        
-        for (byte a : passbin) {
-            for (int b = 7; b >= 0; b--) {
-                boolean f = ((a >>> b) & 1) != 0;
-                if (f) {
-                    mda.update(digestB);
-                } else {
-                    mda.update(passbin);
-                }
-            }
+        // 12. Create intermediate result.
+        byte[] digestA = mdA.digest();
+        // 13. Start computation of P byte sequence.
+        // 14. For every character in the password add the entire password.
+        for (int i = 0; i < passbin.length; i++) {
+            mdA.update(passbin);
         }
-*/
-        // 12.
-        byte[] digestA = mda.digest();
-        // 13.
-        MessageDigest dp = algorithm();
-        // 14.
-        dp.update(passbin);
-        // 15.
-        byte[] digestDP = dp.digest();
-        // 16.
-        byte[] P = new byte[passbin.length];
-        for (int i = 0; i < bl; i++ ) {
-            System.arraycopy(digestDP, 0, P, dl*i, dl);
-        }
-        System.arraycopy(digestDP, 0, P, dl*bl, r);
-        // 17.
-        MessageDigest ds = algorithm();
-        // 18.
+        // 15. Finish the digest.
+        byte[] digestDP = mdA.digest(); // temp_result
+
+        // 16. Create byte sequence P.
+        byte[] P = fill(digestDP, passbin.length);
+        // 17. Starrt computation of S byte sequence.
+        MessageDigest c = mdA;
+        // 18. For every character in the password add the entire password.
         int a0 = 16 + (digestA[0] & 0xff);
         for (int i = 0; i < a0; i++) {
-            ds.update(saltbin);
+            c.update(saltbin);
         }
-        // 19.
-        byte[] digestDS = ds.digest();
-        // 20.
-        byte[] S = new byte[saltbin.length];
-        for (int i = 0; i < bl; i++) {
-            System.arraycopy(digestDS, 0, S, dl*i, dl);
-        }
-        System.arraycopy(digestDS, 0, S, dl*bl, r);
+        // 19. Finish the digest.
+        byte[] digestDS = c.digest();
+        // 20. Create byte sequence S.
+        byte[] S = fill(digestDS, saltbin.length);
         // 21.
-        for (int i = 1; i <= rounds; i++) {
+        int xround = rounds <= 0 ? 5000 : rounds;
+        
+        for (int i = 0; i < xround; i++) {
             // a)
-            MessageDigest c = algorithm();
-            if ( i % 2 != 0) { // b) 奇数ラウンド 1始まりの場合
+            if (i % 2 != 0) { // b) 奇数ラウンド 1始まりの場合
                 c.update(P);
             } else {           // c) 偶数ラウンド
                 c.update(digestA); // digestA または 後の digestC
             }
-            if ( i % 3 != 0) { // d)
+            if (i % 3 != 0) { // d)
                 c.update(S);
             }
-            if ( i % 7 != 0) { // e)
+            if (i % 7 != 0) { // e)
                 c.update(P);
             }
-            if ( i % 2 == 1) { // f)
-                c.update( digestA);
+            if ((i % 2) != 0) { // f)
+                c.update(digestA);
             } else {           // g)
                 c.update(P);
             }
@@ -212,61 +189,87 @@ public class DigestCrypt implements ModularCryptFormat {
         // a) prefix
         sb.append('$').append(pre).append('$');
         // b) rounds
-        if ( rounds != 5000 ) {
+        if (rounds > 0) {
             sb.append("rounds=").append(rounds).append('$');
         }
         sb.append(salt).append('$'); // c) salt d) $
+
         // e)
         byte[] sorted = new byte[digestA.length];
         switch (sorted.length) {
             case 32:
                 for (int i = 0; i < 10; i++) {
-                    sorted[i*3 + 2-(i%3)] = digestA[i];
-                    sorted[i*3 + 2-((i+1)%3)] = digestA[10+i];
-                    sorted[i*3 + 2-((i+2)%3)] = digestA[20+i];
-                }   sorted[30] = digestA[30];
+                    sorted[i * 3 + 2 - (i % 3)] = digestA[i];
+                    sorted[i * 3 + 2 - ((i + 1) % 3)] = digestA[10 + i];
+                    sorted[i * 3 + 2 - ((i + 2) % 3)] = digestA[20 + i];
+                }
+                sorted[30] = digestA[30];
                 sorted[31] = digestA[31];
                 break;
             case 64:
                 for (int i = 0; i < 21; i++) {
-                    sorted[i*3 + ((i+2)%3)] = digestA[i];
-                    sorted[i*3 + ((i+1)%3)] = digestA[21+i];
-                    sorted[i*3 + ( i   %3)] = digestA[42+i];
-                }   sorted[63] = digestA[63];
+                    sorted[i * 3 + ((i + 2) % 3)] = digestA[i];
+                    sorted[i * 3 + ((i + 1) % 3)] = digestA[21 + i];
+                    sorted[i * 3 + (i % 3)] = digestA[42 + i];
+                }
+                sorted[63] = digestA[63];
                 break;
             default:
                 throw new IllegalStateException();
         }
-        BASE64 pass64 = new BASE64(BASE64.PASSWORD, false, 0);
+        BASE64 pass64 = new BASE64.LE(BASE64.PASSWORD, false, 0);
         sb.append(pass64.encode(sorted));
         return sb.toString();
     }
 
+    private byte[] fill(byte[] src, int length) {
+        byte[] P = new byte[length];
+        int digestLength = src.length;
+        int plen;
+        for (plen = 0; plen < length - src.length; plen += src.length) {
+            System.arraycopy(src, 0, P, plen, digestLength);
+        }
+        System.arraycopy(src, 0, P, plen, length - plen);
+        return P;
+    }
+
     static final ABNFReg REG = new ABNFReg();
     static final ABNF ID = REG.rule("id", ABNF.list("56"));
-    static final ABNF ROUND = REG.rule("round",BNFStringParser.class, ABNF5234.DIGIT.x(4,9));
-    static final ABNF rounds = REG.rule("rounds",  ABNF.text("rounds=").pl(ROUND, ABNF.bin('$')));
-    static final ABNF CODE = REG.rule("code", ABNF5234.ALPHA.or(ABNF5234.DIGIT).or(ABNF.binlist("./")));
-    static final ABNF SALT = REG.rule("salt",  CODE.x());
+    static final ABNF ROUND = REG.rule("round", BNFStringParser.class, ABNF5234.DIGIT.x(4, 9));
+    static final ABNF ROUNDS = REG.rule("rounds", ABNF.text("rounds=").pl(ROUND, ABNF.bin('$')));
+    static final ABNF CODE = REG.rule("code", ABNF5234.ALPHA.or1(ABNF5234.DIGIT, ABNF.binlist("./")));
+    static final ABNF SALT = REG.rule("salt", CODE.x());
     static final ABNF BASEPASS = REG.rule("basepass", CODE.x());
-    static final ABNF DC5 = REG.rule("dc5",ABNF.bin('$').pl(ID,ABNF.bin('$'),rounds.c(), SALT,ABNF.bin('$'),BASEPASS));
+    static final ABNF DC5 = REG.rule("dc5", ABNF.bin('$').pl(ID, ABNF.bin('$'), ROUNDS.c(), SALT, ABNF.bin('$'), BASEPASS));
 
     @Override
     public boolean verify(String pass, String code) {
         ReadableBlock rcode = ReadableBlock.wrap(code);
-        BNF.Match result = REG.find(rcode, "dc5","round","salt");
-        long round = 5000;
-        if ( result == null) {
-            throw new IllegalStateException();
+        BNF.Match result = REG.find(rcode, "dc5", "id","round", "salt", "basepass");
+        int round = 0;
+        if (result == null) {
+            return false;
+//            throw new IllegalStateException();
         }
         List rounds = result.get(ROUND);
         if (rounds != null) {
-            round = Long.parseLong((String) rounds.get(0));
+            round = Integer.parseInt((String) rounds.get(0));
         }
-        String salt = new String(((Input)result.get(SALT).get(0)).toByteArray(), StandardCharsets.UTF_8);
+        String id = new String(((Input) result.get(ID).get(0)).toByteArray(), StandardCharsets.UTF_8);
+        String salt = new String(((Input) result.get(SALT).get(0)).toByteArray(), StandardCharsets.UTF_8);
+        String codepass = new String(((Input)result.get(BASEPASS).get(0)).toByteArray(), StandardCharsets.UTF_8);
+        if (!id.equals(pre)) {
+            return false;
+        }
+
         String mcf = encode(round, salt, pass);
-        System.out.println("verify:" + mcf);
-        return mcf.equals(code);
+        rcode = ReadableBlock.wrap(mcf);
+        result = REG.find(rcode, "dc5","basepass");
+        if (result != null) {
+            String basepass = new String(((Input)result.get(BASEPASS).get(0)).toByteArray(), StandardCharsets.UTF_8);
+            return codepass.equals(basepass);
+        }
+        return false;
     }
 
 }
