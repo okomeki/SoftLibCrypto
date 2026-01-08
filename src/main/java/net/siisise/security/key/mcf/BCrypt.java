@@ -39,7 +39,7 @@ public class BCrypt implements ModularCryptFormat {
     private int cost;
     
     public BCrypt() {
-        this("$2b$", DEFAULT_COST);
+        this("2b", DEFAULT_COST);
     }
 
     /**
@@ -47,7 +47,7 @@ public class BCrypt implements ModularCryptFormat {
      * @param count cost
      */
     public BCrypt(int count) {
-        this("$2b$", count);
+        this("2b", count);
     }
 
     /**
@@ -103,7 +103,7 @@ public class BCrypt implements ModularCryptFormat {
         BASE64 mcf = new BASE64(BASE64.Type.BCRYPT, 0);
         // checksum 23byte 何故か1バイト減らす
         String checksum = mcf.encode(Bin.itob(itext), 0, 23);
-        return prefix + cost + "$" + mcf.encode(salt) + checksum;
+        return "$" + prefix + "$" + cost + "$" + mcf.encode(salt) + checksum;
     }
 
     /**

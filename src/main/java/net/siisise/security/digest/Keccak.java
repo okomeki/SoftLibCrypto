@@ -17,6 +17,7 @@ package net.siisise.security.digest;
 
 import java.util.Arrays;
 import net.siisise.io.Output;
+import net.siisise.lang.Bin;
 import net.siisise.security.io.BitBlockOutput;
 
 /**
@@ -56,7 +57,8 @@ public class Keccak extends BlockMessageDigest {
         }
     }
 
-    private byte padstart;
+    private int padbit;
+    private int padlen;
 
     /**
      * Keccak[c](N,d).
@@ -78,7 +80,7 @@ public class Keccak extends BlockMessageDigest {
      * @param d 出力ビット長
      */
     public Keccak(int c, long d) {
-        this("Keccak[" + c + "](N," + d + ")", c, d, (byte) 0x01);
+        this("Keccak[" + c + "](N," + d + ")", c, d, 0x01,1);
     }
 
     /**
@@ -92,13 +94,15 @@ public class Keccak extends BlockMessageDigest {
      * @param c キャパシティ 2*d か d か固定
      * @param d 出力長 bit
      * @param suffix paddingの前に付加するビット列 とKeccak padding先頭1ビットをまとめた値  頭ビットは下位
+     * @param suflen suffix のビット長
      */
-    protected Keccak(String name, int c, long d, byte suffix) {
+    protected Keccak(String name, int c, long d, int suffix, int suflen) {
         super(name + d);
         this.d = d;
         r = 5 * 5 * w - c; // 1600-c 1152(448),1088(512),832(768),576(1024) 1344(256) 1088(512) 
         R = r / w;         // 25       18(448)   17(512)  13(768)   9(1024)   21(256)   17(512)
-        padstart = suffix;
+        padbit = suffix;
+        padlen = suflen;
         engineReset();
     }
 
@@ -324,15 +328,32 @@ public class Keccak extends BlockMessageDigest {
      * Algorithm 9:
      * padding バイト長で計算
      */
-    void pad10x1() {
+/*
+    void oldpad10x1() {
         int rblen = r / 8; // R * 8;
         int padlen = rblen - (pac.size() % rblen);
         byte[] pad = new byte[padlen];
-        pad[0] |= padstart; // 種類判定用おまけbitが付く
+        pad[0] |= padbit; // 種類判定用おまけbitが付く
         pad[padlen - 1] |= 0x80;
         pac.write(pad);
     }
-
+*/
+    /*
+     * bit 対応.
+     * @deprecated エラー有り
+     */
+    @Deprecated
+    void pad10x1() {
+        ((BitBlockOutput)pac).writeBit(padbit, padlen);
+        long pacBitLength = ((BitBlockOutput)pac).bitLength();
+        long padBitLength = r - pacBitLength;
+        
+        int rblen = r / 8; // R * 8;
+        byte[] pad = new byte[rblen];
+        pad[rblen - 1] |= 0x80;
+        ((BitBlockOutput)pac).writeBit(pad, pacBitLength, padBitLength);
+    }
+    
     /**
      * SHA-512と逆
      *

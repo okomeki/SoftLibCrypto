@@ -36,7 +36,7 @@ public class SHA3 extends Keccak {
     public SHA3(int n) {
         // M || 01
         // 110
-        super("SHA3-", 2 * n, n, (byte) 0x06);
+        super("SHA3-", 2 * n, n, 0x06, 3);
     }
 
 }

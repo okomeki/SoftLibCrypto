@@ -28,7 +28,6 @@ import net.siisise.security.mac.MAC;
  * RFC 4226 HOTP
  */
 public class HOTP implements OTP {
-//    MessageDigest prf;
 
     private MAC mac;
 
@@ -77,8 +76,9 @@ public class HOTP implements OTP {
 
     /**
      * 鍵生成.
+     *
      * @return 鍵
-     * @throws NoSuchAlgorithmException 
+     * @throws NoSuchAlgorithmException
      */
     public byte[] genKey() throws NoSuchAlgorithmException {
         int ml = mac.getMacLength();

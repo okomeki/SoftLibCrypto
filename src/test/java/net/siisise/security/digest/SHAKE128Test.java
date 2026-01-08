@@ -79,13 +79,18 @@ public class SHAKE128Test {
                 int Len = Integer.parseInt(struct.get("Len"));
                 byte[] Msg = Bin.toByteArray(struct.get("Msg"));
                 byte[] Output = Bin.toByteArray(struct.get("Output"));
+                if (Len == 1336) {
+                    System.out.println();
+                }
+                System.out.println();
                 System.out.println("SHAKE128:" + Len);
-                System.out.println(Bin.toHex(Msg));
-                System.out.println(Bin.toHex(Output));
+                System.out.println("Msg   :"+Bin.toHex(Msg));
+                System.out.println("Output:"+Bin.toHex(Output));
 
                 SHAKE128 shake = new SHAKE128(outlen);
                 shake.update(Msg, 0, Len/8);
                 byte[] result = shake.digest();
+                System.out.println("Result:"+Bin.toHex(result));
                 assertArrayEquals(Output, result, "SHAKE128:" + Len);
             } while (line != null);
 

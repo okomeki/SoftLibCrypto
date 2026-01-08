@@ -27,7 +27,7 @@ public class SHAKE extends Keccak implements XOF {
      * @param d 出力長
      */
     public SHAKE(int c, long d) {
-        super("SHAKE" + c, c*2, d, (byte)0x1f);
+        super("SHAKE" + c, c*2, d, 0x1f, 5);
     }
 
     /**

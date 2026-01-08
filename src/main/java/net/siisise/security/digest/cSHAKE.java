@@ -35,7 +35,9 @@ public class cSHAKE extends Keccak {
      * @param S 任意の文字列
      */
     public cSHAKE(int c, long d, String N, String S) {
-        super("cSHAKE" + c + "(" + d + ")", 2 * c, d, (((N != null && !N.isEmpty()) || (S != null && !S.isEmpty())) ? (byte) 0x04 : (byte) 0x1f));
+        super("cSHAKE" + c + "(" + d + ")", 2 * c, d,
+                ((N != null && !N.isEmpty()) || (S != null && !S.isEmpty())) ? 0x04 : 0x1f,
+                ((N != null && !N.isEmpty()) || (S != null && !S.isEmpty())) ? 3 : 5);
         if (N == null) {
             N = "";
         }

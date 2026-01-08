@@ -16,17 +16,25 @@
 package net.siisise.security.io;
 
 import java.io.IOException;
+import net.siisise.io.BaseBitPac;
 import net.siisise.io.LittleBitPacket;
 import net.siisise.io.Output;
 
 /**
- * ブロック切り機能. ビット単位入力に対応したもの.
+ * ブロック切り機能.
+ *
+ * ビット単位入力に対応したもの.
  */
 public class BitBlockOutput extends BlockOutput {
 
     public BitBlockOutput(BlockIOListener listener) {
         super(listener);
         pac = new LittleBitPacket();
+    }
+
+    public BitBlockOutput(BlockIOListener listener, BaseBitPac packet) {
+        super(listener);
+        pac = packet;
     }
 
     @Override
@@ -37,15 +45,15 @@ public class BitBlockOutput extends BlockOutput {
     }
 
     public void writeBit(byte[] data, long bitOffset, long bitLength) {
-        ((LittleBitPacket) pac).writeBit(data, bitOffset, bitLength);
+        ((BaseBitPac) pac).writeBit(data, bitOffset, bitLength);
         out();
     }
-    
+
     public void writeBit(int data, int bitLength) {
-        ((LittleBitPacket)pac).writeBit(data, bitLength);
+        ((BaseBitPac) pac).writeBit(data, bitLength);
         out();
     }
-    
+
     private void out() {
         while (pac.readable(max)) {
             byte[] d = new byte[max];
@@ -59,6 +67,6 @@ public class BitBlockOutput extends BlockOutput {
     }
 
     public long bitLength() {
-        return ((LittleBitPacket)pac).bitLength();
+        return ((BaseBitPac) pac).bitLength();
     }
 }

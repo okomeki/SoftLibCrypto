@@ -15,6 +15,8 @@
  */
 package net.siisise.security.key.mcf;
 
+import net.siisise.security.digest.SHA256;
+import net.siisise.security.digest.SHA512;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -65,9 +67,8 @@ public class DigestCryptTest {
     public void testVerify5() {
         System.out.println("verify sha-256");
         String pass = "password";
-        String code = "$5$rounds=80000$wnsT7Yr92oJoP28r$cKhJImk5mfuSKV9b3mumNzlbstFUplKtQXXMo4G6Ep5";
-        DigestCrypt instance = new DigestCrypt("5", "sha-256");
-        boolean expResult = true;
+        String code = "$5$rounds=80000$wnsT7Yr92oJoP28rbd$cKhJImk5mfuSKV9b3mumNzlbstFUplKtQXXMo4G6Ep5";
+        DigestCrypt instance = new DigestCrypt("5", new SHA256());
         boolean result = instance.verify(pass, code);
         System.out.println("      :" + code);
         assertTrue(result);
@@ -81,8 +82,7 @@ public class DigestCryptTest {
         System.out.println("verify sha-256 2");
         String pass = "password";
         String code = "$5$rounds=12345$q3hvJE5mn5jKRsW.$BbbYTFiaImz9rTy03GGi.Jf9YY5bmxN0LU3p3uI1iUB";
-        DigestCrypt instance = new DigestCrypt("5", "sha-256");
-        boolean expResult = true;
+        DigestCrypt instance = new DigestCrypt("5", new SHA256());
         boolean result = instance.verify(pass, code);
         System.out.println("ex    :" + code);
         assertTrue(result);
@@ -96,7 +96,7 @@ public class DigestCryptTest {
         System.out.println("verify sha-512");
         String pass = "test";
         String code = "$6$salt$xdLuw21n.5WciQUUpHTTPfR6QwS..Z1Q/4xGfiyYa51WSQktzSXYXSk2zBp.Is5r9WiXrGqRmHpEG0iG0HaSk.";
-        DigestCrypt instance = new DigestCrypt("6", "sha-512");
+        DigestCrypt instance = new DigestCrypt("6", new SHA512());
         boolean result = instance.verify(pass, code);
         System.out.println("      :" + code);
         assertTrue(result);
