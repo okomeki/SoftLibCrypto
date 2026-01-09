@@ -42,11 +42,13 @@ public class SHAKE128Test {
         byte[] result = shake.digest();
         System.out.println(Bin.toHex(result));
     }
-    
+
     @Test
-    public void testShortMsg() throws IOException {
-        System.out.println("SHAKE128 ShortMsg");
-        List<String> names = List.of("SHAKE128ShortMsg.rsp","SHAKE128LongMsg.rsp");
+    public void testByteMsg() throws IOException {
+        System.out.println("SHAKE128 ByteMsg");
+        List<String> names = List.of(
+                "SHAKE128ShortMsg.rsp",
+                "SHAKE128LongMsg.rsp");
 
         for ( String fname : names ) {
             BufferedReader in = new BufferedReader(
@@ -56,47 +58,74 @@ public class SHAKE128Test {
                 line = in.readLine();
             } while (line.length() > 0);
 
-            Map<String,String> outMap = new HashMap();
-            line = in.readLine();
-            while (line.length() > 0) {
-                line = line.substring(1, line.length() - 1);
-                String[] sp = line.split(" ");
-                outMap.put(sp[0], sp[2]);
-                line = in.readLine();
-            }
+            Map<String,String> struct = readMap(in);
+            int outlen = Integer.parseInt(struct.get("Outputlen"));
 
-            int outlen = Integer.parseInt(outMap.get("Outputlen"));
-
-            Map<String, String> struct = new HashMap<>();
-
-            do {
-                line = in.readLine();
-                while (line != null && line.length() > 0) {
-                    String[] sp = line.split(" ");
-                    struct.put(sp[0], sp[2]);
-                    line = in.readLine();
-                }
+            struct = readMap(in);
+            while (struct != null) {
                 int Len = Integer.parseInt(struct.get("Len"));
                 byte[] Msg = Bin.toByteArray(struct.get("Msg"));
                 byte[] Output = Bin.toByteArray(struct.get("Output"));
-                if (Len == 1336) {
-                    System.out.println();
-                }
-                System.out.println();
-                System.out.println("SHAKE128:" + Len);
-                System.out.println("Msg   :"+Bin.toHex(Msg));
-                System.out.println("Output:"+Bin.toHex(Output));
 
                 SHAKE128 shake = new SHAKE128(outlen);
                 shake.update(Msg, 0, Len/8);
                 byte[] result = shake.digest();
-                System.out.println("Result:"+Bin.toHex(result));
                 assertArrayEquals(Output, result, "SHAKE128:" + Len);
-            } while (line != null);
-
+                struct = readMap(in);
+            }
 
             in.close();
         }
     }
-    
+
+    Map<String,String> readMap(BufferedReader in) throws IOException {
+        Map<String,String> outMap = new HashMap();
+        String line = in.readLine();
+        while (line != null && line.length() > 0) {
+            if (line.charAt(0) == '[') {
+                line = line.substring(1, line.length() - 1);
+            }
+            String[] sp = line.split("=");
+            outMap.put(sp[0].strip(), sp[1].strip());
+            System.out.println(sp[0].strip()+" :"+ sp[1].strip());
+            line = in.readLine();
+        }
+        if (outMap.isEmpty()) return null;
+        return outMap;
+    }
+
+    @Test
+    public void testBitMsg() throws IOException {
+        System.out.println("SHAKE128 BitMsg");
+        List<String> names = List.of(
+                "SHAKE128ShortMsg.rsp",
+                "SHAKE128LongMsg.rsp");
+
+        for ( String fname : names ) {
+            BufferedReader in = new BufferedReader(
+                    new InputStreamReader(SHAKE128Test.class.getResourceAsStream("/nist/shakebittestvectors/" + fname), "utf-8"));
+            String line;
+            do {
+                line = in.readLine();
+            } while (line.length() > 0);
+
+            Map<String,String> struct = readMap(in);
+            int outlen = Integer.parseInt(struct.get("Outputlen"));
+
+            struct = readMap(in);
+            while (struct != null) {
+                int Len = Integer.parseInt(struct.get("Len"));
+                byte[] Msg = Bin.toByteArray(struct.get("Msg"));
+                byte[] Output = Bin.toByteArray(struct.get("Output"));
+
+                SHAKE128 shake = new SHAKE128(outlen);
+                shake.updateBit(Msg, 0, Len);
+                byte[] result = shake.digest();
+                assertArrayEquals(Output, result, "SHAKE128:" + Len);
+                struct = readMap(in);
+            }
+
+            in.close();
+        }
+    }
 }

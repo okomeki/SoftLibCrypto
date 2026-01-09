@@ -15,9 +15,14 @@
  */
 package net.siisise.security.digest;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.security.Provider;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import net.siisise.lang.Bin;
 import net.siisise.security.SiisiseJCA;
 import static org.junit.jupiter.api.Assertions.*;
@@ -214,4 +219,101 @@ public class SHA3Test {
         assertArrayEquals(example, result);
     }
     
+    static Map<String,String> readMap(BufferedReader in) throws IOException {
+        Map<String,String> outMap = new HashMap();
+        String line = in.readLine();
+        while (line != null && line.length() > 0) {
+            if (line.charAt(0) == '[') {
+                line = line.substring(1, line.length() - 1);
+            }
+            String[] sp = line.split("=");
+            outMap.put(sp[0].strip(), sp[1].strip());
+            System.out.println(sp[0].strip()+" :"+ sp[1].strip());
+            line = in.readLine();
+        }
+        if (outMap.isEmpty()) return null;
+        return outMap;
+    }
+
+    @Test
+    public void testByteMsg() throws IOException {
+        System.out.println("SHA3 ByteMsg");
+        List<String> names = List.of(
+                "SHA3_224ShortMsg.rsp",
+                "SHA3_224LongMsg.rsp",
+                "SHA3_256ShortMsg.rsp",
+                "SHA3_256LongMsg.rsp",
+                "SHA3_384ShortMsg.rsp",
+                "SHA3_384LongMsg.rsp",
+                "SHA3_512ShortMsg.rsp",
+                "SHA3_512LongMsg.rsp");
+
+        for ( String fname : names ) {
+            BufferedReader in = new BufferedReader(
+                    new InputStreamReader(SHA3Test.class.getResourceAsStream("/nist/sha-3bytetestvectors/" + fname), "utf-8"));
+            String line;
+            do {
+                line = in.readLine();
+            } while (line.length() > 0);
+
+            Map<String,String> struct = readMap(in);
+            int outlen = Integer.parseInt(struct.get("L"));
+
+            struct = readMap(in);
+            while (struct != null) {
+                int Len = Integer.parseInt(struct.get("Len"));
+                byte[] Msg = Bin.toByteArray(struct.get("Msg"));
+                byte[] MD = Bin.toByteArray(struct.get("MD"));
+
+                SHA3 sha = new SHA3(outlen);
+                sha.update(Msg, 0, Len/8);
+                byte[] result = sha.digest();
+                assertArrayEquals(MD, result, "SHA3-"+outlen+":" + Len);
+                struct = readMap(in);
+            }
+
+            in.close();
+        }
+    }
+
+    @Test
+    public void testBitMsg() throws IOException {
+        System.out.println("SHA3 BitMsg");
+        List<String> names = List.of(
+                "SHA3_224ShortMsg.rsp",
+                "SHA3_224LongMsg.rsp",
+                "SHA3_256ShortMsg.rsp",
+                "SHA3_256LongMsg.rsp",
+                "SHA3_384ShortMsg.rsp",
+                "SHA3_384LongMsg.rsp",
+                "SHA3_512ShortMsg.rsp",
+                "SHA3_512LongMsg.rsp");
+
+        for ( String fname : names ) {
+            BufferedReader in = new BufferedReader(
+                    new InputStreamReader(SHA3Test.class.getResourceAsStream("/nist/sha-3bittestvectors/" + fname), "utf-8"));
+            String line;
+            do {
+                line = in.readLine();
+            } while (line.length() > 0);
+
+            Map<String,String> struct = readMap(in);
+            int outlen = Integer.parseInt(struct.get("L"));
+
+            struct = readMap(in);
+            while (struct != null) {
+                int Len = Integer.parseInt(struct.get("Len"));
+                byte[] Msg = Bin.toByteArray(struct.get("Msg"));
+                byte[] MD = Bin.toByteArray(struct.get("MD"));
+
+                SHA3 sha = new SHA3(outlen);
+                sha.updateBit(Msg, 0, Len);
+                byte[] result = sha.digest();
+                assertArrayEquals(MD, result, "SHA3-"+outlen+":" + Len);
+                struct = readMap(in);
+            }
+
+            in.close();
+        }
+    }
 }
