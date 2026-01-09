@@ -316,4 +316,88 @@ public class SHA3Test {
             in.close();
         }
     }
+
+    @Test
+    public void testByteMonte() throws IOException {
+        System.out.println("SHA3 ByteMonte");
+        List<String> names = List.of(
+                "SHA3_224Monte.rsp",
+                "SHA3_256Monte.rsp",
+                "SHA3_384Monte.rsp",
+                "SHA3_512Monte.rsp");
+
+        for ( String fname : names ) {
+            BufferedReader in = new BufferedReader(
+                    new InputStreamReader(SHA3Test.class.getResourceAsStream("/nist/sha-3bytetestvectors/" + fname), "utf-8"));
+            String line;
+            do {
+                line = in.readLine();
+            } while (line.length() > 0);
+
+            Map<String,String> struct = readMap(in);
+            int outlen = Integer.parseInt(struct.get("L"));
+            struct = readMap(in);
+            byte[] seed = Bin.toByteArray(struct.get("Seed"));
+
+            struct = readMap(in);
+            while (struct != null) {
+                int Count = Integer.parseInt(struct.get("COUNT"));
+                byte[] MD = Bin.toByteArray(struct.get("MD"));
+
+                for (int i = 0; i < 1000; i++) {
+                    SHA3 sha = new SHA3(outlen);
+                    sha.update(seed);
+                    seed = sha.digest();
+                }
+                System.out.println(Bin.toHex(seed));
+                assertArrayEquals(MD, seed, "SHA3-"+outlen+":" + Count);
+                struct = readMap(in);
+            }
+
+            in.close();
+        }
+    }
+
+
+    @Test
+    public void testBitMonte() throws IOException {
+        System.out.println("SHA3 BitMonte");
+        List<String> names = List.of(
+                "SHA3_224Monte.rsp",
+                "SHA3_256Monte.rsp",
+                "SHA3_384Monte.rsp",
+                "SHA3_512Monte.rsp");
+
+        for ( String fname : names ) {
+            System.out.println(fname);
+            BufferedReader in = new BufferedReader(
+                    new InputStreamReader(SHA3Test.class.getResourceAsStream("/nist/sha-3bittestvectors/" + fname), "utf-8"));
+            String line;
+            do {
+                line = in.readLine();
+            } while (line.length() > 0);
+
+            Map<String,String> struct = readMap(in);
+            int outlen = Integer.parseInt(struct.get("L"));
+            struct = readMap(in);
+            byte[] seed = Bin.toByteArray(struct.get("Seed"));
+
+            struct = readMap(in);
+            while (struct != null) {
+                int Count = Integer.parseInt(struct.get("COUNT"));
+                byte[] MD = Bin.toByteArray(struct.get("MD"));
+
+                for (int i = 0; i < 1000; i++) {
+                    SHA3 sha = new SHA3(outlen);
+                    sha.updateBit(seed, 0, seed.length * 8);
+                    seed = sha.digest();
+                }
+                System.out.println(Bin.toHex(seed));
+                assertArrayEquals(MD, seed, "SHA3-"+outlen+":" + Count);
+                struct = readMap(in);
+            }
+
+            in.close();
+        }
+    }
 }

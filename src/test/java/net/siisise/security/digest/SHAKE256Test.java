@@ -119,7 +119,7 @@ public class SHAKE256Test {
 
         for (String fname : names) {
             BufferedReader in = new BufferedReader(
-                    new InputStreamReader(SHAKE128Test.class.getResourceAsStream("/nist/shakebittestvectors/" + fname), "utf-8"));
+                    new InputStreamReader(SHAKE256Test.class.getResourceAsStream("/nist/shakebittestvectors/" + fname), "utf-8"));
             String line;
             do {
                 line = in.readLine();

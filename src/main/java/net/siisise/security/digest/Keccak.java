@@ -17,7 +17,6 @@ package net.siisise.security.digest;
 
 import java.util.Arrays;
 import net.siisise.io.Output;
-import net.siisise.lang.Bin;
 import net.siisise.security.io.BitBlockOutput;
 
 /**
@@ -272,12 +271,12 @@ public class Keccak extends BlockMessageDigest {
     }
 
     /**
-     * ビット入力にも対応している(仮)
+     * ビット入力にも対応している.
      * @param input データ (Little Endian)
      * @param bitOffset ビット位置
      * @param bitLen ビット長
      */
-    public void updateBit(byte[] input, int bitOffset, int bitLen) {
+    public void updateBit(byte[] input, long bitOffset, long bitLen) {
         ((BitBlockOutput)pac).writeBit(input, bitOffset, bitLen);
     }
     
@@ -326,32 +325,17 @@ public class Keccak extends BlockMessageDigest {
     /**
      * 5.1. Specification of pad10*1
      * Algorithm 9:
-     * padding バイト長で計算
+     * padding bit 対応.
      */
-/*
-    void oldpad10x1() {
-        int rblen = r / 8; // R * 8;
-        int padlen = rblen - (pac.size() % rblen);
-        byte[] pad = new byte[padlen];
-        pad[0] |= padbit; // 種類判定用おまけbitが付く
-        pad[padlen - 1] |= 0x80;
-        pac.write(pad);
-    }
-*/
-    /*
-     * bit 対応.
-     * @deprecated エラー有り
-     */
-    @Deprecated
     void pad10x1() {
         ((BitBlockOutput)pac).writeBit(padbit, padlen);
-        long pacBitLength = ((BitBlockOutput)pac).bitLength();
-        long padBitLength = r - pacBitLength;
+        long offset = ((BitBlockOutput)pac).bitLength();
+        long bitLength = r - offset;
         
         int rblen = r / 8; // R * 8;
         byte[] pad = new byte[rblen];
         pad[rblen - 1] |= 0x80;
-        ((BitBlockOutput)pac).writeBit(pad, pacBitLength, padBitLength);
+        ((BitBlockOutput)pac).writeBit(pad, offset, bitLength);
     }
     
     /**
