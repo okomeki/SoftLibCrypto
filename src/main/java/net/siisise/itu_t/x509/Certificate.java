@@ -20,34 +20,37 @@ import net.siisise.iso.asn1.tag.BITSTRING;
 import net.siisise.security.key.RSAMiniPrivateKey;
 
 /**
- * RFC 5280 4.1.1.
- * 署名の形式.
+ * RFC 5280 4.1.1. 署名の形式.
  */
 public class Certificate {
+
     public TBSCertificate tbsCertificate;
     public AlgorithmIdentifier signatureAlgorithm;
     public BITSTRING signatureValue;
-    
+
     /**
      * 仮.
+     *
      * @param tbs
      * @param prvKey 秘密鍵
-     * @return 
+     * @return
      */
     public static Certificate sign(TBSCertificate tbs, RSAMiniPrivateKey prvKey) {
         Certificate cert = new Certificate();
         cert.tbsCertificate = tbs;
         cert.signatureAlgorithm = tbs.signature;
-        
+
         throw new IllegalStateException();
     }
-    
+
     /**
      * 検証 validate.
+     *
      * @param cert 証明書
      * @param pub 公開鍵
      */
     public static void validate(Certificate cert, Object pub) {
+        //cert.signatureAlgorithm;
         throw new IllegalStateException();
     }
 }

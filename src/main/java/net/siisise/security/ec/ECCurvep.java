@@ -28,6 +28,7 @@ import net.siisise.iso.asn1.tag.SEQUENCEMap;
  * 素数をpに使う方向の楕円曲線 Fp
  *
  * y^2 ≡ x^3 + ax + b
+ * @param <P> 型
  */
 public class ECCurvep<P extends ECCurvep.ECPointp> extends Curvep<P> implements ECCurve {
 
@@ -49,6 +50,7 @@ public class ECCurvep<P extends ECCurvep.ECPointp> extends Curvep<P> implements 
      * generator Gx, Gy
      * 他 order, h
      *
+     * @param oid OBJECT IDENTIFIER
      * @param p fieldID.parameters(prime-p) Fp prime p
      * @param a curve.a +axのa
      * @param b curve.b +bのb
@@ -149,6 +151,7 @@ public class ECCurvep<P extends ECCurvep.ECPointp> extends Curvep<P> implements 
          * SEC1 2.3.3 圧縮.
          * ゼロ 00
          * 圧縮 02, 03
+         * @return 圧縮
          */
         public byte[] encLXY() {
             reset();
@@ -164,17 +167,18 @@ public class ECCurvep<P extends ECCurvep.ECPointp> extends Curvep<P> implements 
             }
         }
 
+        /*
         BigInteger y(boolean yf, BigInteger x) {
             BigInteger y2 = add(add(x.modPow(BigInteger.valueOf(3), p), mul(a, x)), b);
             BigInteger y = y2.sqrt();
             throw new UnsupportedOperationException();
         }
+        */
 
         /**
          * 加算.
          *
          * Z考慮版.
-         * @param p 点P
          * @param q 点Q
          * @return P * Q
          */
@@ -225,9 +229,8 @@ public class ECCurvep<P extends ECCurvep.ECPointp> extends Curvep<P> implements 
         /**
          * 乗算.
          * nG だったり nEだったり
-         * @param n
-         * @param E
-         * @return
+         * @param n 倍数
+         * @return nG nE
          */
         @Override
         public P x(BigInteger n) {

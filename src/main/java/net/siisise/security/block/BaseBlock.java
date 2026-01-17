@@ -22,15 +22,17 @@ public abstract class BaseBlock implements Block {
 
     /**
      * 必要な初期値(鍵,IVなど)のビット長のめやす.
+     *
      * @return key bit length array
      */
     @Override
     public int[] getParamLength() {
-        return new int[] { getBlockLength() };
+        return new int[]{getBlockLength()};
     }
 
     /**
      * 暗号化.
+     *
      * @param src メッセージ
      * @return 暗号文
      */
@@ -66,7 +68,7 @@ public abstract class BaseBlock implements Block {
 
     /**
      * 復号処理.
-     * 
+     *
      * @param src 暗号文
      * @param offset 位置
      * @param length　サイズ
@@ -79,7 +81,7 @@ public abstract class BaseBlock implements Block {
         byte[] dec = new byte[length];
         byte[] bdec;
         int to = 0;
-        for ( int i = 0; i < len; i++ ) {
+        for (int i = 0; i < len; i++) {
             bdec = decrypt(src, offset);
             System.arraycopy(bdec, 0, dec, to, blen);
             offset += blen;
@@ -87,10 +89,10 @@ public abstract class BaseBlock implements Block {
         }
         return dec;
     }
-    
+
     /**
      * 復号処理.
-     * 
+     *
      * @param src 暗号文
      * @param offset 位置
      * @param length サイズ
@@ -103,7 +105,7 @@ public abstract class BaseBlock implements Block {
         int[] dec = new int[length];
         int[] bdec;
         int to = 0;
-        for ( int i = 0; i < len; i++ ) {
+        for (int i = 0; i < len; i++) {
             bdec = decrypt(src, offset);
             System.arraycopy(bdec, 0, dec, to, blen);
             offset += blen;
@@ -119,7 +121,7 @@ public abstract class BaseBlock implements Block {
         long[] dec = new long[length];
         long[] bdec;
         int to = 0;
-        for ( int i = 0; i < len; i++ ) {
+        for (int i = 0; i < len; i++) {
             bdec = decrypt(src, offset);
             System.arraycopy(bdec, 0, dec, to, blen);
             offset += blen;
@@ -127,7 +129,7 @@ public abstract class BaseBlock implements Block {
         }
         return dec;
     }
-    
+
     @Override
     public byte[] doFinalEncrypt() {
         return doFinalEncrypt(new byte[0]);

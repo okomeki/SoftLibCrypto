@@ -61,7 +61,6 @@ public abstract class Curve extends Curvep {
          * u は Pの座標.
          *
          * @param k 数
-         * @param u Curve25519 9 Curve448 5 または相手の公開鍵
          * @return 公開鍵または共通鍵
          */
         @Override
@@ -132,7 +131,8 @@ public abstract class Curve extends Curvep {
     }
 
     /**
-     *
+     * 曲線
+     * @param name 名称
      * @param p P Fp
      * @param A A
      * @param n order
@@ -183,12 +183,6 @@ public abstract class Curve extends Curvep {
 
     abstract BigInteger vCheck(BigInteger v, BigInteger a);
 
-    /**
-     * k の
-     *
-     * @param sc
-     * @return
-     */
     public byte[] cutk(byte[] sc) {
         byte[] s = sc.clone();
         s[0] &= 0xff << c;

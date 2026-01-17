@@ -16,18 +16,30 @@
 package net.siisise.security.digest;
 
 /**
- * ParallelHash
+ * ParallelHash 128bit
  */
 public class ParallelHash128 extends ParallelHash {
     
     /**
+     * ParallelHash
      * 
-     * @param b block byte size
-     * @param l hash bit length ハッシュ出力bit長
-     * @param S 付加文字
+     * @param B block byte size
+     * @param L hash bit length ハッシュ出力bit長
+     * @param S customization bit string 付加文字
      */
-    public ParallelHash128(int b, int l, String S) {
-        super(128, b, l, S);
+    public ParallelHash128(int B, int L, String S) {
+        super(128, B, L, false, S);
     }
-    
+
+    /**
+     * ParallelHash
+     * 
+     * @param B block byte size
+     * @param L ハッシュ出力 bit長
+     * @param xof
+     * @param S customization bit string 付加文字
+     */
+    ParallelHash128(int B, int L, boolean xof, String S) {
+        super(128, B, L, xof, S);
+    }
 }

@@ -19,7 +19,7 @@ import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.iso.asn1.tag.BITSTRING;
 
 /**
- *
+ * RFC 5480
  */
 public class SubjectPublicKeyInfo {
     public AlgorithmIdentifier algorithm;

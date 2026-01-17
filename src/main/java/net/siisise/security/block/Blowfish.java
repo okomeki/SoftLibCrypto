@@ -47,7 +47,7 @@ public class Blowfish extends IntBlock {
         return null;
     }
 
-    static final int sBox0[] = {
+    static final int[] sBox0 = {
         0xD1310BA6, 0x98DFB5AC, 0x2FFD72DB, 0xD01ADFB7,
         0xB8E1AFED, 0x6A267E96, 0xBA7C9045, 0xF12C7F99,
         0x24A19947, 0xB3916CF7, 0x0801F2E2, 0x858EFC16,
@@ -374,7 +374,7 @@ public class Blowfish extends IntBlock {
 
         expandKey(salt, key);
 
-        long rounds = 1l << cost;
+        long rounds = 1L << cost;
         for (long l = 0; l < rounds; l++) {
             expandKey(key); // saltなしなので標準を利用.
             expandKey(salt);
@@ -392,7 +392,7 @@ public class Blowfish extends IntBlock {
 
     /**
      * 鍵拡張.
-     * @param K key
+     * @param key key
      */
     void expandKey(byte[] key) {
         // setting up the P-array
@@ -429,7 +429,7 @@ public class Blowfish extends IntBlock {
      * password 256バイト越えの場合は2aと2bの結果が違うのかも
      *
      * @param byteSalt 128bit 16 byte 4int
-     * @param K password 72文字まで有効
+     * @param key password 72文字まで有効
      */
     void expandKey(byte[] byteSalt, byte[] key) {
         int[] salt = Bin.btoi(byteSalt); // int[4]

@@ -18,6 +18,7 @@ package net.siisise.security.digest;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.security.NoSuchAlgorithmException;
 import java.security.Provider;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -60,28 +61,29 @@ public class SHA3Test {
     static String Keccak512 = "0eab42de4c3ceb9235fc91acffe746b29c29a8c366b7c60e4e67c466f36a4304c00fa9caf9d87976ba469bcbe06713b435f091ef2769fb160cdab33d3670680e";
 
     @Test
-    public void testSomeMethod() throws IOException {
-        Keccak md;
+    public void testSomeMethod() throws IOException, NoSuchAlgorithmException {
+        BlockMessageDigest md;
         byte[] r;
         byte[] src = "abc".getBytes("utf-8");
-        
-        md = new SHA3(224);
+
+        md = new SHA3224(); //MessageDigest.getInstance("SHA3-224");
+        System.out.println(md.getClass().getName());
         r = md.digest(src);
         assertArrayEquals(r,Bin.toByteArray(SHA3224abc));
 
-        md = new SHA3(256);
+        md = new SHA3256(); //MessageDigest.getInstance("SHA3-256");
         r = md.digest(src);
         assertArrayEquals(r,Bin.toByteArray(SHA3256abc));
         
-        md = new SHA3(384);
+        md = new SHA3384(); //MessageDigest.getInstance("SHA3-384");
         r = md.digest(src);
         assertArrayEquals(r,Bin.toByteArray(SHA3384abc));
         
-        md = new SHA3(512);
+        md = new SHA3512(); //MessageDigest.getInstance("SHA3-512");
         r = md.digest(src);
         assertArrayEquals(r,Bin.toByteArray(SHA3512abc));
 
-        md = new SHAKE128(256);
+        md = new SHAKE128(); // MessageDigest.getInstance("SHAKE128");
         r = md.digest(src);
         assertArrayEquals(r,Bin.toByteArray(SHAKE128256abc));
 
@@ -228,7 +230,7 @@ public class SHA3Test {
             }
             String[] sp = line.split("=");
             outMap.put(sp[0].strip(), sp[1].strip());
-            System.out.println(sp[0].strip()+" :"+ sp[1].strip());
+//            System.out.println(sp[0].strip()+" :"+ sp[1].strip());
             line = in.readLine();
         }
         if (outMap.isEmpty()) return null;
@@ -307,7 +309,7 @@ public class SHA3Test {
                 byte[] MD = Bin.toByteArray(struct.get("MD"));
 
                 SHA3 sha = new SHA3(outlen);
-                sha.updateBit(Msg, 0, Len);
+                sha.writeBit(Msg, 0, Len);
                 byte[] result = sha.digest();
                 assertArrayEquals(MD, result, "SHA3-"+outlen+":" + Len);
                 struct = readMap(in);
@@ -349,7 +351,7 @@ public class SHA3Test {
                     sha.update(seed);
                     seed = sha.digest();
                 }
-                System.out.println(Bin.toHex(seed));
+//                System.out.println(Bin.toHex(seed));
                 assertArrayEquals(MD, seed, "SHA3-"+outlen+":" + Count);
                 struct = readMap(in);
             }
@@ -389,10 +391,10 @@ public class SHA3Test {
 
                 for (int i = 0; i < 1000; i++) {
                     SHA3 sha = new SHA3(outlen);
-                    sha.updateBit(seed, 0, seed.length * 8);
+                    sha.writeBit(seed, 0, seed.length * 8);
                     seed = sha.digest();
                 }
-                System.out.println(Bin.toHex(seed));
+//                System.out.println(Bin.toHex(seed));
                 assertArrayEquals(MD, seed, "SHA3-"+outlen+":" + Count);
                 struct = readMap(in);
             }

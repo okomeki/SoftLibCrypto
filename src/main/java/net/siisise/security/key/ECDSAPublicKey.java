@@ -30,6 +30,7 @@ import net.siisise.security.sign.ECDSA;
 
 /**
  * まだ限定 ECCurvep FIPS 186-5 Public Key Q
+ * RFC 5480
  */
 public class ECDSAPublicKey implements ECPublicKey {
 

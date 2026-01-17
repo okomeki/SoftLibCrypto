@@ -36,6 +36,7 @@ import net.siisise.security.digest.SHA512256;
 import net.siisise.security.digest.SHAKE128;
 import net.siisise.security.digest.SHAKE256;
 import net.siisise.security.mac.HMACSpi;
+import net.siisise.security.mac.KMACSpi;
 
 /**
  *
@@ -78,68 +79,59 @@ public final class SiisiseJCA extends Provider {
         putService(new Service(this, "MessageDigest", "SHA3-256", SHA3256.class.getName(), null, null));
         putService(new Service(this, "MessageDigest", "SHA3-384", SHA3384.class.getName(), null, null));
         putService(new Service(this, "MessageDigest", "SHA3-512", SHA3512.class.getName(), null, null));
-        putService(new Service(this, "MessageDigest", "SHAKE128-128", SHAKE128.class.getName(), null, null));
-        putService(new Service(this, "MessageDigest", "SHAKE128-256", SHAKE256.class.getName(), null, null));
+        putService(new Service(this, "MessageDigest", "SHAKE128", SHAKE128.class.getName(), null, null));
+        putService(new Service(this, "MessageDigest", "SHAKE256", SHAKE256.class.getName(), null, null));
         aliases = new ArrayList();
         aliases.add("HMAC-MD5");
-        aliases = null;
         putService(new Service(this, "Mac", "HmacMD5", HMACSpi.class.getName(), aliases, null));
         aliases = new ArrayList();
         //ToDo: HMACParameterSpec を使う
         aliases.add("HMAC-MD5-96");
-        aliases = null;
         putService(new Service(this, "Mac", "HmacMD5-96", HMACSpi.class.getName(), aliases, null));
         aliases = new ArrayList();
         aliases.add("HMAC-SHA1");
         aliases.add("HMAC-SHA-1");
-        aliases = null;
         putService(new Service(this, "Mac", "HmacSHA1", HMACSpi.class.getName(), aliases, null));
         aliases = new ArrayList();
         //ToDo: HMACParameterSpec を使う
         aliases.add("HMAC-SHA1-96");
         aliases.add("HMAC-SHA-1-96");
-        aliases = null;
         putService(new Service(this, "Mac", "HmacSHA1-96", HMACSpi.class.getName(), aliases, null));
         aliases = new ArrayList();
         aliases.add("HMAC-SHA-224");
-        aliases = null;
         putService(new Service(this, "Mac", "HmacSHA224", HMACSpi.class.getName(), aliases, null));
         aliases = new ArrayList();
         aliases.add("HMAC-SHA-256");
-        aliases = null;
         putService(new Service(this, "Mac", "HmacSHA256", HMACSpi.class.getName(), aliases, null));
         aliases = new ArrayList();
         aliases.add("HMAC-SHA-384");
-        aliases = null;
         putService(new Service(this, "Mac", "HmacSHA384", HMACSpi.class.getName(), aliases, null));
         aliases = new ArrayList();
         aliases.add("HMAC-SHA-512");
-        aliases = null;
         putService(new Service(this, "Mac", "HmacSHA512", HMACSpi.class.getName(), aliases, null));
         aliases = new ArrayList();
         aliases.add("HMAC-SHA-512/224");
-        aliases = null;
         putService(new Service(this, "Mac", "HmacSHA512/224", HMACSpi.class.getName(), aliases, null));
         aliases = new ArrayList();
         aliases.add("HMAC-SHA-512/256");
-        aliases = null;
         putService(new Service(this, "Mac", "HmacSHA512/256", HMACSpi.class.getName(), aliases, null));
         aliases = new ArrayList();
         aliases.add("HMAC-SHA3-224");
-        aliases = null;
         putService(new Service(this, "Mac", "HmacSHA3-224", HMACSpi.class.getName(), aliases, null));
         aliases = new ArrayList();
         aliases.add("HMAC-SHA3-256");
-        aliases = null;
         putService(new Service(this, "Mac", "HmacSHA3-256", HMACSpi.class.getName(), aliases, null));
         aliases = new ArrayList();
         aliases.add("HMAC-SHA3-384");
-        aliases = null;
         putService(new Service(this, "Mac", "HmacSHA3-384", HMACSpi.class.getName(), aliases, null));
         aliases = new ArrayList();
         aliases.add("HMAC-SHA3-512");
-        aliases = null;
         putService(new Service(this, "Mac", "HmacSHA3-512", HMACSpi.class.getName(), aliases, null));
+        aliases = null;
+        putService(new Service(this,"Mac","Kmac128", KMACSpi.class.getName(), aliases, null));
+        putService(new Service(this,"Mac","Kmac256", KMACSpi.class.getName(), aliases, null));
+        putService(new Service(this,"Mac","Kmac128XOF", KMACSpi.class.getName(), aliases, null));
+        putService(new Service(this,"Mac","Kmac256XOF", KMACSpi.class.getName(), aliases, null));
     }
 
 }

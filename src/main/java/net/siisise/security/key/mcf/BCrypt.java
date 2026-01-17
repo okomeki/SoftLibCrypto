@@ -32,10 +32,11 @@ import net.siisise.security.block.Blowfish;
  */
 public class BCrypt implements ModularCryptFormat {
     
-    static final byte[] CTEXT = "OrpheanBeholderScryDoubt".getBytes(StandardCharsets.UTF_8);
-
-    String prefix;
+    private static final byte[] CTEXT = "OrpheanBeholderScryDoubt".getBytes(StandardCharsets.UTF_8);
     public static final int DEFAULT_COST = 12;
+
+    /** 生成用 */
+    final String prefix;
     private int cost;
     
     public BCrypt() {
@@ -43,6 +44,7 @@ public class BCrypt implements ModularCryptFormat {
     }
 
     /**
+     * 初期化.
      * 
      * @param count cost
      */
@@ -51,8 +53,9 @@ public class BCrypt implements ModularCryptFormat {
     }
 
     /**
+     * 初期化.
      * 
-     * @param prefix $2b$ から置き換えたい?
+     * @param prefix 2b から置き換えたい?
      * @param count cost
      */
     public BCrypt(String prefix, int count) {
@@ -60,6 +63,11 @@ public class BCrypt implements ModularCryptFormat {
         cost = count;
     }
 
+    /**
+     * MCF生成.
+     * @param pass 最大72文字まで有効なpassword
+     * @return MCF
+     */
     @Override
     public String generate(String pass) {
         return gen(cost, pass);
@@ -111,7 +119,7 @@ public class BCrypt implements ModularCryptFormat {
      *
      * @param cost 繰り返しビット長
      * @param salt 塩 128bit
-     * @param pass パスワード
+     * @param pass パスワード NUL文字禁止
      * @return
      */
     Blowfish EksBlowfishSetup(int cost, byte[] salt, String pass) {

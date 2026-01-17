@@ -15,6 +15,7 @@
  */
 package net.siisise.itu_t.x501;
 
+import java.util.Map;
 import net.siisise.iso.asn1.annotation.Choice;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 
@@ -26,8 +27,9 @@ import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
  */
 @Choice
 public class Name {
+
     public RDNSequence rdnSequence;
-    
+
     public static final OBJECTIDENTIFIER ID_AT = new OBJECTIDENTIFIER("2.5.4");
     /**
      * LDAP c X.500 CountryName.
@@ -46,12 +48,13 @@ public class Name {
 //    public static final OBJECTIDENTIFIER O = ORGANIZATION_NAME;
     /**
      * id-at-organizationUnitName
-     * DirectoryName (teletexString, printableString, universalString, utf8String, bmpString)
+     * DirectoryName (teletexString, printableString,
+     * universalString, utf8String, bmpString)
      */
     public static final OBJECTIDENTIFIER ORGANIZATIONAL_UNIT = ID_AT.sub(11); // 組織単位名
     /**
      * RFC 4519 X.520 dnQualifier
-     * 
+     *
      * id-at-dnQualifier
      * PrintableString
      */
@@ -77,7 +80,8 @@ public class Name {
     public static final OBJECTIDENTIFIER L = LOCALITY;
     /**
      * id-at-title
-     * DirectoryName (teletexString, printableString, universalString, utf8String, bmpString)
+     * DirectoryName (teletexString, printableString,
+     * universalString, utf8String, bmpString)
      */
     public static final OBJECTIDENTIFIER TITLE = ID_AT.sub(12); // 敬称
     public static final OBJECTIDENTIFIER SURNAME = ID_AT.sub(4); // 姓
@@ -88,7 +92,8 @@ public class Name {
     public static final OBJECTIDENTIFIER INITIALS = ID_AT.sub(43); // イニシャル
     /**
      * id-at-pseudonym
-     * DirectoryName (teletexString, printableString, universalString, utf8String, bmpString)
+     * DirectoryName (teletexString, printableString,
+     * universalString, utf8String, bmpString)
      */
     public static final OBJECTIDENTIFIER PSEUDONYM = ID_AT.sub(65); // 仮名
     public static final OBJECTIDENTIFIER GENERATION_QUALIFIER = ID_AT.sub(44); // 世代修飾子
@@ -110,7 +115,6 @@ public class Name {
      * IA5String
      */
     public static final OBJECTIDENTIFIER EMAIL_ADDRESS = new OBJECTIDENTIFIER("1.2.840.113549.1.9.1");
-    
 
     // RFC 4519 X.520 のみ?
     public static final OBJECTIDENTIFIER BUSINESS_CATEGORY = ID_AT.sub(15);
@@ -118,7 +122,7 @@ public class Name {
      * RFC 4519 2.5. description X.520
      */
     public static final OBJECTIDENTIFIER DESCRIPTION = ID_AT.sub(13);
-    
+
     /**
      * RFC 4519 2,6. destinationIndicator X.520
      */
@@ -128,37 +132,31 @@ public class Name {
      * RFC 4519 2.7. distinguishedName X.520
      */
     public static final OBJECTIDENTIFIER DISTINGUISHED_NAME = ID_AT.sub(49);
-    
+
     /**
      * RFC 4519 2.9. enhancedSearchGuide X.520
      */
     public static final OBJECTIDENTIFIER ENHANCED_SEARCH_GUIDE = ID_AT.sub(47);
-    
+
     /**
      * RFC 4519 2.17. member X.520
      */
     public static final OBJECTIDENTIFIER MEMBER = ID_AT.sub(31);
 
-    static final Object[][] X500NAMES = {
-        {"C", COUNTRY},
-        {"ST", STATE_OR_PROVINCE_NAME},
-        {"O", ORGANIZATION_NAME},
-        {"OU", ORGANIZATIONAL_UNIT},
-        {"CN", COMMON_NAME}
-    };
-    
+    static final Map<String, OBJECTIDENTIFIER> X500NAMES = Map.of(
+            "C", COUNTRY,
+            "SI", STATE_OR_PROVINCE_NAME,
+            "O", ORGANIZATION_NAME,
+            "OU", ORGANIZATIONAL_UNIT,
+            "CN", COMMON_NAME);
+
     static OBJECTIDENTIFIER toOID(String name) {
-        for ( Object[] o : X500NAMES ) {
-            if ( o[0].equals(name)) {
-                return (OBJECTIDENTIFIER)o[1];
-            }
-        }
-        return null;
+        return X500NAMES.get(name);
     }
-    
+
     /**
      * ToDo: まともなParser
-     * 
+     *
      * @param name / 区切り
      * @return Name
      */
@@ -167,12 +165,12 @@ public class Name {
         String[] tav = name.split("/");
         // RDNSequence
         n.rdnSequence = new RDNSequence();
-        for ( String v : tav ) {
+        for (String v : tav) {
             if (v.isEmpty()) continue;
             String[] nv = v.split("=", 2);
             AttributeTypeAndValue atav = new AttributeTypeAndValue();
             atav.type = toOID(nv[0]);
-            if (atav.type == null ) {
+            if (atav.type == null) {
                 return null;
             }
             atav.value = new DirectoryString(nv[1]);

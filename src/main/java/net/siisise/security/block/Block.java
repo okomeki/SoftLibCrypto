@@ -25,6 +25,7 @@ import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
  * CFBやOFBを使うとストリームモードでも利用可能。
  */
 public interface Block extends EncBlock, DecBlock {
+
     public static final OBJECTIDENTIFIER rsadsi = PKCS1.rsadsi;
     public static final OBJECTIDENTIFIER encryptionAlgorithm = rsadsi.sub(3);
 

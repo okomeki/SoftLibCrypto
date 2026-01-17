@@ -87,7 +87,7 @@ public class SHAKE128Test {
             }
             String[] sp = line.split("=");
             outMap.put(sp[0].strip(), sp[1].strip());
-            System.out.println(sp[0].strip()+" :"+ sp[1].strip());
+//            System.out.println(sp[0].strip()+" :"+ sp[1].strip());
             line = in.readLine();
         }
         if (outMap.isEmpty()) return null;
@@ -119,7 +119,7 @@ public class SHAKE128Test {
                 byte[] Output = Bin.toByteArray(struct.get("Output"));
 
                 SHAKE128 shake = new SHAKE128(outlen);
-                shake.updateBit(Msg, 0, Len);
+                shake.writeBit(Msg, 0, Len);
                 byte[] result = shake.digest();
                 assertArrayEquals(Output, result, "SHAKE128:" + Len);
                 struct = readMap(in);
@@ -128,4 +128,101 @@ public class SHAKE128Test {
             in.close();
         }
     }
+/*
+    @Test
+    public void testByteMonte() throws IOException {
+        System.out.println("SHAKE128 Byte Monte");
+        List<String> names = List.of(
+                "SHAKE128Monte.rsp");
+
+        for ( String fname : names ) {
+            BufferedReader in = new BufferedReader(
+                    new InputStreamReader(SHAKE128Test.class.getResourceAsStream("/nist/shakebytetestvectors/" + fname), "utf-8"));
+            String line;
+            do {
+                line = in.readLine();
+            } while (line.length() > 0);
+
+            Map<String,String> struct = readMap(in);
+            int minOutLen = Integer.parseInt(struct.get("Minimum Output Length (bits)"));
+            int minoutbytes = minOutLen / 8;
+
+            struct = readMap(in);
+            int maxOutLen = Integer.parseInt(struct.get("Maximum Output Length (bits)"));
+            int maxoutbytes = maxOutLen / 8;
+
+            struct = readMap(in);
+            byte[] Msg = Bin.toByteArray(struct.get("Msg"));
+            int Range =(maxoutbytes - minoutbytes + 1);
+            int Len = Msg.length * 8;
+            int Outputlen = maxOutLen/8 * 8;
+
+            struct = readMap(in);
+            while (struct != null) {
+                int COUNT = Integer.parseInt(struct.get("COUNT"));
+                Outputlen = Integer.parseInt(struct.get("Outputlen"));
+                byte[] Output = Bin.toByteArray(struct.get("Output"));
+                int n = 0;
+                for (int i = 0; i < 1000; i++) {
+                    SHAKE128 shake = new SHAKE128(Outputlen * 8);
+                    shake.write(Msg);
+                    Msg = shake.digest();
+                    int Rightmost_Output_bits = (Msg[Msg.length - 1] & 0xff) | (Msg[Msg.length - 2] & 0xff);
+                    if ( i == 999) {
+                        n = Outputlen;
+                    }
+                    Outputlen = minoutbytes + (Rightmost_Output_bits % Range);
+                }
+                System.out.println(Bin.toHex(Msg));
+                System.out.println("Outputlen:" + n);
+                assertArrayEquals(Output, Msg, "SHAKE128:Byte:Monte" + COUNT);
+                struct = readMap(in);
+            }
+
+            in.close();
+        }
+    }
+*/
+/*
+    @Test
+    public void testBitMonteMsg() throws IOException {
+        System.out.println("SHAKE128 Bit Monte");
+        List<String> names = List.of(
+                "SHAKE128Monte.rsp");
+
+        for ( String fname : names ) {
+            BufferedReader in = new BufferedReader(
+                    new InputStreamReader(SHAKE128Test.class.getResourceAsStream("/nist/shakebittestvectors/" + fname), "utf-8"));
+            String line;
+            do {
+                line = in.readLine();
+            } while (line.length() > 0);
+
+            Map<String,String> struct = readMap(in);
+            int minimum = Integer.parseInt(struct.get("Minimum Output Length (bits)"));
+
+            struct = readMap(in);
+            int maximum = Integer.parseInt(struct.get("Maximum Output Length (bits)"));
+
+            struct = readMap(in);
+            byte[] Msg = Bin.toByteArray(struct.get("Outputlen"));
+
+            struct = readMap(in);
+            while (struct != null) {
+                int COUNT = Integer.parseInt(struct.get("COUNT"));
+                int Len = Integer.parseInt(struct.get("Outputlen"));
+                byte[] Output = Bin.toByteArray(struct.get("Output"));
+                for (int i = 0; i < 1000; i++) {
+                    SHAKE128 shake = new SHAKE128(Len);
+                    shake.writeBit(Msg, 0, Len);
+                    Msg = shake.digest();
+                }
+                assertArrayEquals(Output, Msg, "SHAKE128:" + Len);
+                struct = readMap(in);
+            }
+
+            in.close();
+        }
+    }
+*/
 }

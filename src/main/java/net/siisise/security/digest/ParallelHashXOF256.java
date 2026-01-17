@@ -16,18 +16,18 @@
 package net.siisise.security.digest;
 
 /**
- * ParallelHash XOF 256
+ * ParallelHash XOF 256bit
  */
 public class ParallelHashXOF256 extends ParallelHash256 implements XOF {
 
     /**
+     * ParallelHashXOF
      * 
      * @param b block byte size
      * @param l hash bit length
-     * @param S 
+     * @param S customization bit string 付加文字
      */
     public ParallelHashXOF256(int b, int l, String S) {
-        super(b, l, S);
+        super(b, l, true, S);
     }
-    
 }

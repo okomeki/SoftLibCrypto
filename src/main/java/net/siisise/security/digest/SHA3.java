@@ -39,4 +39,30 @@ public class SHA3 extends Keccak {
         super("SHA3-", 2 * n, n, 0x06, 3);
     }
 
+    /**
+     * 出力長変更不可.
+     * @deprecated SHA3は固定サイズ
+     * @param len 出力長.
+     */
+    @Override
+    @Deprecated
+    public void setDigestLength(int len) {
+        if (len != getDigestLength()) {
+            throw new SecurityException();
+        }
+    }
+    
+    /**
+     * 出力長変更不可.
+     * @deprecated SHA3は固定サイズ
+     * @param len 出力長.
+     */
+    @Override
+    @Deprecated
+    public void setBitDigestLength(long len) {
+        if (len != getBitDigestLength()) {
+            throw new SecurityException();
+        }
+    }
+
 }

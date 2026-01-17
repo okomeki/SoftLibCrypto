@@ -27,7 +27,7 @@ public class TupleHash256 extends TupleHash {
      * @param S オプションで設定可能な空文字列を含む可変長文字列. optional customization bit string of any length, including zero.
      */
     public TupleHash256(int L, String S) {
-        super(256, L, S);
+        super(256, L, false, S);
     }
 
     /**
@@ -35,6 +35,10 @@ public class TupleHash256 extends TupleHash {
      * @param S オプションで設定可能な空文字列を含む可変長文字列. optional customization bit string of any length, including zero.
      */
     public TupleHash256(String S) {
-        super(256, 512, S);
+        super(256, 512, false, S);
+    }
+
+    TupleHash256(int L, boolean xof, String S) {
+        super(256, L, xof, S);
     }
 }

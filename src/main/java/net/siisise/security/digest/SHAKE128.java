@@ -46,17 +46,6 @@ public class SHAKE128 extends SHAKE {
     /**
      * 出力ビット指定.
      * @param d ビット数
-     * @deprecated
-     */
-    @Deprecated
-    public SHAKE128(int d) {
-        // M || 1111
-        super(128, d);
-    }
-
-    /**
-     * 出力ビット指定.
-     * @param d ビット数
      */
     public SHAKE128(long d) {
         // M || 1111

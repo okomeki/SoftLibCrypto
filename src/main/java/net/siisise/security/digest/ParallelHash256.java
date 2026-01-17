@@ -16,18 +16,30 @@
 package net.siisise.security.digest;
 
 /**
- *
+ * ParallelHash 256bit
  */
 public class ParallelHash256 extends ParallelHash {
 
     /**
-     * 
-     * @param b block byte size
-     * @param l hash bit length ハッシュ出力bit長
-     * @param S 付加文字
+     * ParallelHash
+     *
+     * @param b block size in bytes
+     * @param L hash bit length ハッシュ出力bit長
+     * @param S customization bit string 付加文字
      */
-    public ParallelHash256(int b, int l, String S) {
-        super(256, b, l, S);
+    public ParallelHash256(int b, int L, String S) {
+        super(256, b, L, false, S);
     }
-    
+
+    /**
+     * ParallelHash
+     *
+     * @param b block size in bytes
+     * @param L hash bit length ハッシュ出力bit長
+     * @param xof XOF有効/無効
+     * @param S customization bit string 付加文字
+     */
+    ParallelHash256(int b, int L, boolean xof, String S) {
+        super(256, b, L, xof, S);
+    }
 }

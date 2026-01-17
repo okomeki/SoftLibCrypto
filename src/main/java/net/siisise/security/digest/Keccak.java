@@ -79,7 +79,7 @@ public class Keccak extends BlockMessageDigest {
      * @param d 出力ビット長
      */
     public Keccak(int c, long d) {
-        this("Keccak[" + c + "](N," + d + ")", c, d, 0x01,1);
+        this("Keccak[" + c + "](N," + d + ")", c, d, 0x01, 1);
     }
 
     /**
@@ -89,10 +89,10 @@ public class Keccak extends BlockMessageDigest {
      * SPONGE[KECCAK-p[1600,12+2l],pad10*1,1600-c]
      * N 入力
      *
-     * @param name
+     * @param name プロトコル名
      * @param c キャパシティ 2*d か d か固定
      * @param d 出力長 bit
-     * @param suffix paddingの前に付加するビット列 とKeccak padding先頭1ビットをまとめた値  頭ビットは下位
+     * @param suffix paddingの前に付加するビット列 とKeccak padding先頭1ビットをまとめた値 頭ビットは下位
      * @param suflen suffix のビット長
      */
     protected Keccak(String name, int c, long d, int suffix, int suflen) {
@@ -107,12 +107,13 @@ public class Keccak extends BlockMessageDigest {
 
     @Override
     protected int engineGetDigestLength() {
-        return (int)((d + 7) / 8);
+        return (int) ((d + 7) / 8);
     }
 
     /**
      * ビット単位の出力長.
      * ビット単位で調整可能なので追加.
+     *
      * @return bit length
      */
     public long getBitDigestLength() {
@@ -123,15 +124,17 @@ public class Keccak extends BlockMessageDigest {
      * 出力長をあとで調整する.
      * 変更できないものもあるので注意.
      * getDigestLength にあわせたのでバイト単位.
+     *
      * @param length 出力バイト長
      */
     public void setDigestLength(int length) {
-        d = length*8l;
+        d = length * 8l;
     }
 
     /**
      * 出力長をあとで調整する.
      * 変更できないものもあるので注意.
+     *
      * @param length 出力ビット長
      */
     public void setBitDigestLength(long length) {
@@ -140,7 +143,8 @@ public class Keccak extends BlockMessageDigest {
 
     /**
      * 入力を分割するサイズ
-     * @return 
+     *
+     * @return bit block size
      */
     @Override
     public int getBitBlockLength() {
@@ -179,7 +183,7 @@ public class Keccak extends BlockMessageDigest {
         return (R & 0x80) != 0;
     }
 
-    static final int[] SS = {0,1,62,28,27, 36,44,6,55,20, 3,10,43,25,39, 41,45,15,21,8, 18,2,61,56,14 };
+    static final int[] SS = {0,1,62,28,27, 36,44,6,55,20, 3,10,43,25,39, 41,45,15,21,8, 18,2,61,56,14};
 
     /**
      * 3.4 KECCAK-f[1600]
@@ -187,6 +191,7 @@ public class Keccak extends BlockMessageDigest {
      * Algorithm 7:
      * 3.2 Step Mappings
      * Algorithm 1: θ(A)
+     *
      * @param a Sっぽい
      */
     private void keccak_f(long[] a) {
@@ -236,7 +241,7 @@ public class Keccak extends BlockMessageDigest {
      * Lane(i,j) = a[i + j * 5] ビット並びは逆
      * Plane(j) = Lane(0,j) || Lane(1,j) || ...
      * S = Plane(0) || Plane(1) || ...
-     * 
+     *
      * Algorithm 8
      * 入力は 64*R bit
      *
@@ -256,9 +261,10 @@ public class Keccak extends BlockMessageDigest {
 
     /**
      * pac から固定長で受け取るところ.
-     * @param input
-     * @param offset
-     * @param len 
+     *
+     * @param input 入力
+     * @param offset 位置
+     * @param len 長さ
      */
     @Override
     public void blockWrite(byte[] input, int offset, int len) {
@@ -272,72 +278,73 @@ public class Keccak extends BlockMessageDigest {
 
     /**
      * ビット入力にも対応している.
+     *
      * @param input データ (Little Endian)
      * @param bitOffset ビット位置
      * @param bitLen ビット長
      */
-    public void updateBit(byte[] input, long bitOffset, long bitLen) {
-        ((BitBlockOutput)pac).writeBit(input, bitOffset, bitLen);
+    public void writeBit(byte[] input, long bitOffset, long bitLen) {
+        ((BitBlockOutput) pac).writeBit(input, bitOffset, bitLen);
     }
-    
+
+    /**
+     * 5.1. Specification of pad10*1
+     * Algorithm 9: padding bit 対応.
+     */
+    void pad10x1() {
+        ((BitBlockOutput) pac).writeBit(padbit, padlen);
+        long offset = ((BitBlockOutput) pac).bitLength();
+        long bitLength = r - offset;
+
+        int rblen = r / 8; // R * 8;
+        byte[] pad = new byte[rblen];
+        pad[rblen - 1] |= 0x80;
+        ((BitBlockOutput) pac).writeBit(pad, offset, bitLength);
+    }
+
     /**
      * XOF可能な出力.
+     * 
      * ビット単位に調整されて残りビットは0埋めされている.
      * Algorithm 8
+     *
      * @param d output bit length
      * @return dサイズになったn
      */
-    private byte[] sponge(long d) {
-        pad10x1();
-        
-        byte[] ret = new byte[(int)((d + 7) / 8)];
+    protected byte[] sponge(long d) {
+        byte[] ret = new byte[(int) ((d + 7) / 8)];
         long offset = 0;
-        while ( d - offset > r ) {
-            toB(a, ret, (int)(offset/8), r);
+        while (d - offset > r) {
+            toB(a, ret, (int) (offset / 8), r);
             offset += r;
             keccak_f(a);
         }
-        toB(a, ret, (int)(offset/8), d - offset);
+        toB(a, ret, (int) (offset / 8), d - offset);
         return ret;
     }
 
     /**
      * XOF可能な出力.
      * ビット単位に調整されて残りビットは0埋めされている.
+     *
      * @param out 出力先
-     * @param d output bit length
+     * @param len output bit length
      */
-    private void sponge(Output out, long d) {
-        pad10x1();
-        
-        byte[] outb = new byte[r/8];
-        while ( d > r ) {
+    protected void sponge(Output out, long len) {
+        byte[] outb;
+        while (len > r) {
+            outb = new byte[r / 8];
             toB(a, outb, 0, r);
-            out.write(outb);
-            d -= r;
+            out.dwrite(outb);
+            len -= r;
             keccak_f(a);
         }
-        toB(a, outb, 0, d);
-        
-        out.write(outb,0, (int)((d + 7) / 8));
+        outb = new byte[r / 8];
+        toB(a, outb, 0, len);
+
+        out.write(outb, 0, (int) ((len + 7) / 8));
     }
 
-    /**
-     * 5.1. Specification of pad10*1
-     * Algorithm 9:
-     * padding bit 対応.
-     */
-    void pad10x1() {
-        ((BitBlockOutput)pac).writeBit(padbit, padlen);
-        long offset = ((BitBlockOutput)pac).bitLength();
-        long bitLength = r - offset;
-        
-        int rblen = r / 8; // R * 8;
-        byte[] pad = new byte[rblen];
-        pad[rblen - 1] |= 0x80;
-        ((BitBlockOutput)pac).writeBit(pad, offset, bitLength);
-    }
-    
     /**
      * SHA-512と逆
      *
@@ -347,18 +354,19 @@ public class Keccak extends BlockMessageDigest {
      * @param len 長さ(ビット)
      */
     static void toB(long[] src, byte[] ret, int offset, long len) {
-        int blen = (int)((len + 7) / 8);
-        int nlen = (int)(len % 8);
+        int blen = (int) ((len + 7) / 8);
+        int nlen = (int) (len % 8);
         for (int i = 0; i < blen; i++) {
-            ret[offset + i] = (byte) (src[i / 8] >>> ((i % 8) * 8));
+            ret[offset++] = (byte) (src[i / 8] >>> ((i % 8) * 8));
         }
-        if ( nlen > 0 ) {
-            ret[offset + blen - 1] &= (1 << nlen) - 1;
+        if (nlen > 0) {
+            ret[--offset] &= (1 << nlen) - 1;
         }
     }
 
     @Override
     protected byte[] engineDigest() {
+        pad10x1();
         byte[] digest = sponge(d);
 
         engineReset();
@@ -367,12 +375,27 @@ public class Keccak extends BlockMessageDigest {
 
     /**
      * 長出力用拡張.
-     * 
+     *
      * @param out 出力先
      */
     public void digest(Output out) {
+        pad10x1();
         sponge(out, d);
-        
+
+        engineReset();
+    }
+
+    /**
+     * 長出力用拡張.
+     *
+     * @param out 出力先
+     * @param length 出力bit長 別で出力する場合は0かも
+     */
+    public void digest(Output out, long length) {
+        pad10x1();
+        setBitDigestLength(length); // 可変判定
+        sponge(out, d);
+
         engineReset();
     }
 }

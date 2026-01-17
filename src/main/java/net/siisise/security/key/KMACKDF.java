@@ -32,25 +32,16 @@ public class KMACKDF implements KDF {
 
     /**
      * KとLのみ指定する初期化.
+     *
      * @param K 鍵導出鍵 Kin, the key-derivation key.
      * @param L 出力ビット
      */
     public void init(byte[] K, long L) {
-        init(K,L,"KDF");
-    }
-    
-    /**
-     * KとLのみ指定する初期化.
-     * @param K 鍵導出鍵 Kin, the key-derivation key.
-     * @param L 出力ビット
-     * @deprecated 
-     */
-    @Deprecated
-    public void init(byte[] K, int L) {
-        init(K,L,"KDF");
+        init(K, L, "KDF");
     }
 
     /**
+     * 初期化.
      *
      * @param K 鍵導出鍵
      * @param L output bit length
@@ -61,17 +52,11 @@ public class KMACKDF implements KDF {
     }
 
     /**
+     * 鍵生成.
      *
-     * @param K 鍵導出鍵
-     * @param L output bit length
-     * @param S KDF or KDF4X
-     * @deprecated 
+     * @param password password
+     * @return key
      */
-    @Deprecated
-    public void init(byte[] K, int L, String S) {
-        mac.init(K, L, S);
-    }
-
     @Override
     public byte[] kdf(byte[] password) {
         return mac.doFinal(password);
@@ -79,7 +64,7 @@ public class KMACKDF implements KDF {
 
     @Override
     public byte[] kdf(byte[] password, int len) {
-        mac.setMacBitLength(len*8l);
+        mac.setMacBitLength(len * 8l);
         return Arrays.copyOf(kdf(password), len);
     }
 

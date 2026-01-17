@@ -17,9 +17,9 @@ package net.siisise.security.key;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
+import net.siisise.ietf.pkcs1.PKCS1;
 import net.siisise.io.Packet;
 import net.siisise.io.PacketA;
-import net.siisise.security.block.RSA;
 
 /**
  * ISO-18033-2
@@ -31,11 +31,11 @@ public class KDF1 implements KDF {
     public KDF1(MessageDigest md) {
         this.md = md;
     }
-    
+
     public void init(int len) {
         dkLen = len;
     }
-    
+
     int dkLen;
 
     @Override
@@ -44,16 +44,16 @@ public class KDF1 implements KDF {
         Packet pac = new PacketA();
         do {
             md.update(password);
-            pac.write(md.digest(RSA.i2osp(BigInteger.valueOf(i++),4)));
-        } while ( pac.size() < dkLen );
+            pac.write(md.digest(PKCS1.I2OSP(BigInteger.valueOf(i++), 4)));
+        } while (pac.size() < dkLen);
         byte[] key = new byte[dkLen];
         pac.read(key);
         return key;
     }
-    
+
     @Override
     public byte[] kdf(byte[] password) {
         return kdf(password, dkLen);
     }
-    
+
 }

@@ -30,6 +30,11 @@ public class AlgorithmIdentifier {
         algorithm = new OBJECTIDENTIFIER(alg);
     }
 
+    /**
+     * コンストラクタ.
+     * @param alg アルゴリズム Object Identifier
+     * @param params パラメータ
+     */
     public AlgorithmIdentifier(OBJECTIDENTIFIER alg, ASN1Tag params) {
         algorithm = alg;
         parameters = params;
@@ -38,7 +43,7 @@ public class AlgorithmIdentifier {
     public SEQUENCEMap encodeASN1() {
         return (SEQUENCEMap)rebind(new ASN1Convert());
     }
-    
+
     public <T> T rebind(TypeFormat<T> format) {
         SEQUENCEMap s = new SEQUENCEMap();
         s.put("algorithm", algorithm);

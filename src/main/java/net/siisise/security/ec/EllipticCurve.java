@@ -83,6 +83,7 @@ public class EllipticCurve {
      */
     public final int h;
 
+    @Override
     public boolean equals(Object o) {
         if (o instanceof EllipticCurve) {
             EllipticCurve c = (EllipticCurve) o;
@@ -125,6 +126,10 @@ public class EllipticCurve {
         return p;
     }
 
+    /**
+     * order
+     * @return order
+     */
     public BigInteger getN() {
         return n;
     }
@@ -133,8 +138,8 @@ public class EllipticCurve {
      * Point convert.
      *
      * @param x 主軸?
-     * @param y
-     * @return
+     * @param y y
+     * @return Point
      */
     public Point toPoint(BigInteger x, BigInteger y) {
         return new Point(x, y);

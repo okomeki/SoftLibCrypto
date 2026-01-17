@@ -86,13 +86,12 @@ public class CBC extends LongBlockMode {
     }
 
     /**
-     * byte to long
+     * 暗号化 byte to long
      * @param src 平文 plane text
-     * @param offset
-     * @param length
+     * @param offset src offset
+     * @param length src length
      * @return 暗号列
      */
-
     @Override
     public byte[] encrypt(byte[] src, int offset, int length) {
         int vl = vectorl.length;
@@ -110,6 +109,13 @@ public class CBC extends LongBlockMode {
         return ret;
     }
 
+    /**
+     * 暗号化 long to long
+     * @param src plane text 平文
+     * @param offset sec offset
+     * @param length src length
+     * @return 暗号列
+     */
     @Override
     public long[] encrypt(long[] src, int offset, int length) {
         int vl = vectorl.length;
@@ -131,10 +137,10 @@ public class CBC extends LongBlockMode {
     }
 
     /**
-     * 復号
-     * @param src
-     * @param offset
-     * @return 
+     * 復号 decrypt
+     * @param src 暗号列
+     * @param offset src offset
+     * @return 平文
      */
     @Override
     public byte[] decrypt(byte[] src, int offset) {
@@ -147,7 +153,7 @@ public class CBC extends LongBlockMode {
     }
 
     /**
-     * byte to int decrypt
+     * 復号 byte to int decrypt
      * ToDo: 並列化が可能
      * @param src 暗号文
      * @param offset 位置
@@ -183,11 +189,11 @@ public class CBC extends LongBlockMode {
     }
 
     /**
-     * 
-     * @param src
-     * @param offset
-     * @param length
-     * @return 
+     * 復号 decrypt
+     * @param src 暗号文
+     * @param offset src offset
+     * @param length src length
+     * @return 平文
      */
     @Override
     public long[] decrypt(long[] src, int offset, int length) {
@@ -221,10 +227,11 @@ public class CBC extends LongBlockMode {
     }
 
     /**
+     * 復号.
      * 
-     * @param src
-     * @param offset
-     * @return 
+     * @param src 暗号文
+     * @param offset src offset
+     * @return 平文
      */
     @Override
     public long[] decrypt(long[] src, int offset) {

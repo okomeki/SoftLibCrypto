@@ -36,6 +36,7 @@ public class KMAC256 extends KMAC implements MAC {
 
     /**
      * 512bit出力固定で初期化.
+     *
      * @param key 鍵
      */
     @Override
@@ -45,25 +46,29 @@ public class KMAC256 extends KMAC implements MAC {
 
     /**
      * 初期化要素.
+     *
      * @param key 鍵 len(key) &lt; 2^2040
      * @param length XOF出力サイズ 0 &lt;= L &lt; 2^2040
-     * @param S オプションで設定可能な空文字列を含む可変長文字列. optional customization bit string of any length, including zero. len(S) &lt; 2^2040
+     * @param S オプションで設定可能な空文字列を含む可変長文字列. optional customization bit string of
+     * any length, including zero. len(S) &lt; 2^2040
      */
     @Override
     public void init(byte[] key, long length, String S) {
-        init(256,key,length,S);
+        init(256, key, length, S);
     }
 
     /**
      * 初期化要素.
+     *
      * @param key 鍵 len(key) &lt; 2^2040
      * @param length XOF出力サイズ 0 &lt;= L &lt; 2^2040
-     * @param S オプションで設定可能な空文字列を含む可変長文字列. optional customization bit string of any length, including zero. len(S) &lt; 2^2040
-     * @deprecated 
+     * @param S オプションで設定可能な空文字列を含む可変長文字列. optional customization bit string of
+     * any length, including zero. len(S) &lt; 2^2040
+     * @deprecated
      */
     @Deprecated
     @Override
     public void init(byte[] key, int length, String S) {
-        init(256,key,length,S);
+        init(256, key, length, S);
     }
 }

@@ -17,12 +17,12 @@ package net.siisise.security.key;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
+import net.siisise.ietf.pkcs1.PKCS1;
 import net.siisise.io.Packet;
 import net.siisise.io.PacketA;
-import net.siisise.security.block.RSA;
 
 /**
- *
+ * ISO/IEC 18033-2
  */
 public class KDF2 implements KDF {
 
@@ -32,24 +32,39 @@ public class KDF2 implements KDF {
     public KDF2(MessageDigest md) {
         this.md = md;
     }
-    
+
+    /**
+     * 初期化.
+     * @param len 鍵長
+     */
     public void init(int len) {
         dkLen = len;
     }
 
+    /**
+     * 鍵生成.
+     * @param password パスワード
+     * @param dkLen 出力長 byte
+     * @return key
+     */
     @Override
     public byte[] kdf(byte[] password, int dkLen) {
         long i = 1;
         Packet pac = new PacketA();
         do {
             md.update(password);
-            pac.write(md.digest(RSA.i2osp(BigInteger.valueOf(i++),4)));
+            pac.write(md.digest(PKCS1.I2OSP(BigInteger.valueOf(i++),4)));
         } while ( pac.size() < dkLen );
         byte[] key = new byte[dkLen];
         pac.read(key);
         return key;
     }
-    
+
+    /**
+     * 鍵生成.
+     * @param password パスワード
+     * @return key 鍵
+     */
     @Override
     public byte[] kdf(byte[] password) {
         return kdf(password, dkLen);

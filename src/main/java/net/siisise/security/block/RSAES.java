@@ -91,8 +91,8 @@ public class RSAES implements ES {
     /**
      * ブロック暗号の作法
      *
-     * @param m
-     * @return
+     * @param m メッセージ
+     * @return 暗号文
      */
     @Override
     public byte[] encrypt(byte[] m) {
@@ -103,7 +103,7 @@ public class RSAES implements ES {
 
     /**
      * RSAES-XXXX-DECRYPT.
-     * RFC 8017 7.1.2. 7.2.2. Decription Operation をまとめたもの
+     * RFC 8017 7.1.2. 7.2.2. Decryption Operation をまとめたもの
      *
      * @param prv 秘密鍵
      * @param c ciphertext 暗号文

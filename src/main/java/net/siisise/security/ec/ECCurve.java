@@ -19,8 +19,7 @@ import java.math.BigInteger;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 
 /**
- *
- * @author okome
+ * ECC
  */
 public interface ECCurve {
 
@@ -28,10 +27,14 @@ public interface ECCurve {
 
     /**
      * order相当.
-     * @return
+     * @return order N
      */
     BigInteger getN();
 
+    /**
+     * 
+     * @return G
+     */
     EllipticCurve.ECPoint getG();
 
     EllipticCurve.ECPoint toPoint(BigInteger x, BigInteger y);

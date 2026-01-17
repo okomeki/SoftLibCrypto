@@ -220,7 +220,7 @@ public class SHA256 extends BlockMessageDigest {
      * int列をbyte列に変換するだけ。 big endianかな
      * @param src データint列
      * @param len 出力バイト長
-     * @return 
+     * @return バイト列
      */
     public static byte[] toB(int[] src, int len) {
         byte[] ret = new byte[len];

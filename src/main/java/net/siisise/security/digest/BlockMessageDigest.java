@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 import net.siisise.bind.format.TypeFormat;
 import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.io.Input;
+import net.siisise.io.Output;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
 import net.siisise.iso.asn1.tag.SEQUENCEMap;
@@ -29,9 +30,9 @@ import net.siisise.security.io.BlockListener;
 import net.siisise.security.io.BlockOutput;
 
 /**
- *
+ * MessageDigest
  */
-public abstract class BlockMessageDigest extends MessageDigest implements BlockListener {
+public abstract class BlockMessageDigest extends MessageDigest implements BlockListener,Output {
 
     protected OBJECTIDENTIFIER oid;
     protected BlockOutput pac;
@@ -49,11 +50,11 @@ public abstract class BlockMessageDigest extends MessageDigest implements BlockL
     @Override
     protected void engineUpdate(byte[] input, int offset, int len) {
         pac.write(input, offset, len);
-        length += len * 8l;
+        length += len * 8L;
     }
 
     public void update(Input in) {
-        pac.write(in);
+        length += Output.write(this, in, in.length());
     }
 
     public static BlockMessageDigest getInstance(String alg) {
@@ -92,14 +93,17 @@ public abstract class BlockMessageDigest extends MessageDigest implements BlockL
     
     /**
      * MessageDigestでは doFinal で閉めるので使わない
-     * @param buffer
-     * @param len
+     * @param buffer buffer
+     * @param len output length
      */
     @Override
     public void blockFlush(byte[] buffer, int len) {
         throw new UnsupportedOperationException();
     }
-    
+
+    /**
+     * 使わない.
+     */
     @Override
     public void close() {
         throw new UnsupportedOperationException();
@@ -110,5 +114,57 @@ public abstract class BlockMessageDigest extends MessageDigest implements BlockL
         di.put("digestAlgorithm", new AlgorithmIdentifier(DigestAlgorithm.toOID(this)));
         di.put("digest", new OCTETSTRING(digest()));
         return (T)di.rebind(format);
+    }
+
+    @Override
+    public void write(int data) {
+        engineUpdate((byte)data);
+    }
+
+    @Override
+    public void write(byte[] data) {
+        engineUpdate(data, 0, data.length);
+    }
+
+    @Override
+    public void write(byte[] data, int offset, int length) {
+        engineUpdate(data, offset, length);
+    }
+
+    @Override
+    public void dwrite(byte[] data) {
+        engineUpdate(data, 0, data.length);
+    }
+
+    @Override
+    public long write(Input pac) {
+        long pacLength = pac.length();
+        update(pac);
+        return pacLength;
+    }
+
+    @Override
+    public long write(Input src, long length) {
+        this.length += length;
+        Output.write(this, src, length);
+        return length;
+    }
+
+    @Override
+    public Output put(byte data) {
+        engineUpdate(data);
+        return this;
+    }
+
+    @Override
+    public Output put(byte[] data) {
+        engineUpdate(data, 0, data.length);
+        return this;
+    }
+
+    @Override
+    public Output put(byte[] data, int offset, int length) {
+        engineUpdate(data, offset, length);
+        return this;
     }
 }

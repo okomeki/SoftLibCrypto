@@ -44,7 +44,7 @@ public interface BlockIOListener {
      * @param src 元配列
      * @param offset データ位置
      * @param length 固定ブロックサイズ(参考)
-     * @throws java.io.IOException
+     * @throws java.io.IOException io Exception
      */
     void blockWrite(byte[] src, int offset, int length) throws IOException;
     
@@ -52,9 +52,9 @@ public interface BlockIOListener {
     
     /**
      * flush() で呼ばれず closeで呼ばれる 仮Interface
-     * @param src
+     * @param src 元配列
      * @param size max - offset で 1以上 maxまでくらい
-     * @throws IOException 
+     * @throws IOException io Exception
      */
     void blockFlush(byte[] src, int size) throws IOException;
 

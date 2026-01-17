@@ -77,37 +77,20 @@ public class RSA extends OneBlock {
         }
     }
 
+    /**
+     * パラメータ指定初期化.
+     * @param prv 秘密鍵
+     */
     public void init(RSAMiniPrivateKey prv) {
         key = prv;
     }
 
+    /**
+     * 公開鍵指定.
+     * @param pb 公開鍵
+     */
     public void init(RSAPublicKey pb) {
         pub = pb;
-    }
-
-    /**
-     * Integer to Octet String primitive
-     * RFC 8017 4.1. I2OSP
-     * @deprecated net.siisise.ietf.pkcs1.PKCS1#I2OSP(BigInteger,int)
-     * @param x データ
-     * @param xLen 長さ
-     * @return 長さ
-     */
-    @Deprecated
-    public static byte[] i2osp(BigInteger x, int xLen) {
-        return PKCS1.I2OSP(x, xLen);
-    }
-
-    /**
-     * Octet String to Integer primitive
-     * 4. Data Conversion Primitives
-     * 4.2. OS2IP
-     * signed になりそうなものをunsigned に拡張してからBigIntegerにする.
-     * @param em 符号略バイトデータ
-     * @return 符号なしBigInteger
-     */
-    public static BigInteger os2ip(byte[] em) {
-        return PKCS1.OS2IP(em);
     }
 
     @Override
@@ -122,7 +105,7 @@ public class RSA extends OneBlock {
      * 秘密鍵で
      * @param src 暗号文
      * @param offset 見ない?
-     * @return 
+     * @return メッセージ
      */
     @Override
     public byte[] decrypt(byte[] src, int offset) {

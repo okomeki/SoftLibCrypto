@@ -66,7 +66,7 @@ public class SHAKE256Test {
             }
             String[] sp = line.split("=");
             outMap.put(sp[0].strip(), sp[1].strip());
-            System.out.println(sp[0].strip()+" :"+ sp[1].strip());
+//            System.out.println(sp[0].strip()+" :"+ sp[1].strip());
             line = in.readLine();
         }
         if (outMap.isEmpty()) {
@@ -135,7 +135,7 @@ public class SHAKE256Test {
                 byte[] Output = Bin.toByteArray(struct.get("Output"));
      
                 SHAKE256 shake = new SHAKE256(outlen);
-                shake.updateBit(Msg, 0, Len);
+                shake.writeBit(Msg, 0, Len);
                 byte[] result = shake.digest();
                 assertArrayEquals(Output, result, "SHAKE256:" + Len);
                 struct = readMap(in);

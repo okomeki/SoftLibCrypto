@@ -143,7 +143,7 @@ public class DigestAlgorithm extends AlgorithmIdentifier {
     /**
      * SEQUENCE からDigestAlgorithm を生成.
      * @param s AlgorithmIdentifier の SEQUENCE
-     * @return 
+     * @return デコードされたDigestAlgorithm
      */
     public static DigestAlgorithm decode(SEQUENCE s) {
         AlgorithmIdentifier alg = AlgorithmIdentifier.decode(s);

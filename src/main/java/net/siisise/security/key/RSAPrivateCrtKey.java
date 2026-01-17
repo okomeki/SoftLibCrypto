@@ -148,7 +148,8 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements ASN1PrivateKe
 
     /**
      * PKCS#12は PKCS#8?
-     * @return 
+     * 後で変えるかも.
+     * @return 鍵形式
      */
     @Override
     public String getFormat() {
@@ -177,7 +178,7 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements ASN1PrivateKe
 
     /**
      * 特殊機能? PKCS #1形式でも出力できるような
-     * @param f 
+     * @param f 形式
      */
     public void setFormat(Format f) {
         format = f;
@@ -186,7 +187,7 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements ASN1PrivateKe
     /**
      * 秘密鍵の出力.
      * PKCS#8 固定か他の形式も対応するか.
-     * @return 
+     * @return setFormtで指定した形式
      */
     @Override
     public byte[] getEncoded() {
@@ -259,9 +260,9 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements ASN1PrivateKe
     /**
      * RFC 8017 A.1.2.RSA Private Key Syntax.
      * Optional なし
-     * @param <T>
-     * @param format 
-     * @return  
+     * @param <T> 出力型
+     * @param format 任意の出力形式
+     * @return formatで指定した形式
      */
     public <T> T rebind(TypeFormat<T> format) {
         SEQUENCEMap prv = getPrivateASN1();

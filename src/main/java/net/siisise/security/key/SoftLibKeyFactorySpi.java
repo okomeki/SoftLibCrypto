@@ -35,10 +35,11 @@ import java.security.spec.RSAPublicKeySpec;
 public class SoftLibKeyFactorySpi extends KeyFactorySpi {
 
     /**
+     * 公開鍵オブジェクトの生成.
      * CRT以上のPrivateKeyでも作れる.
      * @param keySpec PublicKeySpec または RSAPrivateCrtKeySpec以上
-     * @return
-     * @throws InvalidKeySpecException 
+     * @return PublicKey 公開鍵
+     * @throws InvalidKeySpecException 不正など
      */
     @Override
     protected PublicKey engineGeneratePublic(KeySpec keySpec) throws InvalidKeySpecException {
@@ -55,6 +56,12 @@ public class SoftLibKeyFactorySpi extends KeyFactorySpi {
         throw new InvalidKeySpecException();
     }
 
+    /**
+     * 秘密鍵オブジェクトの生成.
+     * @param keySpec 秘密鍵仕様
+     * @return PrivateKey 秘密鍵
+     * @throws InvalidKeySpecException 不正など
+     */
     @Override
     protected PrivateKey engineGeneratePrivate(KeySpec keySpec) throws InvalidKeySpecException {
         if ( keySpec instanceof RSAPrivateCrtKeySpec ) {

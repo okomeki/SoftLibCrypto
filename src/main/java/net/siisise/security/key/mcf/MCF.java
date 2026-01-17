@@ -30,6 +30,10 @@ public class MCF implements ModularCryptFormat {
         this(new BCrypt());
     }
 
+    /**
+     *
+     * @param gen 生成用
+     */
     public MCF(ModularCryptFormat gen) {
         this.gen = gen;
         sub = new HashMap<>();

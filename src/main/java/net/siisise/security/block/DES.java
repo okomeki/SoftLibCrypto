@@ -98,7 +98,7 @@ public class DES extends OneBlock {
     public DES() {
     }
 
-    private byte[][] ks = new byte[16][];
+    private final byte[][] ks = new byte[16][];
 
     static void parityCheck(byte[] key) {
         if (key == null || key.length != 8) {
@@ -133,7 +133,7 @@ public class DES extends OneBlock {
     /**
      * 1つ引いて下位3ビットを反転したもの
      */
-    private static final int PC1[] = {
+    private static final int[] PC1 = {
         63, 55, 47, 39, 31, 23, 15,
          7, 62, 54, 46, 38, 30, 22,
         14,  6, 61, 53, 45, 37, 29,

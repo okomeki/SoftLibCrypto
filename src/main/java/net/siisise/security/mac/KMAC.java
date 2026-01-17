@@ -27,6 +27,7 @@ import net.siisise.security.key.KDF;
  * MACかXOF
  */
 public abstract class KMAC extends Output.AbstractOutput implements MAC, KDF {
+
     private cSHAKE cshake;
     protected long L;
 
@@ -36,31 +37,35 @@ public abstract class KMAC extends Output.AbstractOutput implements MAC, KDF {
 
     /**
      * 初期化要素.
+     *
      * @param c 暗号強度 128,256
      * @param key 鍵
      * @param length XOF出力サイズ bit
-     * @param S オプションで設定可能な空文字列を含む可変長文字列. optional customization bit string of any length, including zero.
+     * @param S オプションで設定可能な空文字列を含む可変長文字列. optional customization bit string of
+     * any length, including zero.
      */
     protected void init(int c, byte[] key, long length, String S) {
         L = length;
-        cshake = new cSHAKE(c,length, "KMAC", S);
-        byte[] newX = SHA3Derived.bytepad(SHA3Derived.encode_string(key), cshake.getBitBlockLength() / 8 );
+        cshake = new cSHAKE(c, length, "KMAC", S);
+        byte[] newX = SHA3Derived.bytepad(SHA3Derived.encode_string(key), cshake.getBitBlockLength() / 8);
         cshake.update(newX);
     }
-    
+
     /**
      * 暗号強度はあらかじめ設定済みなので省けるかもしれず.
-     * 
-     * @param K 鍵
+     *
+     * @param K 鍵 key
      * @param L 出力bitサイズ
-     * @param S オプション可変長文字列
+     * @param S オプション可変長文字列 "KDF"
      */
     public abstract void init(byte[] K, long L, String S);
+
     @Deprecated
     public abstract void init(byte[] K, int L, String S);
 
     /**
      * KDFとして利用.
+     *
      * @param K 鍵導出鍵
      * @param L 出力ビットサイズ
      */
@@ -70,6 +75,7 @@ public abstract class KMAC extends Output.AbstractOutput implements MAC, KDF {
 
     /**
      * KDF4Xとして利用.
+     *
      * @param K 鍵導出鍵
      * @param L 出力ビットサイズ
      */
@@ -92,19 +98,20 @@ public abstract class KMAC extends Output.AbstractOutput implements MAC, KDF {
     public int getMacLength() {
         return cshake.getDigestLength();
     }
-    
+
     /**
      * 出力長の変更.
+     *
      * @param d バイト長
      */
     public void setMacLength(long d) {
-        cshake.setBitDigestLength(d*8);
-        L = d*8;
+        cshake.setBitDigestLength(d * 8);
+        L = d * 8;
     }
 
     /**
-     * 出力長をビット指定する.
-     * 最後は下から埋め、上は0padding
+     * 出力長をビット指定する. 最後は下から埋め、上は0padding
+     *
      * @param d 出力ビット長
      */
     public void setMacBitLength(long d) {
@@ -113,9 +120,9 @@ public abstract class KMAC extends Output.AbstractOutput implements MAC, KDF {
     }
 
     /**
-     * 鍵長.
-     * SHAKEの鍵長は任意なので適当に返す。
-     * @return 
+     * 鍵長. SHAKEの鍵長は任意なので適当に返す。
+     *
+     * @return length
      */
     @Override
     public int getKeyLength() {
@@ -124,8 +131,9 @@ public abstract class KMAC extends Output.AbstractOutput implements MAC, KDF {
 
     /**
      * KDF.
-     * @param password
-     * @return 
+     *
+     * @param password password
+     * @return key
      */
     @Override
     public byte[] kdf(byte[] password) {
@@ -134,15 +142,15 @@ public abstract class KMAC extends Output.AbstractOutput implements MAC, KDF {
     }
 
     /**
-     * 鍵導出 KDF.
-     * KMACXOFは使えない.
-     * @param password
-     * @param len
-     * @return 
+     * 鍵導出 KDF. KMACXOFは使えない.
+     *
+     * @param password password
+     * @param len length
+     * @return key
      */
     @Override
     public byte[] kdf(byte[] password, int len) {
-        setMacBitLength(len*8l);
+        setMacBitLength(len * 8l);
 //        L = 0; // でいいのか?
         update(password);
         return sign();

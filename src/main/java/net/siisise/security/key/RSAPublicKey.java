@@ -80,6 +80,9 @@ public class RSAPublicKey implements java.security.interfaces.RSAPublicKey {
         return "RSA";
     }
 
+    /**
+     * ECCも含めて RAW と PKCS#8 ぐらいに変えるかも
+     */
     public static enum Format {
         PKCS1, // RFC 8017 A.1.1.
         PKCS8,

@@ -15,7 +15,10 @@
  */
 package net.siisise.security.digest;
 
+import net.siisise.io.Input;
 import net.siisise.io.Output;
+import net.siisise.io.Packet;
+import net.siisise.io.PacketA;
 
 /**
  * extendable-output function.
@@ -23,7 +26,7 @@ import net.siisise.io.Output;
  * MessageDigestに追加する
  * interface にするか class か未定.
  */
-public interface XOF {
+public interface XOF extends Input {
 
     /**
      * ハッシュ出力長.
@@ -75,10 +78,61 @@ public interface XOF {
      * @return ハッシュ出力
      */
     byte[] digest(byte[] src);
+
     /**
      * 連続出力が可能な型式.
      * @param out 出力先
      */
     void digest(Output out);
 
+    @Override
+    default int read(byte[] data, int offset, int length) {
+        PacketA out = new PacketA();
+        digest(out);
+        return out.read(data, offset, length);
+    }
+    
+    @Override
+    default int read() {
+        byte[] a = new byte[1];
+        int l = read(a, 0, 1);
+        return l == 1 ? a[0] & 0xff : -1;
+    }
+    
+    @Override
+    default long get(byte[] data, int offset, int length) {
+        return read(data, offset, length);
+    }
+
+    @Override
+    default Packet readPacket(long length) {
+        Packet pac = new PacketA();
+        digest(pac);
+        return pac;
+    }
+
+    /**
+     * skip.
+     * @param length byte length
+     */
+    @Override
+    default long skip(long length) {
+        return Input.skipImpl(this, length);
+    }
+
+    /**
+     * バイト列化.
+     * 可変サイズではdefault っぽいサイズで
+     * digest() と等価.
+     * @return 出力
+     */
+    @Override
+    default byte[] toByteArray() {
+        return digest();
+    }
+    
+    @Override
+    default long length() {
+        return 1024*1024;
+    }
 }

@@ -156,21 +156,21 @@ public class AES extends IntBlock {
             // XOR で演算できるので 3は1と2を合成するだけ
             // sbox込み あとで XOR できるところまで計算
 
-            LMIX0[i] = s * 0x00010101l ^ gf2 * 0x01000001l;
-            LMIX1[i] = s * 0x01000101l ^ gf2 * 0x01010000l;
-            LMIX2[i] = s * 0x01010001l ^ gf2 * 0x00010100l;
-            LMIX3[i] = s * 0x01010100l ^ gf2 * 0x00000101l;
+            LMIX0[i] = s * 0x00010101L ^ gf2 * 0x01000001L;
+            LMIX1[i] = s * 0x01000101L ^ gf2 * 0x01010000L;
+            LMIX2[i] = s * 0x01010001L ^ gf2 * 0x00010100L;
+            LMIX3[i] = s * 0x01010100L ^ gf2 * 0x00000101L;
 
             // 同じ原理で個別の計算を省略する
             gf2 = gf.x(i); //GF[i];
             int gf4 = gf.x(gf2); //GF[gf2];
-            long gf7x = i ^ (gf2 * 0x101) ^ (gf4 * 0x10001l);
-            long gf9x = ((long)gf.x(gf4) /*GF[gf4]*/ ^ i) * 0x01010101l;
+            long gf7x = i ^ (gf2 * 0x101L) ^ (gf4 * 0x10001L);
+            long gf9x = ((long)gf.x(gf4) /*GF[gf4]*/ ^ i) * 0x01010101L;
 
             // iboxあり
-            IMIX0[s] = gf9x ^ ((gf7x << 24) ^ (gf7x >>> 8)) & 0xffffffffl;
-            IMIX1[s] = gf9x ^ ((gf7x << 16) ^  gf4) & 0xffffffffl;
-            IMIX2[s] = gf9x ^ (gf7x <<  8) & 0xffffffffl;
+            IMIX0[s] = gf9x ^ ((gf7x << 24) ^ (gf7x >>> 8)) & 0xffffffffL;
+            IMIX1[s] = gf9x ^ ((gf7x << 16) ^  gf4) & 0xffffffffL;
+            IMIX2[s] = gf9x ^ (gf7x <<  8) & 0xffffffffL;
             IMIX3[s] = gf9x ^  gf7x;
         }
 
@@ -406,9 +406,9 @@ public class AES extends IntBlock {
     public int[] encrypt(final int[] src, int offset) {
         long a, b;
         a = ((long)src[offset]) << 32;
-        a |= src[offset+1] & 0xffffffffl;
+        a |= src[offset+1] & 0xffffffffL;
         b = ((long)src[offset+2]) << 32;
-        b |= src[offset+3] & 0xffffffffl;
+        b |= src[offset+3] & 0xffffffffL;
         // AddRoundKey
         a ^= lw[0];
         b ^= lw[1];
@@ -552,9 +552,9 @@ public class AES extends IntBlock {
         long a, b;
         int nr = Nr4 / 2;
         a = (long)src[offset + 0] << 32;
-        a |= src[offset + 1] & 0xffffffffl;
+        a |= src[offset + 1] & 0xffffffffL;
         b = (long)src[offset + 2] << 32;
-        b |= src[offset + 3] & 0xffffffffl;
+        b |= src[offset + 3] & 0xffffffffL;
         a ^= lw[nr];
         b ^= lw[nr+1];
 

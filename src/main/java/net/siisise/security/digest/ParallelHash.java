@@ -15,79 +15,84 @@
  */
 package net.siisise.security.digest;
 
-import net.siisise.io.Packet;
-import net.siisise.io.PacketA;
-
 /**
- * NIST SP 800-185 6 ParallelHash.
+ * NIST SP 800-185 6 ParallelHash. 並列ではないかも.
  */
-public class ParallelHash extends cSHAKE {
-    int b;
+public class ParallelHash extends RawcSHAKE {
+
+    /**
+     * block size in bytes. 並列ハッシュのブロックサイズ
+     */
+    final int B;
     /**
      * XOFは0にする
      */
     protected int L;
-    Packet z;
+    /**
+     * block 残サイズ
+     */
     int size;
-    private SHAKE shake;
+    private final SHAKE shake;
     int n;
 
     /**
-     * 
+     *
      * @param c 暗号強度 128 または 256
-     * @param b block byte size
-     * @param l ハッシュ出力 bit長
-     * @param S 付加文字
+     * @param B block size in bytes
+     * @param L ハッシュ出力 bit長
+     * @param xof XOF
+     * @param S customization bit string 付加文字
      */
-    public ParallelHash(int c, int b, int l, String S) {
-        super(c, l, "ParallelHash", S);
-        this.b = b;
-        this.L = this instanceof XOF ? 0 : l;
-        z = new PacketA();
-        z.dwrite(SHA3Derived.left_encode(b));
-        size = b;
-        shake = new SHAKE(c,c*2);
-        byte[] zb = z.toByteArray();
+    public ParallelHash(int c, int B, int L, boolean xof, String S) {
+        super(c, L, "ParallelHash", S);
+        this.B = B;
+        this.L = xof ? 0 : L;
+        size = B;
+        shake = new SHAKE(c, c * 2);
+//        z = new PacketA();
+        //z.dwrite(SHA3Derived.left_encode(B));
+        byte[] zb = SHA3Derived.left_encode(B);
         super.engineUpdate(zb, 0, zb.length);
         n = 0;
     }
-    
+
     @Override
     public void engineUpdate(byte[] src, int offset, int length) {
-        while ( size <= length ) {
+        while (size <= length) {
             shake.update(src, offset, size);
             length -= size;
             offset += size;
             byte[] dj = shake.digest();
             super.engineUpdate(dj, 0, dj.length);
-            size = b;
+            size = B;
             n++;
         }
-        if ( length > 0 ) {
-            shake.update(src,offset,length);
+        if (length > 0) {
+            shake.update(src, offset, length);
             size -= length;
         }
     }
-    
+
     /**
+     * digest
      *
-     * @return 
+     * @return ダイジェスト
      */
     @Override
     public byte[] engineDigest() {
-        if ( size < b) {
+        if (size < B) {
             byte[] dj = shake.digest();
             super.engineUpdate(dj, 0, dj.length);
             n++;
-            size = b;
+            size = B;
         }
-        z.write(SHA3Derived.right_encode(n));
-        z.write(SHA3Derived.right_encode(L));
-        byte[] zb = z.toByteArray();
+        byte[] a = SHA3Derived.right_encode(n);
+        super.engineUpdate(a, 0, a.length);
+        a = SHA3Derived.right_encode(L);
+        super.engineUpdate(a, 0, a.length);
 
         n = 0;
-        super.engineUpdate(zb, 0, zb.length);
         return super.engineDigest();
     }
-    
+
 }

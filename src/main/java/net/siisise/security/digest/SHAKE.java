@@ -19,7 +19,7 @@ package net.siisise.security.digest;
  * SHAKE128 / SHAKE256.
  * FIPS PUB 202
  */
-public class SHAKE extends Keccak implements XOF {
+public class SHAKE extends KeccakXOF implements XOF {
     
     /**
      * 

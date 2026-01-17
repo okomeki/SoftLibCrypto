@@ -15,15 +15,12 @@
  */
 package net.siisise.security.digest;
 
-import java.nio.charset.StandardCharsets;
-import net.siisise.io.Packet;
-
 /**
  * NIST SP 800-185 cSHAKE.
  * ビット列用だがバイト列で使う.
  *
  */
-public class cSHAKE extends Keccak {
+public class cSHAKE extends RawcSHAKE implements XOF {
 
     /**
      * cSHAKE.
@@ -35,22 +32,6 @@ public class cSHAKE extends Keccak {
      * @param S 任意の文字列
      */
     public cSHAKE(int c, long d, String N, String S) {
-        super("cSHAKE" + c + "(" + d + ")", 2 * c, d,
-                ((N != null && !N.isEmpty()) || (S != null && !S.isEmpty())) ? 0x04 : 0x1f,
-                ((N != null && !N.isEmpty()) || (S != null && !S.isEmpty())) ? 3 : 5);
-        if (N == null) {
-            N = "";
-        }
-        if (S == null) {
-            S = "";
-        }
-        if (!N.isEmpty() || !S.isEmpty()) {
-            Packet p;
-            p = SHA3Derived.encode_string(N.getBytes(StandardCharsets.UTF_8));
-            p.write(SHA3Derived.encode_string(S.getBytes(StandardCharsets.UTF_8)));
-            byte[] x = SHA3Derived.bytepad(p, getBitBlockLength() / 8);
-            // KeccakのengineUpdate を呼びたいが継承されることもあるのでsuper.をつけておく
-            super.engineUpdate(x, 0, x.length);
-        }
+        super("cSHAKE" + c, c, d, N, S);
     }
 }
