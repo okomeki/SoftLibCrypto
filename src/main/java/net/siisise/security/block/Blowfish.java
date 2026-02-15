@@ -360,7 +360,7 @@ public class Blowfish extends IntBlock {
      *
      * @param cost 4 - 31
      * @param salt 128bit
-     * @param key password 72文字まで有効 \0 有り
+     * @param key password 72文字まで有効 NUL可 + \0 有り (最大73オクテット以降無視)
      */
     public void initBcrypt(int cost, byte[] salt, byte[] key) {
         if (cost < 4) {
@@ -429,7 +429,7 @@ public class Blowfish extends IntBlock {
      * password 256バイト越えの場合は2aと2bの結果が違うのかも
      *
      * @param byteSalt 128bit 16 byte 4int
-     * @param key password 72文字まで有効
+     * @param key password 72文字まで有効 NUL可
      */
     void expandKey(byte[] byteSalt, byte[] key) {
         int[] salt = Bin.btoi(byteSalt); // int[4]

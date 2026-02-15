@@ -21,6 +21,7 @@ import net.siisise.ietf.pkcs1.PKCS1;
 import net.siisise.iso.asn1.tag.ASN1DERFormat;
 import net.siisise.iso.asn1.tag.INTEGER;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
+import net.siisise.iso.asn1.tag.SEQUENCE;
 import net.siisise.iso.asn1.tag.SEQUENCEMap;
 
 /**
@@ -177,16 +178,17 @@ public class RSAMiniPrivateKey implements PrivateKey, java.security.interfaces.R
      */
     @Override
     public byte[] getEncoded() {
-        SEQUENCEMap seq = getPrivateASN1();
+        SEQUENCE seq = getPrivateKeyASN1();
         return (byte[]) seq.rebind(new ASN1DERFormat());
     }
 
     /**
      * PrivateKey 型式くらいになるといい.
+     * OCTETSTRINGで囲まれていない版
      * 公開鍵の形式を借り
      * @return 
      */
-    public SEQUENCEMap getPrivateASN1() {
+    public SEQUENCE getPrivateKeyASN1() {
         SEQUENCEMap seq = new SEQUENCEMap();
         seq.put("modulus", new INTEGER(modulus)); // n
         seq.put("privateExponent", new INTEGER(privateExponent)); // e
@@ -198,6 +200,6 @@ public class RSAMiniPrivateKey implements PrivateKey, java.security.interfaces.R
      * @return 
      */
     public OCTETSTRING getPrivateKey() {
-        return new OCTETSTRING((byte[]) getPrivateASN1().rebind(new ASN1DERFormat()));
+        return new OCTETSTRING((byte[]) getPrivateKeyASN1().rebind(new ASN1DERFormat()));
     }
 }

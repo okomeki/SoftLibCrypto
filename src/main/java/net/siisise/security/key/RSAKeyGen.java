@@ -263,7 +263,7 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
      * @return 
      */
     public static SEQUENCEMap encodePrivate8(RSAPrivateCrtKey key) {
-        return key.getPKCS8PrivateKeyInfo().encodeASN1();
+        return key.getPrivateKeyInfo().encodeASN1();
     }
     
     public static SEQUENCEMap encodePublic1(RSAPublicKey pub) {
@@ -282,8 +282,8 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
      * @param key
      * @return 
      */
-    public static SEQUENCEMap encodePrivate1(RSAPrivateCrtKey key) {
-        return key.getPrivateASN1();
+    public static SEQUENCE encodePrivate1(RSAPrivateCrtKey key) {
+        return (SEQUENCE) key.getPrivateKey();
     }
 
     private static final int PRIMECOUNT = 500;

@@ -63,7 +63,11 @@ public class PrivateKeyInfo {
     /**
      * privateKey PrivateKey
      * 秘密鍵.
+     * OCTET STRING
+     * 
      * PrivateKey ::= OCTET STRING
+     * RSAPrivateCrtKey, ECPrivateKey ::= SEQUENCE なので OCTETSTRING で wrapする
+     * CurvePrivateKey ::= OCTET STRING wrapしないかも
      */
     public byte[] privateKey;
     /**

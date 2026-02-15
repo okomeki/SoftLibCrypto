@@ -88,7 +88,7 @@ public class EdDSATest {
     public void testGenPrvKey() {
         System.out.println("genPrvKey");
         EdDSA instance = new EdDSA();
-        EdWards25519 curve = instance.init25519();
+        EdWards25519 curve = EdDSA.init25519();
         int expResult = 32;
         byte[] result = instance.genPrvKey(curve);
         OCTETSTRING oct = (OCTETSTRING) ASN1Util.toASN1(result);

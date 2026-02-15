@@ -27,14 +27,22 @@ import net.siisise.security.ec.EllipticCurve;
 
 /**
  * FIPS PUB 186-5 ?
+ * RFC 6979
  */
 public class ECDSAKeyGen {
 
+    /**
+     * 秘密鍵[1, q-1]の生成. RFC 6979
+     *
+     * @param curve 楕円曲線
+     * @return 秘密鍵 x
+     */
     public ECDSAPrivateKey genPrivateKey(ECCurvep curve) {
         BigInteger x;
         try {
             SecureRandom srnd = SecureRandom.getInstanceStrong();
-            BigInteger s = new BigInteger(curve.p.bitLength()*2, srnd); // 1 <= x < n
+            // 偏り補正
+            BigInteger s = new BigInteger(curve.p.bitLength() * 2, srnd); // 1 <= x < n
             x = s.mod(curve.n.subtract(BigInteger.ONE)).add(BigInteger.ONE);
             return new ECDSAPrivateKey(curve, x);
         } catch (NoSuchAlgorithmException ex) {
@@ -43,10 +51,11 @@ public class ECDSAKeyGen {
     }
 
     /**
-     * PKCS #8 の privateKey  OCTETSTRING からデコード.
-     * @param ai
+     * PKCS #8 の privateKey OCTETSTRING からデコード.
+     *
+     * @param ai ECDSA OID
      * @param prv privateKey OCTETSTRING の中身
-     * @return 
+     * @return Private Key 秘密鍵
      */
     public static ECDSAPrivateKey decodePrivate(AlgorithmIdentifier ai, byte[] prv) {
         ECCurvep curve = toCurve(ai);
@@ -55,9 +64,10 @@ public class ECDSAKeyGen {
 
     /**
      * 公開鍵変換.
-     * @param ai 曲線
+     *
+     * @param ai ECDSA OID
      * @param pub 点 publicKey BITSTRING の中相当
-     * @return 公開鍵
+     * @return Public Key 公開鍵
      */
     public ECDSAPublicKey decodePublic(AlgorithmIdentifier ai, byte[] pub) {
         ECCurvep curve = toCurve(ai);
@@ -67,19 +77,20 @@ public class ECDSAKeyGen {
 
     /**
      * アルゴリズムから曲線の取得.
-     * @param ai 
-     * @return 
+     *
+     * @param ai ECDSA OID
+     * @return ECC
      */
     static ECCurvep toCurve(AlgorithmIdentifier ai) {
-        if ( ai.parameters instanceof OBJECTIDENTIFIER) {
-            return getCurve((OBJECTIDENTIFIER)ai.parameters);
+        if (ai.parameters instanceof OBJECTIDENTIFIER) {
+            return getCurve((OBJECTIDENTIFIER) ai.parameters);
         }
-        
+
         throw new UnsupportedOperationException();
     }
 
     static Map<OBJECTIDENTIFIER, ECCurvep> curves = new HashMap<>();
-    
+
     static {
         curves.put(EllipticCurve.P192.oid, EllipticCurve.P192);
         curves.put(EllipticCurve.P224.oid, EllipticCurve.P224);
@@ -89,6 +100,11 @@ public class ECDSAKeyGen {
         curves.put(EllipticCurve.secp256k1.oid, EllipticCurve.secp256k1);
     }
 
+    /**
+     * 楕円曲線取得.
+     * @param oid ECC OID
+     * @return ECC
+     */
     private static ECCurvep getCurve(OBJECTIDENTIFIER oid) {
         return curves.get(oid);
     }

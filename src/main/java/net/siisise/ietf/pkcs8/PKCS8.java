@@ -18,16 +18,19 @@ package net.siisise.ietf.pkcs8;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.ietf.pkcs5.PBES2;
 import net.siisise.iso.asn1.ASN1Util;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.SEQUENCE;
 import net.siisise.iso.asn1.tag.SEQUENCEMap;
+import net.siisise.security.key.ASN1PrivateKey;
 import net.siisise.security.key.ECDSAKeyGen;
 import net.siisise.security.key.ECDSAPublicKey;
-import net.siisise.security.key.RSAPrivateCrtKey;
+import net.siisise.security.key.EdDSAPrivateKey;
 import net.siisise.security.key.RSAKeyGen;
 import net.siisise.security.sign.ECDSA;
+import net.siisise.security.sign.EdDSA;
 
 /**
  * しばらく5958より5208重視.
@@ -55,8 +58,9 @@ public class PKCS8 {
      * @param key 鍵をPKCS #8形式(暗号なし,DER)にする
      * @return PrivateKeyInfo PKCS #8でラップした鍵
      */
-    public static SEQUENCEMap getPrivateKeyInfo(RSAPrivateCrtKey key) {
-        PrivateKeyInfo info = new PrivateKeyInfo(rsaEncryption, key.getPrivateEncoded());
+    public static SEQUENCEMap getPrivateKeyInfo(ASN1PrivateKey key) {
+        AlgorithmIdentifier ai = key.getAlgorithmIdentifier();
+        PrivateKeyInfo info = new PrivateKeyInfo(ai, key.getPrivateKey().getValue());
         return info.encodeASN1();
     }
 
@@ -78,6 +82,12 @@ public class PKCS8 {
             } else if (ECDSAPublicKey.ecPublicKey.equals(alg)
                     || ecDSA_SHAKE128.equals(alg)) {
                 return ECDSAKeyGen.decodePrivate(info.privateKeyAlgorithm, info.privateKey);
+            } else if (EdDSA.Ed25519.equals(alg)) {
+                byte[] k = info.privateKey;
+                return new EdDSAPrivateKey(k);
+            } else if (EdDSA.Ed448.equals(alg)) {
+                byte[] k = info.privateKey;
+                return new EdDSAPrivateKey(EdDSA.init448(), k);
             }
                 
         }
@@ -94,8 +104,8 @@ public class PKCS8 {
      * @throws NoSuchAlgorithmException 該当アルゴリズムなし
      */
     @Deprecated
-    public SEQUENCEMap encryptedPrivateKeyInfoASN1(RSAPrivateCrtKey key, byte[] pass) throws NoSuchAlgorithmException {
-        return encryptedPrivateKeyInfo(new PrivateKeyInfo(key.getAlgorithmIdentifier(), key.getPrivateEncoded()), pass).encode();
+    public SEQUENCEMap encryptedPrivateKeyInfoASN1(ASN1PrivateKey key, byte[] pass) throws NoSuchAlgorithmException {
+        return encryptedPrivateKeyInfo(key.getPrivateKeyInfo(), pass).encode();
     }
 
     /**
@@ -110,6 +120,13 @@ public class PKCS8 {
         return encryptPrivateKeyInfo(info.encodeASN1().encodeAll(), pass);
     }
 
+    /**
+     * RFC5958側で実装.
+     * @param keyInfo
+     * @param pass password
+     * @return
+     * @throws NoSuchAlgorithmException 
+     */
     EncryptedPrivateKeyInfo encryptPrivateKeyInfo(byte[] keyInfo, byte[] pass) throws NoSuchAlgorithmException {
         throw new UnsupportedOperationException();
     }

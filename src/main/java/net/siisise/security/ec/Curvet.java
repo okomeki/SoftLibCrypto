@@ -20,13 +20,11 @@ import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 
 /**
  * 仮 F2^m
+ * @param <P>
  */
 public class Curvet<P extends Curvet.Pointt> extends EllipticCurve {
 
     public class Pointt extends Point {
-
-        long[] bx;
-        long[] by;
 
         public Pointt(BigInteger x, BigInteger y) {
             super(x, y);

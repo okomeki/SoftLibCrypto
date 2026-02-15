@@ -31,6 +31,7 @@ module net.siisise.crypto {
     exports net.siisise.itu_t.x501;
     exports net.siisise.security.block;
     exports net.siisise.security.digest;
+    exports net.siisise.security.ec;
     exports net.siisise.security.key;
     exports net.siisise.security.key.mcf;
     exports net.siisise.security.mac;

@@ -131,7 +131,7 @@ public class RSAMultiPrivateKey extends RSAPrivateCrtKey {
      * @return 
      */
     @Override
-    public SEQUENCEMap getPrivateASN1() {
+    public SEQUENCEMap getPrivateKeyASN1() {
         SEQUENCEMap prv = new SEQUENCEMap();
         prv.put("version", version);
         prv.put("modulus", modulus);
@@ -162,7 +162,7 @@ public class RSAMultiPrivateKey extends RSAPrivateCrtKey {
      */
     @Override
     public <T> T rebind(TypeFormat<T> format) {
-        return (T)getPrivateASN1().rebind(format);
+        return (T)getPrivateKeyASN1().rebind(format);
     }
 
     @Override

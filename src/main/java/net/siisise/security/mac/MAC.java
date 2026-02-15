@@ -15,6 +15,7 @@
  */
 package net.siisise.security.mac;
 
+import net.siisise.io.Output;
 import net.siisise.security.sign.SignVerify;
 
 /**
@@ -24,6 +25,12 @@ import net.siisise.security.sign.SignVerify;
 public interface MAC extends SignVerify {
 
     void init(byte[] key);
+
+    @Override
+    default Output put(byte[] data, int offset, int length) {
+        update(data, offset, length);
+        return this;
+    }
 
     default byte[] doFinal(byte[] src) {
         update(src);
@@ -40,7 +47,7 @@ public interface MAC extends SignVerify {
      * @return バイト長
      */
     int getMacLength();
-    
+
     /*
      * ブロック長.
      * @return 
@@ -50,6 +57,7 @@ public interface MAC extends SignVerify {
     /**
      * 鍵生成用長さ. (最小? または 適当)
      * ハッシュ系は512bitまたは1024bit，KMAC(Keccak)は任意?
+     *
      * @return 鍵バイト長
      */
     @Override

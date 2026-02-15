@@ -17,6 +17,7 @@ package net.siisise.security.ec;
 
 import java.math.BigInteger;
 import net.siisise.bind.format.TypeFormat;
+import net.siisise.block.ReadableBlock;
 import net.siisise.ietf.pkcs1.PKCS1;
 import net.siisise.io.PacketA;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
@@ -28,6 +29,7 @@ import net.siisise.iso.asn1.tag.SEQUENCEMap;
  * 素数をpに使う方向の楕円曲線 Fp
  *
  * y^2 ≡ x^3 + ax + b
+ *
  * @param <P> 型
  */
 public class ECCurvep<P extends ECCurvep.ECPointp> extends Curvep<P> implements ECCurve {
@@ -61,17 +63,18 @@ public class ECCurvep<P extends ECCurvep.ECPointp> extends Curvep<P> implements 
      */
     public ECCurvep(OBJECTIDENTIFIER oid, BigInteger p, BigInteger a, BigInteger b, BigInteger Gx, BigInteger Gy, BigInteger order, int h) {
         super(oid, p, Gx, Gy, order, h);
-        this.a = add(p, a);
+        this.a = a;
         this.b = b;
     }
 
     public ECCurvep(OBJECTIDENTIFIER oid, BigInteger p, long a, BigInteger b, BigInteger Gx, BigInteger Gy, BigInteger n, int h) {
-        this(oid, p, BigInteger.valueOf(a), b, Gx, Gy, n, h);
+        this(oid, p, p.add(BigInteger.valueOf(a)), b, Gx, Gy, n, h);
     }
 
     /**
      * 楕円曲線.
-     * @param p Fp
+     *
+     * @param p fieldID Fp
      * @param a +ax
      * @param b +b
      * @param Gx 始点
@@ -81,12 +84,12 @@ public class ECCurvep<P extends ECCurvep.ECPointp> extends Curvep<P> implements 
      */
     public ECCurvep(BigInteger p, BigInteger a, BigInteger b, BigInteger Gx, BigInteger Gy, BigInteger order, int h) {
         super(p, Gx, Gy, order, h);
-        this.a = add(p, a);
+        this.a = a;
         this.b = b;
     }
 
     public ECCurvep(BigInteger p, long a, BigInteger b, BigInteger Gx, BigInteger Gy, BigInteger n, int h) {
-        this(p, BigInteger.valueOf(a), b, Gx, Gy, n, h);
+        this(p, p.add(BigInteger.valueOf(a)), b, Gx, Gy, n, h);
     }
 
     public class ECPointp<P extends ECPointp> extends Pointp implements ECPoint<P> {
@@ -102,6 +105,7 @@ public class ECCurvep<P extends ECCurvep.ECPointp> extends Curvep<P> implements 
 
         /**
          * 仮.
+         *
          * @param <T> 型
          * @param format 型
          * @return xyデータ
@@ -118,6 +122,8 @@ public class ECCurvep<P extends ECCurvep.ECPointp> extends Curvep<P> implements 
          * SEC1 2.3.3 非圧縮.
          * ゼロ 00
          * 非圧縮 04
+         *
+         * @return
          */
         @Override
         public byte[] encXY() {
@@ -151,6 +157,7 @@ public class ECCurvep<P extends ECCurvep.ECPointp> extends Curvep<P> implements 
          * SEC1 2.3.3 圧縮.
          * ゼロ 00
          * 圧縮 02, 03
+         *
          * @return 圧縮
          */
         public byte[] encLXY() {
@@ -173,12 +180,12 @@ public class ECCurvep<P extends ECCurvep.ECPointp> extends Curvep<P> implements 
             BigInteger y = y2.sqrt();
             throw new UnsupportedOperationException();
         }
-        */
-
+         */
         /**
          * 加算.
          *
          * Z考慮版.
+         *
          * @param q 点Q
          * @return P * Q
          */
@@ -190,7 +197,7 @@ public class ECCurvep<P extends ECCurvep.ECPointp> extends Curvep<P> implements 
             // 3.
             BigInteger v = sub(mul(q.x, z), mul(x, q.z));
             BigInteger u = sub(mul(q.y, z), mul(y, q.z));
-            if ( v.equals(BigInteger.ZERO)) {
+            if (v.equals(BigInteger.ZERO)) {
                 return u.equals(BigInteger.ZERO) ? x2() : NULL;
             }
             // 4. xが異なる2点
@@ -203,7 +210,7 @@ public class ECCurvep<P extends ECCurvep.ECPointp> extends Curvep<P> implements 
             BigInteger Z3 = mul(mul(v3, z), q.z);
             return new ECPointp(X3, Y3, Z3);
         }
-        
+
         ECPointp x2() {
             // x2?
             if (y.equals(BigInteger.ZERO)) {
@@ -229,6 +236,7 @@ public class ECCurvep<P extends ECCurvep.ECPointp> extends Curvep<P> implements 
         /**
          * 乗算.
          * nG だったり nEだったり
+         *
          * @param n 倍数
          * @return nG nE
          */
@@ -249,6 +257,7 @@ public class ECCurvep<P extends ECCurvep.ECPointp> extends Curvep<P> implements 
 
     /**
      * 座標型変換.
+     *
      * @param x X座標
      * @param y Y座標
      * @return Point
@@ -260,11 +269,12 @@ public class ECCurvep<P extends ECCurvep.ECPointp> extends Curvep<P> implements 
 
     /**
      * バイナリから座標変換.
+     *
      * @param code
      * @return 座標Point
      */
     public P toPoint(byte[] code) {
-        PacketA c = new PacketA(code);
+        ReadableBlock c = ReadableBlock.wrap(code);
         int type = c.read();
         int csize = c.size();
         int qlen = (p.bitLength() + 7) / 8;
@@ -319,5 +329,5 @@ public class ECCurvep<P extends ECCurvep.ECPointp> extends Curvep<P> implements 
         }
         return false;
     }
-    
+
 }

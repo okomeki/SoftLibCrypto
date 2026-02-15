@@ -16,6 +16,7 @@
 package net.siisise.security.block;
 
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
+import net.siisise.lang.Bin;
 
 /**
  * Data Encryption Standard.
@@ -30,6 +31,7 @@ import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
  */
 @Deprecated
 public class DES extends OneBlock {
+
     public static final OBJECTIDENTIFIER desCBC = new OBJECTIDENTIFIER("1.3.14.3.2.7");
 
     /**
@@ -83,23 +85,22 @@ public class DES extends OneBlock {
 
     static {
         // S&P to SP
-        for ( int i = 0; i < 32; i++ ) {
+        for (int i = 0; i < 32; i++) {
             int n = P[i];
             int n4 = n / 4; // S列を特定
             int np = 1 << (3 - (n % 4)); // 該当S出力ビットを特定
             int t = 1 << (31 - i); // S出力からP出力の変換コードを作成
-            for ( int j = 0; j < 64; j++ ) { // 該当個所に書き込み
+            for (int j = 0; j < 64; j++) { // 該当個所に書き込み
                 SP[n4][j] |= ((S[n4][j] & np) != 0) ? t : 0;
             }
         }
-
     }
 
     public DES() {
     }
 
     private final byte[][] ks = new byte[16][];
-
+/*
     static void parityCheck(byte[] key) {
         if (key == null || key.length != 8) {
             throw new SecurityException();
@@ -114,11 +115,11 @@ public class DES extends OneBlock {
             throw new SecurityException("ぱりてー");
         }
     }
-
+*/
     /*
      * ひとつ引いた値
      */
-/*    private static final int PC1[] = {
+ /*    private static final int[] PC1 = {
         56, 48, 40, 32, 24, 16,  8,
          0, 57, 49, 41, 33, 25, 17,
          9,  1, 58, 50, 42, 34, 26,
@@ -129,7 +130,7 @@ public class DES extends OneBlock {
         13,  5, 60, 52, 44, 36, 28,
         20, 12,  4, 27, 19, 11,  3
     };
-*/
+     */
     /**
      * 1つ引いて下位3ビットを反転したもの
      */
@@ -146,7 +147,7 @@ public class DES extends OneBlock {
     };
 
     /**
-     *
+     * 鍵から変換
      * @param key 7bit 8バイト
      * @return 28*2bit
      */
@@ -165,8 +166,8 @@ public class DES extends OneBlock {
     /*
      * ひとつ減らした値
      */
-/*
-    private static final int PC2[] = {
+ /*
+    private static final int[] PC2 = {
         13, 16, 10, 23,  0,  4,
          2, 27, 14,  5, 20,  9,
         22, 18, 11,  3, 25,  7,
@@ -176,12 +177,12 @@ public class DES extends OneBlock {
         43, 48, 38, 55, 33, 52,
         45, 41, 49, 35, 28, 31
     };
-*/
+     */
     /**
      * ひとつ減らして上位消し、下位反転した値
-     * 27 - PC2 % 28 
+     * 27 - PC2 % 28
      */
-    private static final int PC2[] = {
+    private static final int[] PC2 = {
         14, 11, 17,  4, 27, 23,
         25,  0, 13, 22,  7, 18,
          5,  9, 16, 24,  2, 20,
@@ -243,6 +244,10 @@ public class DES extends OneBlock {
 
     final byte[] e = new byte[8];
 
+    /**
+     * rからeに行列変換っぽいもの
+     * @param r 
+     */
     private void e(int r) {
         e[0] = (byte) ((r << 5) | (r >>> 27));
         e[1] = (byte) (r >>> 23);
@@ -255,6 +260,43 @@ public class DES extends OneBlock {
 //        return e;
     }
 
+    // DEScrypt パスワード用亜種拡張
+    int[] saltmask = new int[0];
+    int[] saltxor = new int[0];
+
+    /**
+     * DEScrype用 改変DES
+     *
+     * @param salt 12bitぐらいまで 6bit x2で格納
+     */
+    public void setSalt(byte[] salt) {
+        saltxor = new int[salt.length];
+        for (int i = 0; i < salt.length; i++) {
+            saltxor[i] = salt[i] & 0x3f;
+        }
+        System.out.println("salt:"+Bin.toHex(salt));
+        saltmask = new int[salt.length];
+        for (int i = 0; i < saltxor.length; i++) {
+            saltmask[i] = ~saltxor[i];
+        }
+    }
+
+    /**
+     * 
+     * @param r
+     * @return 
+     */
+    private int salt(int r) {
+        System.out.println("in :"+Bin.toHex(e));
+        for (int i = 0; i < saltxor.length; i++) {
+            int tmp = (e[6+ i] & saltmask[i]) | (e[2+ i] & saltxor[i]);
+            e[2+ i] = (byte) ((e[2+ i] & saltmask[i]) | (e[6+ i] & saltxor[i]));
+            e[6+ i] = (byte) tmp;
+        }
+        System.out.println("out:"+Bin.toHex(e));
+        return r;
+    }
+
     /**
      * 間違えてもわかりにくい.
      *
@@ -263,6 +305,7 @@ public class DES extends OneBlock {
      * @return 32bitハッシュ系データ
      */
     private int f(int r, int kn) {
+        r = salt(r);
         e(r); // 6x8bit 48ビットに増やす
         byte[] k1 = ks[kn];
 
@@ -319,6 +362,7 @@ public class DES extends OneBlock {
 
     /**
      * 暗号化.
+     *
      * @param src 64bit 平文
      * @return 暗号文
      */
@@ -339,7 +383,7 @@ public class DES extends OneBlock {
 
     /**
      * 復号化.
-     * 
+     *
      * @param src 暗号文ブロック
      * @param offset 位置
      * @return 平文

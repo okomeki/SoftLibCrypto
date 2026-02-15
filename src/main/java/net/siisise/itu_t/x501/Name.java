@@ -124,9 +124,9 @@ public class Name {
     public static final OBJECTIDENTIFIER DESCRIPTION = ID_AT.sub(13);
 
     /**
-     * RFC 4519 2,6. destinationIndicator X.520
+     * RFC 4519 2.6. destinationIndicator X.520
      */
-    public static final OBJECTIDENTIFIER DESTINTAION_INDICATOR = ID_AT.sub(27);
+    public static final OBJECTIDENTIFIER DESTINATION_INDICATOR = ID_AT.sub(27);
 
     /**
      * RFC 4519 2.7. distinguishedName X.520

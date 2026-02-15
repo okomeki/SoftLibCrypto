@@ -33,15 +33,13 @@ import net.siisise.security.block.Block;
 import net.siisise.security.mac.HMAC;
 
 /**
- * PKCS #8 の後継的な
- * RFC 5208 PKCS #8 Private-Key Information Syntax Specification Version 1.2 私有鍵情報構文仕様 Version 1.2
- * RFC 5958 Asymmetric Key Packages
+ * PKCS #8 の後継的な RFC 5208 PKCS #8 Private-Key Information Syntax Specification
+ * Version 1.2 私有鍵情報構文仕様 Version 1.2 RFC 5958 Asymmetric Key Packages
  */
 public class RFC5958 extends PKCS8 {
 
     /**
-     * PBKDF2で使用する乱数生成器のOBJECTIDENTIFIER.
-     * HMACが標準、他のMACも設定は可能
+     * PBKDF2で使用する乱数生成器のOBJECTIDENTIFIER. HMACが標準、他のMACも設定は可能
      */
     public OBJECTIDENTIFIER prf = HMAC.idhmacWithSHA256;
     /**
@@ -53,6 +51,16 @@ public class RFC5958 extends PKCS8 {
      */
     public int iterationCount = 2048;
 
+    SecureRandom srnd;
+
+    public RFC5958() {
+        try {
+            srnd = SecureRandom.getInstanceStrong();
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
     /**
      * PrivateKeyInfo 暗号付きASN.1符号化.
      *
@@ -62,16 +70,15 @@ public class RFC5958 extends PKCS8 {
      * @throws NoSuchAlgorithmException
      */
     @Override
-    EncryptedPrivateKeyInfo encryptPrivateKeyInfo(byte[] keyInfo, byte[] pass) throws NoSuchAlgorithmException {
+    EncryptedPrivateKeyInfo encryptPrivateKeyInfo(byte[] keyInfo, byte[] pass) {
 
-        SecureRandom srnd = SecureRandom.getInstanceStrong();
         byte[] kdfSalt = new byte[16];
         srnd.nextBytes(kdfSalt);
 
         Block preBlock = PBES2params.getEncryptionScheme(block);
         byte[] esSalt = null;
         int[] plen = preBlock.getParamLength();
-        switch ( plen.length ) { // 1つまで対応可能
+        switch (plen.length) { // 1つまで対応可能
             case 1:
                 break;
             case 2:
@@ -94,8 +101,7 @@ public class RFC5958 extends PKCS8 {
     }
 
     /**
-     * CMS RFC 5652, RFC 5083 を使って暗号化ができるのでどうにかする.
-     * SignedData 署名 EncryptedData
+     * CMS RFC 5652, RFC 5083 を使って暗号化ができるのでどうにかする. SignedData 署名 EncryptedData
      * AsymmetricKeyで暗号化 暗号化キー共有済み EnvelopedData AsymmetricKeyで暗号化 暗号化キーを共有しない
      * AuthenticatedData メッセージ認証コードを使用して EnvelopedDataと同様な AuthEnvelopedData
      * EnvelopedDataと同様な

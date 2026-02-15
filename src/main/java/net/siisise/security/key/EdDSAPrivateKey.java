@@ -19,7 +19,10 @@ import java.math.BigInteger;
 import java.security.PrivateKey;
 import java.util.Arrays;
 import net.siisise.bind.format.TypeFormat;
+import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.ietf.pkcs8.OneAsymmetricKey;
+import net.siisise.iso.asn1.ASN1Tag;
+import net.siisise.iso.asn1.tag.ASN1Convert;
 import net.siisise.iso.asn1.tag.ASN1DERFormat;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
 import net.siisise.security.ec.EdWards;
@@ -29,7 +32,7 @@ import net.siisise.security.ec.EdWards25519;
  * EdDSA 秘密鍵.
  *
  */
-public class EdDSAPrivateKey implements PrivateKey {
+public class EdDSAPrivateKey implements PrivateKey,ASN1PrivateKey {
 
     final EdWards curve;
     byte[] key;
@@ -83,6 +86,33 @@ public class EdDSAPrivateKey implements PrivateKey {
     @Override
     public String getFormat() {
         return "EdDSA";
+    }
+
+    /**
+     * OBJECT IDENTIFIERのみのAlgorithmIdentifier ?
+     * @return AlgorithmIdentifier
+     */
+    @Override
+    public AlgorithmIdentifier getAlgorithmIdentifier() {
+        return new AlgorithmIdentifier(curve.oid, null);
+    }
+
+    /**
+     * 
+     * @return 
+     */
+    @Override
+    public ASN1Tag getPrivateKeyASN1() {
+        return rebind(new ASN1Convert());
+    }
+
+    /**
+     * 
+     * @return 
+     */
+    @Override
+    public OCTETSTRING getPrivateKey() {
+        return (OCTETSTRING) getPrivateKeyASN1();
     }
 
     /**

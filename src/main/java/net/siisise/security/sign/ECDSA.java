@@ -93,7 +93,7 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
     }
 
     public static ECParameterSpec toSpec(ECCurvet curve) {
-        ECFieldF2m F2m = new ECFieldF2m(curve.p.bitLength(),curve.p);
+        ECFieldF2m F2m = new ECFieldF2m(curve.p.bitLength(), curve.p);
         java.security.spec.EllipticCurve c = new java.security.spec.EllipticCurve(F2m, curve.a, curve.b);
         ECPoint g = new ECPoint(curve.getG().getX(), curve.getG().getY());
         return new ECParameterSpec(c, g, curve.n, curve.h);
@@ -101,13 +101,13 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
 
     public static ECParameterSpec toSpec(ECCurve curve) {
         if (curve instanceof ECCurvep) {
-            return toSpec((ECCurvep)curve);
+            return toSpec((ECCurvep) curve);
         } else if (curve instanceof ECCurvet) {
-            return toSpec((ECCurvet)curve);
+            return toSpec((ECCurvet) curve);
         }
         throw new IllegalStateException();
     }
-    
+
     public static ECDSAPrivateKey toECDSAKey(ECPrivateKey prv) {
         ECCurve curve = toCurve(prv.getParams());
         BigInteger s = prv.getS();
@@ -206,42 +206,74 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
     }
 
     /**
+     * KT-I署名.
      * テスト用署名乱数指定可能版.
      *
      * @param h ハッシュ済み値
-     * @param k 乱数を固定
+     * @param k 乱数を固定 1 から order -1
      * @return 署名
      */
     public byte[] sign(byte[] h, BigInteger k) {
-        BigInteger q = E.getN();
+        BigInteger q = E.getN(); // order
 
-        // 2.
         // SEC.1 4.1.3. 1. kとRのペアを生成
-        k = k.mod(q);
+        // RFC 6090 1. 1 から q-1までの間
+        k = k.mod(q); // 念の為
+        // 2. R = (r_x, r_y) = alpha^k
         EllipticCurve.ECPoint R = E.xG(k);
         // 3. s1 = R_x mod q
         // SEC.1 4.1.3. 2. R_x を 変換 3. r
-        BigInteger r = R.getX().mod(q);
-        if (r.equals(BigInteger.ZERO)) {
+        BigInteger s1 = R.getX().mod(q);
+        if (s1.equals(BigInteger.ZERO)) {
             throw new SecurityException();
         }
 
-        int blen = getKeyLength(); //(E.p.bitLength() + 7) / 8;
         // 4. s2 = (h(m) + 秘密鍵z * s1)/k mod q
         // SEC.1 4.1.3 4. ハッシュ(パラメータhで済) 5. eの計算
-        BigInteger e = PKCS1.OS2IP(Arrays.copyOf(h, Integer.min(h.length, blen))); // hを切り詰めた値
-        BigInteger d = prv.getS();
-        BigInteger s = e.add(d.multiply(r)).mod(q).multiply(k.modInverse(q)).mod(q);
-        if (s.equals(BigInteger.ZERO)) {
+        BigInteger e = signH(h); // hを切り詰めた値
+        BigInteger s2 = e.add(prv.getS().multiply(s1)).mod(q).multiply(k.modInverse(q)).mod(q);
+        if (s2.equals(BigInteger.ZERO)) {
+            throw new SecurityException();
+        }
+        
+        return pairEnc(s1, s2);
+    }
+
+    protected BigInteger signH(byte[] h) {
+        int blen = getKeyLength();
+        return PKCS1.OS2IP(Arrays.copyOf(h, Integer.min(h.length, blen)));
+    }
+    
+    byte[] pairEnc(BigInteger s1, BigInteger s2) {
+        int blen = getKeyLength(); //(E.p.bitLength() + 7) / 8;
+        byte[] SS = new byte[blen * 2];
+        byte[] S = PKCS1.I2OSP(s1, blen);
+        System.arraycopy(S, 0, SS, 0, blen);
+        S = PKCS1.I2OSP(s2, blen);
+        System.arraycopy(S, 0, SS, blen, blen);
+        return SS;
+    }
+    
+    BigInteger[] pairDec(byte[] sign) {
+        int blen = getKeyLength();
+        if (sign.length != blen * 2) {
+            throw new SecurityException();
+        }
+        BigInteger[] ss = new BigInteger[2];
+
+        byte[] S = Arrays.copyOfRange(sign, 0, blen);
+        BigInteger q = E.getN();
+        ss[0] = PKCS1.OS2IP(S);
+        if (ss[0].equals(BigInteger.ZERO) || ss[0].compareTo(q) >= 0) {
             throw new SecurityException();
         }
 
-        byte[] SS = new byte[blen * 2];
-        byte[] S = PKCS1.I2OSP(r, blen);
-        System.arraycopy(S, 0, SS, 0, blen);
-        S = PKCS1.I2OSP(s, blen);
-        System.arraycopy(S, 0, SS, blen, blen);
-        return SS;
+        S = Arrays.copyOfRange(sign, blen, blen * 2);
+        ss[1] = PKCS1.OS2IP(S);
+        if (ss[1].equals(BigInteger.ZERO) || ss[1].compareTo(q) >= 0) {
+            throw new SecurityException();
+        }
+        return ss;
     }
 
     /**
@@ -252,26 +284,21 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
      */
     @Override
     public boolean verify(byte[] sign) {
-        byte[] h = md.digest();
-        int blen = getKeyLength();
-        if (sign.length != blen * 2) {
+        BigInteger s1;
+        BigInteger s2;
+        try {
+            BigInteger[] ss = pairDec(sign);
+            s1 = ss[0];
+            s2 = ss[1];
+        } catch (SecurityException e) {
             return false;
         }
         BigInteger q = E.getN();
-
-        byte[] S = Arrays.copyOfRange(sign, 0, blen);
-        BigInteger s1 = PKCS1.OS2IP(S);
-        if (s1.equals(BigInteger.ZERO) || s1.compareTo(q) >= 0) {
-            return false;
-        }
-        S = Arrays.copyOfRange(sign, blen, blen * 2);
-        BigInteger s2 = PKCS1.OS2IP(S);
-        if (s2.equals(BigInteger.ZERO) || s2.compareTo(q) >= 0) {
-            return false;
-        }
         BigInteger s2Inv = s2.modInverse(q);
 
-        BigInteger e = PKCS1.OS2IP(Arrays.copyOf(h, Integer.min(h.length, blen))); // hを切り詰めた値
+        byte[] h = md.digest();
+
+        BigInteger e = signH(h); // hを切り詰めた値
         BigInteger u1 = e.multiply(s2Inv).mod(q);
         BigInteger u2 = s1.multiply(s2Inv).mod(q);
         ECCurvep.ECPoint Y = pub.getY();

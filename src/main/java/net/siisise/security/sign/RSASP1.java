@@ -40,7 +40,7 @@ public class RSASP1 extends Output.AbstractOutput implements SignVerify {
      * @param prv 鍵
      */
     public RSASP1(RSAPrivateKey prv) {
-        this.prv = PKCS1.toCrt(prv);
+        this.prv = PKCS1.toKey(prv);
         md = null;
         d = new PacketA();
     }
@@ -57,7 +57,7 @@ public class RSASP1 extends Output.AbstractOutput implements SignVerify {
      * @param h 事前ハッシュを実施する場合
      */
     public RSASP1(RSAPrivateKey prv, MessageDigest h) {
-        this.prv = PKCS1.toCrt(prv);
+        this.prv = PKCS1.toKey(prv);
         md = h;
         d = new PacketA();
     }

@@ -19,7 +19,7 @@ import java.math.BigInteger;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 
 /**
- * ECC
+ * ECC 楕円曲線
  */
 public interface ECCurve {
 

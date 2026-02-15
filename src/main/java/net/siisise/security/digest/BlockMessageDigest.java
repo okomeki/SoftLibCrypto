@@ -15,12 +15,14 @@
  */
 package net.siisise.security.digest;
 
+import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.security.MessageDigest;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.siisise.bind.format.TypeFormat;
 import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
+import net.siisise.io.FilterOutput;
 import net.siisise.io.Input;
 import net.siisise.io.Output;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
@@ -116,6 +118,11 @@ public abstract class BlockMessageDigest extends MessageDigest implements BlockL
         return (T)di.rebind(format);
     }
 
+    @Override
+    public OutputStream getOutputStream() {
+        return new FilterOutput(this);
+    }
+    
     @Override
     public void write(int data) {
         engineUpdate((byte)data);

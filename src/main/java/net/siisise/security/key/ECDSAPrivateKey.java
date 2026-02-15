@@ -28,28 +28,37 @@ import net.siisise.security.sign.ECDSA;
 
 /**
  * ECDSA 秘密鍵.
+ * RFC 8410 ASN.1 ECPrivateKey
  * 曲線とパラメータx
  * RFC 5480
  */
-public class ECDSAPrivateKey implements ECPrivateKey {
+public class ECDSAPrivateKey implements ECPrivateKey, ASN1PrivateKey {
 
     final ECCurve curve;
+    /**
+     * RFC 6979 秘密鍵 x
+     */
     final BigInteger d;
 
     /**
      * 曲線と秘密鍵.
      * FIPS 186-5 A.2
      * @param c 楕円曲線.
-     * @param d 秘密鍵
+     * @param d 秘密鍵 点Gのもと
      */
     public ECDSAPrivateKey(ECCurve c, BigInteger d) {
         curve = c;
         this.d = d;//.mod(c.n);
     }
 
+    /**
+     * 曲線と秘密鍵.
+     * @param c 楕円曲線
+     * @param d 秘密鍵 点Gのもと
+     */
     public ECDSAPrivateKey(ECCurve c, byte[] d) {
         curve = c;
-        this.d = PKCS1.OS2IP(d);//.mod(c.n);
+        this.d = PKCS1.OS2IP(d); //.mod(c.getN());
     }
 
     /**
@@ -92,6 +101,7 @@ public class ECDSAPrivateKey implements ECPrivateKey {
         return PKCS1.I2OSP(d, 0);
     }
 
+    @Override
     public AlgorithmIdentifier getAlgorithmIdentifier() {
         OBJECTIDENTIFIER oid = ECDSAPublicKey.ecPublicKey;
         ASN1Tag params;
@@ -107,10 +117,21 @@ public class ECDSAPrivateKey implements ECPrivateKey {
     }
 
     /**
-     * 秘密鍵のみ.
+     * OneAsymmetricKey用 秘密鍵のみ.
+     * OCTETSTRINGなので変更無し
      * @return 秘密鍵
      */
+    @Override
     public OCTETSTRING getPrivateKey() {
+        return getPrivateKeyASN1();
+    }
+
+    /**
+     * 秘密鍵.
+     * @return 
+     */
+    @Override
+    public OCTETSTRING getPrivateKeyASN1() {
         return new OCTETSTRING(PKCS1.I2OSP(d, (curve.getP().bitLength()+7)/8));
     }
 
@@ -153,11 +174,11 @@ public class ECDSAPrivateKey implements ECPrivateKey {
     }
 
     /**
+     * 公開鍵 xG.
      * FIPS 186-5 Q.
      * FIPS 186-5 A.2
      * 
-     * 
-     * @return Publick Key
+     * @return Publick Key xG
      */
     public ECDSAPublicKey getPublicKey() {
         return new ECDSAPublicKey(curve,curve.xG(d));

@@ -26,10 +26,12 @@ public class DSADomainFull extends DSADomain {
     private final int counter;
 
     /**
+     * DSAパラメータ.
+     * RFC 6979など
      * 
      * @param p L の長さの素数
      * @param q N の長さの素数
-     * @param g
+     * @param g pを法とする整数の次数qの乗法サブループのパラメータ
      * @param domain_parameter_seed 生成用
      * @param counter 生成用
      */

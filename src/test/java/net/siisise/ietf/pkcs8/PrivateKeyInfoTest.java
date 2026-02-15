@@ -43,7 +43,7 @@ public class PrivateKeyInfoTest {
     public void testRebind() throws NoSuchAlgorithmException {
         System.out.println("rebind");
         RSAPrivateCrtKey rsakey = RSAKeyGen.generatePrivateKey(1024);
-        PrivateKeyInfo instance = rsakey.getPKCS8PrivateKeyInfo();
+        PrivateKeyInfo instance = rsakey.getPrivateKeyInfo();
         byte[] expResult = instance.encodeASN1().encodeAll();
         System.out.println(Bin.toHex(expResult));
         byte[] result = instance.rebind(new ASN1DERFormat());
@@ -59,7 +59,7 @@ public class PrivateKeyInfoTest {
     public void testEncodeASN1() throws NoSuchAlgorithmException {
         System.out.println("encodeASN1");
         RSAPrivateCrtKey rsakey = RSAKeyGen.generatePrivateKey(1024);
-        PrivateKeyInfo instance = rsakey.getPKCS8PrivateKeyInfo();
+        PrivateKeyInfo instance = rsakey.getPrivateKeyInfo();
         ASN1Tag expResult = instance.rebind(new ASN1Convert());
         SEQUENCEMap result = instance.encodeASN1();
         assertEquals(expResult, result);
@@ -73,7 +73,7 @@ public class PrivateKeyInfoTest {
     public void testDecode() throws NoSuchAlgorithmException {
         System.out.println("decode");
         RSAPrivateCrtKey rsakey = RSAKeyGen.generatePrivateKey(1024);
-        PrivateKeyInfo instance = rsakey.getPKCS8PrivateKeyInfo();
+        PrivateKeyInfo instance = rsakey.getPrivateKeyInfo();
         SEQUENCE seq = instance.encodeASN1();
         PrivateKeyInfo expResult = instance;
         PrivateKeyInfo result = PrivateKeyInfo.decode(seq);

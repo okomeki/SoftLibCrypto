@@ -21,9 +21,9 @@ import net.siisise.bind.format.TypeFormat;
 import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.ietf.pkcs1.PKCS1;
 import net.siisise.ietf.pkcs8.EncryptedPrivateKeyInfo;
-import net.siisise.ietf.pkcs8.PrivateKeyInfo;
 import net.siisise.ietf.pkcs8.RFC5958;
 import net.siisise.iso.asn1.tag.ASN1DERFormat;
+import net.siisise.iso.asn1.tag.SEQUENCE;
 import net.siisise.iso.asn1.tag.SEQUENCEMap;
 
 /**
@@ -75,6 +75,10 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements ASN1PrivateKe
         this.coefficient = c;
     }
     
+    /**
+     * 
+     * @return publicExponent
+     */
     @Override
     public BigInteger getPublicExponent() {
         return publicExponent;
@@ -153,9 +157,9 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements ASN1PrivateKe
      */
     @Override
     public String getFormat() {
-        if ( format == Format.PKCS1 ) { // RSA PRIVATE KEY
+        if ( format == Format.PrivateKey ) { // RSA PRIVATE KEY
             return "PKCS#1";
-        } else if ( format == Format.PKCS8 ) { // PRIVATE KEY
+        } else if ( format == Format.PrivateKeyInfo ) { // PRIVATE KEY
             return "PKCS#8";
 //        } else if ( format == Format.PKCS8PEM ) {
 //            return "PKCS#8PEM";
@@ -168,13 +172,13 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements ASN1PrivateKe
      * 公開鍵も出力できるが秘密鍵の形式のみ。
      */
     public static enum Format {
-        PKCS1, // RFC 8017 A.1.2. DER
-        PKCS8, // RFC 5208 BER ?  IDをふったもの
-        RFC5958 //  RFC 5958 PKCS #8 の後継 PKCSの名がない 出力:DER 入力:DER/BER
+        PrivateKey, // PKCS #1 PrivateKey RFC 8017 A.1.2. DER
+        PrivateKeyInfo, // PKCS #8 PrivateKeyInfo RFC 5208 BER ?  IDをふったもの
+        OneAsymmetricKey // RFC 5958 OneAsymmetricKey PKCS #8 の後継 PKCSの名がない 出力:DER 入力:DER/BER
 //        PKCS8PEM // PEM (予定)
     }
 
-    Format format = Format.PKCS8;
+    Format format = Format.PrivateKeyInfo;
 
     /**
      * 特殊機能? PKCS #1形式でも出力できるような
@@ -185,60 +189,34 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements ASN1PrivateKe
     }
 
     /**
+     * パラメータnull
+     * @return AlgorithmIdentifier
+     */
+    @Override
+    public AlgorithmIdentifier getAlgorithmIdentifier() {
+        return new AlgorithmIdentifier(PKCS1.rsaEncryption);
+    }
+
+    /**
      * 秘密鍵の出力.
      * PKCS#8 固定か他の形式も対応するか.
      * @return setFormtで指定した形式
      */
     @Override
     public byte[] getEncoded() {
-        if (format == Format.PKCS1) { // RSA PRIVATE KEY
-            return getPrivateEncoded();
+        if (format == Format.PrivateKey) { // RSA PRIVATE KEY
+            return getPrivateKeyEncoded();
         }
-        return getPKCS8Encoded(); // PRIVATE KEY
+        return getPKCS8Encoded(); // PRIVATE KEY INFO
     }
 
     /**
      * RFc 5208 PKCS 8 information
      * RFC 5958 2. Asymmetric Key Package CMS Content Type
-     * @return 
+     * @return PrivateKeyInfo DER
      */
     public byte[] getPKCS8Encoded() {
-        return getPKCS8PrivateKeyInfo().rebind(new ASN1DERFormat());
-    }
-
-    /**
-     * PKCS #8 PrivateKeyInfo.
-     * OpenSSL PRIVATE KEY
-     * OBJECTIDENTIFIER が判別する容器に梱包したもの
-     * RFC 5208 5. Private-Key Information Syntax
-     * 
-     * OID = rsaEncryption
-     * 
-     * PrivateKeyInfo ::= SEQUENCE {
-     *   vrsion Version,
-     *   privateKeyAlgorithm  PrivateKeyAlgorithmIdentifier,
-     *   privateKey   PrivateKey,
-     *   attributes     [0] IMPLICIT Attributes OPTIONAL }
-     * 
-     * Version ::= INTEGER
-     * 
-     * PrivateKeyAlgorithmIdentifier ::= AlgorithmIdentifier
-     * 
-     * PrivateKey :: = OCTET STRING
-     * 
-     * Attributes ::= SET OF Attribute
-     * 
-     * @return 形を真似しただけ
-     */
-    public PrivateKeyInfo getPKCS8PrivateKeyInfo() {
-        AlgorithmIdentifier ai = getAlgorithmIdentifier();
-        byte[] body = getPrivateEncoded(); // privateKey PrivateKey (BER / RFC 5208)
-        return new PrivateKeyInfo(ai, body);
-    }
-
-    @Override
-    public AlgorithmIdentifier getAlgorithmIdentifier() {
-        return new AlgorithmIdentifier(PKCS1.rsaEncryption);
+        return getPrivateKeyInfo().rebind(new ASN1DERFormat());
     }
 
     /**
@@ -251,7 +229,7 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements ASN1PrivateKe
 
         try {
             RFC5958 p8 = new RFC5958();
-            return p8.encryptedPrivateKeyInfo(getPKCS8PrivateKeyInfo(), pass);
+            return p8.encryptedPrivateKeyInfo(getPrivateKeyInfo(), pass);
         } catch (NoSuchAlgorithmException ex) {
             throw new IllegalStateException(ex);
         }
@@ -265,7 +243,7 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements ASN1PrivateKe
      * @return formatで指定した形式
      */
     public <T> T rebind(TypeFormat<T> format) {
-        SEQUENCEMap prv = getPrivateASN1();
+        SEQUENCE prv = getPrivateKeyASN1();
         return (T)prv.rebind(format);
     }
 
@@ -275,17 +253,18 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements ASN1PrivateKe
      * 鍵の要素だけを格納したもの
      * @return ASN.1 DER 出力
      */
-    public byte[] getPrivateEncoded() {
-        return (byte[]) getPrivateASN1().rebind(new ASN1DERFormat());
+    public byte[] getPrivateKeyEncoded() {
+        return (byte[]) getPrivateKeyASN1().rebind(new ASN1DERFormat());
     }
 
     /**
+     * RFC 8017 A.1.2. RSAPrivateKey.
      * RFC 8017 RSA Private Key Syntax.
      * PKCS #1 A.1.2. で定義されている範囲のASN.1 DER 符号化
      * @return 
      */
     @Override
-    public SEQUENCEMap getPrivateASN1() {
+    public SEQUENCE getPrivateKeyASN1() {
         SEQUENCEMap prv = new SEQUENCEMap();
         prv.put("version", 0); // 0: prime 1: multi 
         prv.put("modulus", modulus);
