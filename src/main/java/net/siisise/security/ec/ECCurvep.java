@@ -45,6 +45,7 @@ public class ECCurvep<P extends ECCurvep.ECPointp> extends Curvep<P> implements 
             return a;
         }
     };
+    final int plen;
 
     /**
      * secp 系. y^2 = x^3 + ax + b 始点 G
@@ -65,6 +66,7 @@ public class ECCurvep<P extends ECCurvep.ECPointp> extends Curvep<P> implements 
         super(oid, p, Gx, Gy, order, h);
         this.a = a;
         this.b = b;
+        plen = (p.bitLength() + 7) / 8;
     }
 
     public ECCurvep(OBJECTIDENTIFIER oid, BigInteger p, long a, BigInteger b, BigInteger Gx, BigInteger Gy, BigInteger n, int h) {
@@ -86,6 +88,7 @@ public class ECCurvep<P extends ECCurvep.ECPointp> extends Curvep<P> implements 
         super(p, Gx, Gy, order, h);
         this.a = a;
         this.b = b;
+        plen = (p.bitLength() + 7) / 8;
     }
 
     public ECCurvep(BigInteger p, long a, BigInteger b, BigInteger Gx, BigInteger Gy, BigInteger n, int h) {
@@ -142,15 +145,13 @@ public class ECCurvep<P extends ECCurvep.ECPointp> extends Curvep<P> implements 
         @Override
         public byte[] encX() {
             reset();
-            int qlen = (p.bitLength() + 7) / 8;
-            return PKCS1.I2OSP(x, qlen);
+            return PKCS1.I2OSP(x, plen);
         }
 
         @Override
         public byte[] encY() {
             reset();
-            int qlen = (p.bitLength() + 7) / 8;
-            return PKCS1.I2OSP(y, qlen);
+            return PKCS1.I2OSP(y, plen);
         }
 
         /**
@@ -168,8 +169,7 @@ public class ECCurvep<P extends ECCurvep.ECPointp> extends Curvep<P> implements 
                 int by = y.mod(BigInteger.TWO).intValue() + 2;
                 PacketA d = new PacketA();
                 d.write(by);
-                int qlen = (p.bitLength() + 7) / 8;
-                d.write(PKCS1.I2OSP(x, qlen));
+                d.write(PKCS1.I2OSP(x, plen));
                 return d.toByteArray();
             }
         }

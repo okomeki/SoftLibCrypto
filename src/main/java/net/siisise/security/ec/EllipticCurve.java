@@ -135,6 +135,10 @@ public class EllipticCurve {
         return n;
     }
 
+    public BigInteger getOrder() {
+        return n;
+    }
+
     /**
      * Point convert.
      *
@@ -178,13 +182,22 @@ public class EllipticCurve {
     public static final ECCurvep secp192k1; // SEC 2
     public static final ECCurvep secp256k1;
 
+    public static final ECCurvet sect163k1;
+    public static final ECCurvet sect163r1;
+    public static final ECCurvet sect163r2;
+    public static final ECCurvet sect233k1;
+    public static final ECCurvet sect233r1;
+    public static final ECCurvet sect239k1;
+    public static final ECCurvet sect283k1;
+    public static final ECCurvet sect283r1;
+
     @Deprecated
     public static final ECCurvet K163; // sect163k1 廃止
     public static final ECCurvet K233;
     public static final ECCurvet K283;
     public static final ECCurvet B283;
     public static final ECCurvet B409;
-
+    
     // EdDSA / ECDH
 //    public static Curve X25519;
 //    public static Curve X448;
@@ -208,7 +221,7 @@ public class EllipticCurve {
                 new BigInteger("4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5", 16), // Gy
                 new BigInteger("ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551", 16), // n
                 1); // h
-        K163 = new ECCurvet(new OBJECTIDENTIFIER("1.3.132.0.1"),
+        sect163k1 = K163 = new ECCurvet(new OBJECTIDENTIFIER("1.3.132.0.1"),
                 new BigInteger("0800000000000000000000000000000000000000c9", 16),
                 1,
                 BigInteger.ONE,
@@ -216,21 +229,37 @@ public class EllipticCurve {
                 new BigInteger("0289070fb05d38ff58321f2e800536d538ccdaa3d9", 16),
                 new BigInteger("04000000000000000000020108a2e0cc0d99f8a5ef", 16),
                 2);
+        sect163r1 = new ECCurvet(new OBJECTIDENTIFIER("1.3.132.0.2"),
+                new BigInteger("0800000000000000000000000000000000000000c9",16), // p
+                new BigInteger("07B6882CAAEFA84F9554FF8428BD88E246D2782AE2",16), // a
+                new BigInteger("0713612DCDDCB40AAB946BDA29CA91F73AF958AFD9",16), // b
+                new BigInteger("0369979697AB43897789566789567F787A7876A654",16),
+                new BigInteger("00435EDB42EFAFB2989D51FEFCE3C80988F41FF883",16),
+                new BigInteger("03FFFFFFFFFFFFFFFFFFFF48AAB689C29CA710279B",16),
+                2);
+        sect239k1 = new ECCurvet(new OBJECTIDENTIFIER("1.3.132.0.3"),
+                new BigInteger("4000000000000000000040000000000000000000000000000000000000001", 16),
+                0,
+                BigInteger.ONE,
+                new BigInteger("29A0B6A887A983E9730988A68727A8B2D126C44CC2CC7B2A6555193035DC", 16),
+                new BigInteger("76310804F12E549BDB011C103089E73510ACB275FC312A5DC6B76553F0CA", 16),
+                new BigInteger("2000000000000000000000000000005A79FEC67CB6E91F1C1DA800E478A5", 16),
+                4);
         secp160r1 = new ECCurvep(new OBJECTIDENTIFIER("1.3.132.0.8"),
-                new BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7FFFFFFF",16),  // p
+                new BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7FFFFFFF", 16), // p
                 -3, //new BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7FFFFFFC",16),  // a
-                new BigInteger("1C97BEFC54BD7A8B65ACF89F81D4D4ADC565FA45",16),  // b
-                new BigInteger("4A96B5688EF573284664698968C38BB913CBFC82",16),  // Gx
-                new BigInteger("23A628553168947D59DCC912042351377AC5FB32",16),  // Gy
-                new BigInteger("0100000000000000000001F4C8F927AED3CA752257",16), // n
+                new BigInteger("1C97BEFC54BD7A8B65ACF89F81D4D4ADC565FA45", 16), // b
+                new BigInteger("4A96B5688EF573284664698968C38BB913CBFC82", 16), // Gx
+                new BigInteger("23A628553168947D59DCC912042351377AC5FB32", 16), // Gy
+                new BigInteger("0100000000000000000001F4C8F927AED3CA752257", 16), // n
                 1); // h
         secp160k1 = new ECCurvep(new OBJECTIDENTIFIER("1.3.132.0.9"),
-                new BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFAC73",16), // p
-                BigInteger.ZERO,           // a
-                BigInteger.valueOf(7),  // b
-                new BigInteger("3B4C382CE37AA192A4019E763036F4F5DD4D7EBB",16), // Gx
-                new BigInteger("938CF935318FDCED6BC28286531733C3F03C4FEE",16), // Gy
-                new BigInteger("0100000000000000000001B8FA16DFAB9ACA16B6B3",16), // n
+                new BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFAC73", 16), // p
+                BigInteger.ZERO, // a
+                BigInteger.valueOf(7), // b
+                new BigInteger("3B4C382CE37AA192A4019E763036F4F5DD4D7EBB", 16), // Gx
+                new BigInteger("938CF935318FDCED6BC28286531733C3F03C4FEE", 16), // Gy
+                new BigInteger("0100000000000000000001B8FA16DFAB9ACA16B6B3", 16), // n
                 1); // h
         secp256k1 = new ECCurvep(new OBJECTIDENTIFIER("1.3.132.0.10"),
                 new BigInteger("fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f", 16),
@@ -240,7 +269,15 @@ public class EllipticCurve {
                 new BigInteger("483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8", 16),
                 new BigInteger("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141", 16),
                 1);
-        K283 = new ECCurvet(new OBJECTIDENTIFIER("1.3.132.0.16"),
+        sect163r2 = new ECCurvet(new OBJECTIDENTIFIER("1.3.132.0.15"),
+                new BigInteger("0800000000000000000000000000000000000000c9",16), // p
+                1, // a
+                new BigInteger("020A601907B8C953CA1481EB10512F78744A3205FD",16), // b
+                new BigInteger("03F0EBA16286A2D57EA0991168D4994637E8343E36",16), // Gx
+                new BigInteger("00D51FBC6C71A0094FA2CDD545B11C5C0C797324F1",16), // Gy
+                new BigInteger("040000000000000000000292FE77E70C12A4234C33",16), // n
+                2);
+        sect283k1 = K283 = new ECCurvet(new OBJECTIDENTIFIER("1.3.132.0.16"),
                 BigInteger.ONE.shiftLeft(283).add(BigInteger.valueOf(4096 + 128 + 32 + 1)),
                 0,
                 BigInteger.ONE,
@@ -248,7 +285,7 @@ public class EllipticCurve {
                 new BigInteger("01ccda380f1c9e318d90f95d07e5426fe87e45c0e8184698e45962364e34116177dd2259", 16),
                 new BigInteger("01ffffffffffffffffffffffffffffffffffe9ae2ed07577265dff7f94451e061e163c61", 16),
                 4);
-        B283 = new ECCurvet(new OBJECTIDENTIFIER("1.3.132.0.17"),
+        sect283r1 = B283 = new ECCurvet(new OBJECTIDENTIFIER("1.3.132.0.17"),
                 BigInteger.ONE.shiftLeft(283).add(BigInteger.valueOf(4096 + 128 + 32 + 1)),
                 1,
                 new BigInteger("027b680ac8b8596da5a4af8a19a0303fca97fd7645309fa2a581485af6263e313b79a2f5", 16),
@@ -256,7 +293,7 @@ public class EllipticCurve {
                 new BigInteger("03676854fe24141cb98fe6d4b20d02b4516ff702350eddb0826779c813f0df45be8112f4", 16),
                 new BigInteger("03ffffffffffffffffffffffffffffffffffef90399660fc938a90165b042a7cefadb307", 16),
                 2);
-        K233 = new ECCurvet(new OBJECTIDENTIFIER("1.3.132.0.26"),
+        sect233k1 = K233 = new ECCurvet(new OBJECTIDENTIFIER("1.3.132.0.26"),
                 new BigInteger("020000000000000000000000000000000000000004000000000000000001", 16),
                 0,
                 BigInteger.ONE,
@@ -264,29 +301,37 @@ public class EllipticCurve {
                 new BigInteger("01db537dece819b7f70f555a67c427a8cd9bf18aeb9b56e0c11056fae6a3", 16),
                 new BigInteger("8000000000000000000000000000069d5bb915bcd46efb1ad5f173abdf", 16),
                 4);
+        sect233r1 = new ECCurvet(new OBJECTIDENTIFIER("1.3.132.0.27"),
+                new BigInteger("020000000000000000000000000000000000000004000000000000000001", 16),
+                1,
+                new BigInteger("0066647EDE6C332C7F8C0923BB58213B333B20E9CE4281FE115F7D8F90AD",16),
+                new BigInteger("00FAC9DFCBAC8313BB2139F1BB755FEF65BC391F8B36F8F8EB7371FD558B", 16),
+                new BigInteger("01006A08A41903350678E58528BEBF8A0BEFF867A7CA36716F7E01F81052", 16),
+                new BigInteger("01000000000000000000000000000013E974E72F8A6922031D2603CFE0D7", 16),
+                2);
         secp128r1 = new ECCurvep(new OBJECTIDENTIFIER("1.3.132.0.28"),
-                new BigInteger("FFFFFFFDFFFFFFFFFFFFFFFFFFFFFFFF",16), // p
+                new BigInteger("FFFFFFFDFFFFFFFFFFFFFFFFFFFFFFFF", 16), // p
                 -3, // a
-                new BigInteger("E87579C11079F43DD824993C2CEE5ED3",16), // b
-                new BigInteger("161FF7528B899B2D0C28607CA52C5B86",16), // Gx
-                new BigInteger("CF5AC8395BAFEB13C02DA292DDED7A83",16), // Gy
-                new BigInteger("FFFFFFFE0000000075A30D1B9038A115",16), // n
+                new BigInteger("E87579C11079F43DD824993C2CEE5ED3", 16), // b
+                new BigInteger("161FF7528B899B2D0C28607CA52C5B86", 16), // Gx
+                new BigInteger("CF5AC8395BAFEB13C02DA292DDED7A83", 16), // Gy
+                new BigInteger("FFFFFFFE0000000075A30D1B9038A115", 16), // n
                 1); // h
         secp128r2 = new ECCurvep(new OBJECTIDENTIFIER("1.3.132.0.29"),
-                new BigInteger("FFFFFFFDFFFFFFFFFFFFFFFFFFFFFFFF",16), // p
+                new BigInteger("FFFFFFFDFFFFFFFFFFFFFFFFFFFFFFFF", 16), // p
                 -3, // a
-                new BigInteger("E87579C11079F43DD824993C2CEE5ED3",16), // b
-                new BigInteger("161FF7528B899B2D0C28607CA52C5B86",16), // Gx
-                new BigInteger("CF5AC8395BAFEB13C02DA292DDED7A83",16), // Gy
-                new BigInteger("FFFFFFFE0000000075A30D1B9038A115",16), // n
+                new BigInteger("E87579C11079F43DD824993C2CEE5ED3", 16), // b
+                new BigInteger("161FF7528B899B2D0C28607CA52C5B86", 16), // Gx
+                new BigInteger("CF5AC8395BAFEB13C02DA292DDED7A83", 16), // Gy
+                new BigInteger("FFFFFFFE0000000075A30D1B9038A115", 16), // n
                 1); // h
         secp160r2 = new ECCurvep(new OBJECTIDENTIFIER("1.3.132.0.30"),
-                new BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFAC73",16),  // p
+                new BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFAC73", 16), // p
                 -3, //new BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFAC70",16),  // a
-                new BigInteger("1C97BEFC54BD7A8B65ACF89F81D4D4ADC565FA45",16),  // b
-                new BigInteger("4A96B5688EF573284664698968C38BB913CBFC82",16),  // Gx
-                new BigInteger("23A628553168947D59DCC912042351377AC5FB32",16),  // Gy
-                new BigInteger("0100000000000000000001F4C8F927AED3CA752257",16), // n
+                new BigInteger("1C97BEFC54BD7A8B65ACF89F81D4D4ADC565FA45", 16), // b
+                new BigInteger("4A96B5688EF573284664698968C38BB913CBFC82", 16), // Gx
+                new BigInteger("23A628553168947D59DCC912042351377AC5FB32", 16), // Gy
+                new BigInteger("0100000000000000000001F4C8F927AED3CA752257", 16), // n
                 1); // h
         secp192k1 = new ECCurvep(new OBJECTIDENTIFIER("1.3.132.0.31"),
                 new BigInteger("fffffffffffffffffffffffffffffffffffffffeffffee37", 16),

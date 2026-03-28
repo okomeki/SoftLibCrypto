@@ -27,16 +27,13 @@ import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
  * y^2 + xy = x^3 + ax^2 + b
  *
  * @param <P>
- * @deprecated まだ
  */
-@Deprecated
 public class ECCurvet<P extends ECCurvet.ECPointt> extends Curvet<P> implements ECCurve {
 
     public final ECPointt NULL = new ECPointt(BigInteger.ZERO, BigInteger.ONE) {
         @Override
         /**
-         * 1. O + O = O
-         * 2. (x,y) + O = O + (x, y) = (x, y)
+         * 1. O + O = O 2. (x,y) + O = O + (x, y) = (x, y)
          */
         public ECPointt add(ECPointt a) {
             return a;
@@ -96,8 +93,7 @@ public class ECCurvet<P extends ECCurvet.ECPointt> extends Curvet<P> implements 
         }
 
         /**
-         * SEC 1 2.2.2. F_2^m 上の楕円曲線 加法規則
-         * SP 800-186 A.2.
+         * SEC 1 2.2.2. F_2^m 上の楕円曲線 加法規則 SP 800-186 A.2.
          *
          * @param q
          * @return
@@ -116,17 +112,15 @@ public class ECCurvet<P extends ECCurvet.ECPointt> extends Curvet<P> implements 
             // 4. 2点が異なる場合
             // x3 = λ^2 + λ + x_1 + x_2 + a
             // y3 = λ(x1 + x3) + x3 + y1
-            BigInteger yy = gf.add(y, q.y);
-            BigInteger xx = gf.add(x, q.x);
-            BigInteger ixx = gf.inv(xx);
-            BigInteger λ = gf.mul(yy, ixx); // GF_2^m
-            BigInteger λ2 = gf.mul(λ,λ);
+            BigInteger λ = gf.mul(gf.add(y, q.y), gf.inv(gf.add(x, q.x))); // GF_2^m
+            BigInteger λ2 = gf.mul(λ, λ);
+
             BigInteger x3 = gf.add(λ2, λ, x, q.x, a);
-            
             BigInteger y3 = gf.add(gf.mul(λ, gf.add(x, x3)), x3, y);
+
             return new ECPointt(x3, y3);
         }
-        
+
         /**
          * 2倍? 2乗?
          *
@@ -135,23 +129,21 @@ public class ECCurvet<P extends ECCurvet.ECPointt> extends Curvet<P> implements 
         ECPointt x2() {
             // 5.
             BigInteger λ = gf.add(x, gf.mul(y, gf.inv(x)));
-            BigInteger λ2 = gf.mul(λ,λ);
+            BigInteger λ2 = gf.mul(λ, λ);
 
-            BigInteger xx = gf.mul(x, x);
             BigInteger x3 = gf.add(λ2, λ, a);
-            BigInteger y3 = gf.add(xx, gf.mul(gf.add(λ, BigInteger.ONE), x3));
-            
+            BigInteger y3 = gf.add(gf.mul(x, x), gf.mul(gf.add(λ, BigInteger.ONE), x3));
+
             return new ECPointt(x3, y3);
         }
     }
 
-    int T;
     public final BigInteger a;
     public final BigInteger b;
     // long[l]
 //    int l;
-    BIGF gf;
-    private ECPointt G;
+    private final BIGF gf;
+    private final ECPointt G;
 
     /**
      * ランダム曲線 h = 2 Koblitz曲線 a = 1 の場合は h = 2 a = 0 の場合は h = 4
@@ -168,6 +160,15 @@ public class ECCurvet<P extends ECCurvet.ECPointt> extends Curvet<P> implements 
     public ECCurvet(OBJECTIDENTIFIER oid, BigInteger p, int a, BigInteger b, BigInteger gx, BigInteger gy, BigInteger n, int h) {
         super(oid, p, n, h);
         this.a = BigInteger.valueOf(a);
+        this.b = b;
+//        l = (p.bitLength() + 63) / 64;
+        gf = new BIGF(p);
+        G = toPoint(gx, gy);
+    }
+
+    public ECCurvet(OBJECTIDENTIFIER oid, BigInteger p, BigInteger a, BigInteger b, BigInteger gx, BigInteger gy, BigInteger n, int h) {
+        super(oid, p, n, h);
+        this.a = a;
         this.b = b;
 //        l = (p.bitLength() + 63) / 64;
         gf = new BIGF(p);
