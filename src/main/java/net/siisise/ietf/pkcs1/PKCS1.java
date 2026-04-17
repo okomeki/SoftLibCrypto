@@ -187,10 +187,6 @@ public class PKCS1 {
         return ssa.verify(pub, S);
     }
 
-    private BigInteger RSASP1(java.security.interfaces.RSAPrivateKey K, BigInteger m) {
-        return m.modPow(K.getPrivateExponent(), K.getModulus());
-    }
-
     /**
      * Java to SoftLib 鍵変換.
      *

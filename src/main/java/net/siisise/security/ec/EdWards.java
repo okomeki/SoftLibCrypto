@@ -57,7 +57,8 @@ public abstract class EdWards {
 
     /**
      * 
-     * @param oid
+     * Ed25519ph, Ed448ph のOIDはRFC 8410のdraftで削除
+     * @param oid PureEdDSA OID
      * @param p p
      * @param b
      * @param c

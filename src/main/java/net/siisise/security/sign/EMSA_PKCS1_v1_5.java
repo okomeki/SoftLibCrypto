@@ -15,6 +15,7 @@
  */
 package net.siisise.security.sign;
 
+import net.siisise.security.digest.DigestInfo;
 import java.nio.ByteBuffer;
 import net.siisise.security.digest.DigestAlgorithm;
 import java.security.MessageDigest;
@@ -69,7 +70,7 @@ public class EMSA_PKCS1_v1_5 implements EMSA {
         byte[] H = md.digest();
         len = 0;
         // DigestInfo
-        DigestAlgorithm alg = new DigestAlgorithm(DigestAlgorithm.toOID(md));
+        DigestAlgorithm alg = DigestAlgorithm.toAlgorithm(md);
         DigestInfo info = new DigestInfo(alg, H);
         byte[] T = info.rebind(new ASN1DERFormat());
         if ( emLen < T.length + 11 ) {

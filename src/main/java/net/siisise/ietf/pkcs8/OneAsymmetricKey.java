@@ -90,12 +90,14 @@ public class OneAsymmetricKey extends PrivateKeyInfo {
     public byte[] publicKey; // [1] PublicKey OPTIONAL
 
     /**
-     * version 指定を優先、公開鍵がない場合はv1固定。
+     * OneAsymmetricKeyの符号化
      *
-     * @return ASN.1っぽく
+     * @param <V> 出力型
+     * @param format 出力形式
+     * @return 符号化
      */
     @Override
-    public SEQUENCEMap encodeASN1() {
+    public <V> V rebind(TypeFormat<V> format) {
         SEQUENCEMap one = new SEQUENCEMap();
         // version 0: 秘密鍵のみ　version 1: 公開鍵込み
         if (publicKey == null) {
@@ -105,42 +107,16 @@ public class OneAsymmetricKey extends PrivateKeyInfo {
         }
         one.put("privateKeyAlgorithm", privateKeyAlgorithm);
         one.put("privateKey", privateKey);
-        if (attributes != null && !attributes.isEmpty()) {
-            //ASN1Prefixed pre0 = new ASN1Prefixed(0, Rebind.valueOf(attributes, new ASN1Convert()));
-            SEQUENCE pre0 = (SEQUENCE) Rebind.valueOf(attributes, new ASN1Convert());
-            pre0.setContextSpecific(0);
-            one.put("attributes", pre0);
-        }
-        if (publicKey != null && version > 0) { // IMPLICIT
-            BITSTRING pre1 = new BITSTRING(publicKey);
-            one.putImplicit("publicKey", 1, pre1);
-        }
-        return one;
-    }
-
-    /**
-     * OneAsymmetricKeyの符号化
-     *
-     * @param <V> 出力型
-     * @param format 出力形式
-     * @return 符号化
-     */
-    @Override
-    public <V> V rebind(TypeFormat<V> format) {
-        SEQUENCEMap map = new SEQUENCEMap();
-        map.put("version", version);
-        map.put("privateKeyAlgorithm", privateKeyAlgorithm);
-        map.put("privateKey", privateKey);
 
         if (attributes != null && !attributes.isEmpty()) {
-            map.putExplicit("attributes", 0, Rebind.valueOf(attributes, new ASN1Convert()));
+            one.putExplicit("attributes", 0, Rebind.valueOf(attributes, new ASN1Convert()));
         }
 
         if (publicKey != null && version >= 1) { // IMPLICIT
             BITSTRING pre1 = new BITSTRING(publicKey);
-            map.putImplicit("publicKey", 1, pre1);
+            one.putImplicit("publicKey", 1, pre1);
         }
-        return (V) map.rebind(format); //Rebind.valueOf(map, format);
+        return (V) one.rebind(format); //Rebind.valueOf(one, format);
     }
 
     /**

@@ -53,13 +53,13 @@ public class PBES2params {
     }
 
     /**
-     * 
+     * PBES2params.
      * @param kp KDF OID と パラメータ (PBKDF2 固定)
      * @param eid 暗号OID
      * @param salt block暗号のivになるかもしれない
      */
     public PBES2params(PBKDF2params kp, OBJECTIDENTIFIER eid, byte[] salt) {
-        keyDerivationFunc = new AlgorithmIdentifier(PBKDF2.OID, kp.encodeASN1());
+        keyDerivationFunc = new AlgorithmIdentifier(PBKDF2.OID, kp.rebind(new ASN1Convert()));
         ASN1Tag opt;
         if ( salt == null ) {
             opt = new NULL();

@@ -26,7 +26,9 @@ import net.siisise.iso.asn1.tag.SEQUENCEMap;
 
 /**
  * PBES1用
+ * @Deprecated
  */
+@Deprecated
 public class PBEParameter {
 
     public byte[] salt;

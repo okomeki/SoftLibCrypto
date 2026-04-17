@@ -16,8 +16,6 @@
  */
 package net.siisise.security.digest;
 
-import java.io.InputStream;
-import net.siisise.io.FilterInput;
 import net.siisise.io.Input;
 import net.siisise.io.Packet;
 import net.siisise.io.PacketA;
@@ -47,11 +45,6 @@ public class KeccakXOF extends Keccak implements XOF,Input {
             long blockLen = (len - buff.size() + r - 1) / r * r;
             sponge(buff, blockLen);
         }
-    }
-    
-    @Override
-    public InputStream getInputStream() {
-        return new FilterInput(this);
     }
 
     @Override

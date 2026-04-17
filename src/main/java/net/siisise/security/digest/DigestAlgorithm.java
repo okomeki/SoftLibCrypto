@@ -160,4 +160,8 @@ public class DigestAlgorithm extends AlgorithmIdentifier {
         String name = md.getAlgorithm();
         return OIDS.get(name);
     }
+    
+    public static DigestAlgorithm toAlgorithm(MessageDigest md) {
+        return new DigestAlgorithm(toOID(md));
+    }
 }

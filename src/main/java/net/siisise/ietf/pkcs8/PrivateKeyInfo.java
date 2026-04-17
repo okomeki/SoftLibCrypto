@@ -16,7 +16,6 @@
 package net.siisise.ietf.pkcs8;
 
 import java.math.BigInteger;
-import java.util.LinkedHashMap;
 import java.util.List;
 import net.siisise.bind.Rebind;
 import net.siisise.bind.format.TypeFormat;
@@ -36,9 +35,9 @@ import net.siisise.iso.asn1.tag.SEQUENCEMap;
  * PEMヘッダ PRIVATE KEY
  * RFC 5208 PKCS #8 5. Private-Key Information Syntax
  * RFC 5958
- * 
+ *
  * RSA, ECDSA など
- * 
+ *
  */
 public class PrivateKeyInfo {
 //    static class Version extends INTEGER {}
@@ -47,7 +46,7 @@ public class PrivateKeyInfo {
 
     /**
      * version Version
-     * 
+     *
      * Version ::= INTEGER
      */
     public int version;
@@ -64,7 +63,7 @@ public class PrivateKeyInfo {
      * privateKey PrivateKey
      * 秘密鍵.
      * OCTET STRING
-     * 
+     *
      * PrivateKey ::= OCTET STRING
      * RSAPrivateCrtKey, ECPrivateKey ::= SEQUENCE なので OCTETSTRING で wrapする
      * CurvePrivateKey ::= OCTET STRING wrapしないかも
@@ -82,6 +81,7 @@ public class PrivateKeyInfo {
     /**
      * 秘密鍵.
      * OIDは公開鍵相当のものを指定するのかも.
+     *
      * @param algorithm 鍵種別
      * @param privateKey 秘密鍵
      */
@@ -94,6 +94,7 @@ public class PrivateKeyInfo {
     /**
      * 秘密鍵.
      * OIDは公開鍵相当のものを指定するのかも.
+     *
      * @param oid 鍵種別 パラメータ省略 AlgorithmIdentifier
      * @param privateKey 秘密鍵
      */
@@ -103,12 +104,13 @@ public class PrivateKeyInfo {
 
     /**
      * 汎用出力.
+     *
      * @param <T> 出力型
      * @param format 出力型
      * @return 各種出力
      */
     public <T> T rebind(TypeFormat<T> format) {
-        LinkedHashMap s = new LinkedHashMap();
+        SEQUENCEMap s = new SEQUENCEMap();
         s.put("version", version);
         s.put("privateKeyAlgorithm", privateKeyAlgorithm);
         s.put("privateKey", privateKey);
@@ -117,15 +119,16 @@ public class PrivateKeyInfo {
             atrs.addAll(Rebind.valueOf(attributes, ASN1Tag.class));
             s.put("attributes", atrs);
         }
-        return Rebind.valueOf(s,format);
+        return (T) s.rebind(format);
     }
 
     /**
      * ASN.1出力.
+     *
      * @return ASN.1型
      */
     public SEQUENCEMap encodeASN1() {
-        return (SEQUENCEMap)rebind(new ASN1Convert());
+        return (SEQUENCEMap) rebind(new ASN1Convert());
     }
 
     /**
@@ -133,14 +136,15 @@ public class PrivateKeyInfo {
      * version=0 想定.
      * version=1はOneAsymmetricKey
      * algorithm と privateKey を持つ.
+     *
      * @param seq　ASN.1型
      * @return PrivateKeyInfo
      */
     public static PrivateKeyInfo decode(SEQUENCE seq) {
         INTEGER ver = (INTEGER) seq.get("version", 0);
         AlgorithmIdentifier privateKeyAlg = AlgorithmIdentifier.decode((SEQUENCE) seq.get("privateKeyAlgorithm", 1));
-        if ( ver.getValue().equals(BigInteger.ZERO)) {
-            PrivateKeyInfo info = new PrivateKeyInfo(privateKeyAlg, ((OCTETSTRING)seq.get( "privateKey", 2)).getValue());
+        if (ver.getValue().equals(BigInteger.ZERO)) {
+            PrivateKeyInfo info = new PrivateKeyInfo(privateKeyAlg, ((OCTETSTRING) seq.get("privateKey", 2)).getValue());
             if (seq.size() == 3) {
                 return info;
             }

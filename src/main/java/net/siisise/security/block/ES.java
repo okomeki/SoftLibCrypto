@@ -16,7 +16,7 @@
 package net.siisise.security.block;
 
 /**
- * Encryption Schemas.
+ * Encryption Schemes.
  * RSAESとPBESのさらに汎用.
  * RSAなど長文ではない暗号用.
  * Block暗号 Stream暗号と分けておく?

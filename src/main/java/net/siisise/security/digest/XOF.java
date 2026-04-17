@@ -15,8 +15,6 @@
  */
 package net.siisise.security.digest;
 
-import java.io.InputStream;
-import net.siisise.io.FilterInput;
 import net.siisise.io.Input;
 import net.siisise.io.Output;
 import net.siisise.io.Packet;
@@ -88,20 +86,10 @@ public interface XOF extends Input {
     void digest(Output out);
 
     @Override
-    default InputStream getInputStream() {
-        return new FilterInput(this);
-    }
-    
-    @Override
     default int read(byte[] data, int offset, int length) {
         PacketA out = new PacketA();
         digest(out);
         return out.read(data, offset, length);
-    }
-    
-    @Override
-    default int read(byte[] data) {
-        return read(data, 0, data.length);
     }
     
     @Override

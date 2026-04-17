@@ -21,6 +21,7 @@ import java.security.PrivateKey;
 import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.ietf.pkcs5.PBES2;
 import net.siisise.iso.asn1.ASN1Util;
+import net.siisise.iso.asn1.tag.ASN1DERFormat;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.SEQUENCE;
 import net.siisise.iso.asn1.tag.SEQUENCEMap;
@@ -31,6 +32,7 @@ import net.siisise.security.key.EdDSAPrivateKey;
 import net.siisise.security.key.RSAKeyGen;
 import net.siisise.security.sign.ECDSA;
 import net.siisise.security.sign.EdDSA;
+import net.siisise.security.sign.RSASSA_PSS;
 
 /**
  * しばらく5958より5208重視.
@@ -47,8 +49,8 @@ public class PKCS8 {
     public static final OBJECTIDENTIFIER PKCS = net.siisise.ietf.pkcs1.PKCS1.PKCS; // new OBJECTIDENTIFIER("1.2.840.113549.1");
     public static final OBJECTIDENTIFIER PKCS1 = net.siisise.ietf.pkcs1.PKCS1.PKCS1;
     public static final OBJECTIDENTIFIER rsaEncryption = net.siisise.ietf.pkcs1.PKCS1.rsaEncryption;
-    public static final OBJECTIDENTIFIER RSASSA_PSS_SHAKE128 = net.siisise.security.sign.RSASSA_PSS.RSASSA_PSS_SHAKE128;
-    public static final OBJECTIDENTIFIER RSASSA_PSS_SHAKE256 = net.siisise.security.sign.RSASSA_PSS.RSASSA_PSS_SHAKE256;
+    public static final OBJECTIDENTIFIER RSASSA_PSS_SHAKE128 = RSASSA_PSS.RSASSA_PSS_SHAKE128;
+    public static final OBJECTIDENTIFIER RSASSA_PSS_SHAKE256 = RSASSA_PSS.RSASSA_PSS_SHAKE256;
     public static final OBJECTIDENTIFIER PKCS8 = PKCS.sub(8);
     public static final OBJECTIDENTIFIER ecDSA_SHAKE128 = ECDSA.ECDSA_SHAKE128;
     public static final OBJECTIDENTIFIER ecDSA_SHAKE256 = ECDSA.ECDSA_SHAKE256;
@@ -83,11 +85,9 @@ public class PKCS8 {
                     || ecDSA_SHAKE128.equals(alg)) {
                 return ECDSAKeyGen.decodePrivate(info.privateKeyAlgorithm, info.privateKey);
             } else if (EdDSA.Ed25519.equals(alg)) {
-                byte[] k = info.privateKey;
-                return new EdDSAPrivateKey(k);
+                return new EdDSAPrivateKey(info.privateKey);
             } else if (EdDSA.Ed448.equals(alg)) {
-                byte[] k = info.privateKey;
-                return new EdDSAPrivateKey(EdDSA.init448(), k);
+                return new EdDSAPrivateKey(EdDSA.init448(), info.privateKey);
             }
                 
         }
@@ -117,7 +117,7 @@ public class PKCS8 {
      * @throws NoSuchAlgorithmException 該当アルゴリズムなし
      */
     public EncryptedPrivateKeyInfo encryptedPrivateKeyInfo(PrivateKeyInfo info, byte[] pass) throws NoSuchAlgorithmException {
-        return encryptPrivateKeyInfo(info.encodeASN1().encodeAll(), pass);
+        return encryptPrivateKeyInfo(info.rebind(new ASN1DERFormat()), pass);
     }
 
     /**

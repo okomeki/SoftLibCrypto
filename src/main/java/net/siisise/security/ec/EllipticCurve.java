@@ -193,10 +193,11 @@ public class EllipticCurve {
 
     @Deprecated
     public static final ECCurvet K163; // sect163k1 廃止
-    public static final ECCurvet K233;
-    public static final ECCurvet K283;
-    public static final ECCurvet B283;
-    public static final ECCurvet B409;
+    public static final ECCurvet B163; // sect163r2
+    public static final ECCurvet K233; // sect233k1
+    public static final ECCurvet K283; // sect283k1
+    public static final ECCurvet B283; // sect283r1
+    public static final ECCurvet B409; // sect409r1
     
     // EdDSA / ECDH
 //    public static Curve X25519;
@@ -269,7 +270,7 @@ public class EllipticCurve {
                 new BigInteger("483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8", 16),
                 new BigInteger("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141", 16),
                 1);
-        sect163r2 = new ECCurvet(new OBJECTIDENTIFIER("1.3.132.0.15"),
+        sect163r2 = B163 = new ECCurvet(new OBJECTIDENTIFIER("1.3.132.0.15"),
                 new BigInteger("0800000000000000000000000000000000000000c9",16), // p
                 1, // a
                 new BigInteger("020A601907B8C953CA1481EB10512F78744A3205FD",16), // b
@@ -277,6 +278,17 @@ public class EllipticCurve {
                 new BigInteger("00D51FBC6C71A0094FA2CDD545B11C5C0C797324F1",16), // Gy
                 new BigInteger("040000000000000000000292FE77E70C12A4234C33",16), // n
                 2);
+        // どちらか正解?
+/*
+        B163 = new ECCurvet(new OBJECTIDENTIFIER("1.3.132.0.15"),
+                BigInteger.ONE.shiftLeft(163).add(BigInteger.valueOf(0xc9)),
+                BigInteger.ZERO,
+                new BigInteger("020a601907b8c953ca1481eb10512f78744a3205fd", 16),
+                new BigInteger("03f0eba16286a2d57ea0991168d4994637e8343e36", 16),
+                new BigInteger("00d51fbc6c71a0094fa2cdd545b11c5c0c797324f1", 16),
+                new BigInteger("5846006549323611672814742442876390689256843201587", 16), // order
+                4);
+*/
         sect283k1 = K283 = new ECCurvet(new OBJECTIDENTIFIER("1.3.132.0.16"),
                 BigInteger.ONE.shiftLeft(283).add(BigInteger.valueOf(4096 + 128 + 32 + 1)),
                 0,

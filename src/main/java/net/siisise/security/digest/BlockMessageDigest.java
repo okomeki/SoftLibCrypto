@@ -21,13 +21,10 @@ import java.security.MessageDigest;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.siisise.bind.format.TypeFormat;
-import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.io.FilterOutput;
 import net.siisise.io.Input;
 import net.siisise.io.Output;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
-import net.siisise.iso.asn1.tag.OCTETSTRING;
-import net.siisise.iso.asn1.tag.SEQUENCEMap;
 import net.siisise.security.io.BlockListener;
 import net.siisise.security.io.BlockOutput;
 
@@ -112,10 +109,9 @@ public abstract class BlockMessageDigest extends MessageDigest implements BlockL
     }
 
     public <T> T digestInfo(TypeFormat<T> format) {
-        SEQUENCEMap di = new SEQUENCEMap();
-        di.put("digestAlgorithm", new AlgorithmIdentifier(DigestAlgorithm.toOID(this)));
-        di.put("digest", new OCTETSTRING(digest()));
-        return (T)di.rebind(format);
+        DigestAlgorithm alg = DigestAlgorithm.toAlgorithm(this);
+        DigestInfo info = new DigestInfo(alg, digest());
+        return (T)info.rebind(format);
     }
 
     @Override

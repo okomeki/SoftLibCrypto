@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.siisise.security.sign;
+package net.siisise.security.digest;
 
 import java.util.LinkedHashMap;
 import net.siisise.bind.format.TypeFormat;
 import net.siisise.iso.asn1.tag.ASN1Convert;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
 import net.siisise.iso.asn1.tag.SEQUENCEMap;
-import net.siisise.security.digest.DigestAlgorithm;
 
 /**
  * RFC 8017 RSA
