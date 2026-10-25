@@ -34,7 +34,11 @@ import net.siisise.security.sign.ECDSA;
  */
 public class ECDSAPublicKey implements ECPublicKey {
 
-    public static final OBJECTIDENTIFIER ecPublicKey = new OBJECTIDENTIFIER("1.2.840.10045.2.1");
+    public static final OBJECTIDENTIFIER ecPublicKey     = new OBJECTIDENTIFIER("1.2.840.10045.2.1");
+    public static final OBJECTIDENTIFIER ecdsaWithSHA224 = new OBJECTIDENTIFIER("1.2.840.10045.4.3.1");
+    public static final OBJECTIDENTIFIER ecdsaWithSHA256 = new OBJECTIDENTIFIER("1.2.840.10045.4.3.2");
+    public static final OBJECTIDENTIFIER ecdsaWithSHA384 = new OBJECTIDENTIFIER("1.2.840.10045.4.3.3");
+    public static final OBJECTIDENTIFIER ecdsaWithSHA512 = new OBJECTIDENTIFIER("1.2.840.10045.4.3.4");
     public static final OBJECTIDENTIFIER ecDH = new OBJECTIDENTIFIER("1.3.132.1.12");
     public static final OBJECTIDENTIFIER ecMQV = new OBJECTIDENTIFIER("1.3.132.1.13");
 

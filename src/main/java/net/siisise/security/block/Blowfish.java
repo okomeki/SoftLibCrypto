@@ -47,7 +47,7 @@ public class Blowfish extends IntBlock {
         return null;
     }
 
-    static final int[] sBox0 = {
+    private static final int[] sBox0 = {
         0xD1310BA6, 0x98DFB5AC, 0x2FFD72DB, 0xD01ADFB7,
         0xB8E1AFED, 0x6A267E96, 0xBA7C9045, 0xF12C7F99,
         0x24A19947, 0xB3916CF7, 0x0801F2E2, 0x858EFC16,
@@ -392,6 +392,7 @@ public class Blowfish extends IntBlock {
 
     /**
      * 鍵拡張.
+     *
      * @param key key
      */
     void expandKey(byte[] key) {
@@ -433,7 +434,7 @@ public class Blowfish extends IntBlock {
      */
     void expandKey(byte[] byteSalt, byte[] key) {
         int[] salt = Bin.btoi(byteSalt); // int[4]
-        
+
         // setting up the P-array
         int keyIndex = 0;
         for (int i = 0; i < N + 2; i++) {
@@ -466,22 +467,23 @@ public class Blowfish extends IntBlock {
 
     private int f(int data) {
         return ((S1[data >>> 24        ]
-               + S2[(data >> 16) & 0xff])
-               ^ S3[(data >>  8) & 0xff])
-               + S4[data         & 0xff];
+                + S2[(data >> 16) & 0xff])
+                ^ S3[(data >>  8) & 0xff])
+                + S4[ data        & 0xff];
     }
 
     @Override
     public int[] encrypt(int[] src, int offset) {
         int l = src[offset];
         int r = src[offset + 1];
-        for (int i = 0; i < N; i++) {
-            int t = r;
-            r = l ^ P[i];
-            l = t ^ f(r);
+        for (int i = 0; i < N; i += 2) {
+            l ^= P[i];
+            r ^= P[i + 1];
+            r ^= f(l);
+            l ^= f(r);
         }
-        l ^= P[16];
-        r ^= P[17];
+        l ^= P[N];
+        r ^= P[N + 1];
         return new int[]{r, l};
     }
 
@@ -489,12 +491,13 @@ public class Blowfish extends IntBlock {
     public int[] decrypt(int[] src, int offset) {
         int r = src[offset];
         int l = src[offset + 1];
-        r ^= P[17];
-        l ^= P[16];
-        for (int i = 15; i >= 0; i--) {
-            int t = l;
-            l = r ^ P[i];
-            r = t ^ f(r);
+        r ^= P[N + 1];
+        l ^= P[N];
+        for (int i = N - 2; i >= 0; i -= 2) {
+            l ^= f(r);
+            r ^= f(l);
+            r ^= P[i + 1];
+            l ^= P[i];
         }
         return new int[]{l, r};
     }

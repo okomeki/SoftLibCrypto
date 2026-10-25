@@ -21,8 +21,6 @@ import java.util.Arrays;
 import net.siisise.bind.format.TypeFormat;
 import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.ietf.pkcs8.OneAsymmetricKey;
-import net.siisise.iso.asn1.ASN1Tag;
-import net.siisise.iso.asn1.tag.ASN1Convert;
 import net.siisise.iso.asn1.tag.ASN1DERFormat;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
 import net.siisise.security.ec.EdWards;
@@ -30,7 +28,11 @@ import net.siisise.security.ec.EdWards25519;
 
 /**
  * EdDSA 秘密鍵.
- *
+ * Ed25519
+ * Ed448
+ * Ed25519ph
+ * Ed448ph
+ * X25519, X448 は別
  */
 public class EdDSAPrivateKey implements PrivateKey,ASN1PrivateKey {
 
@@ -40,12 +42,16 @@ public class EdDSAPrivateKey implements PrivateKey,ASN1PrivateKey {
     byte[] prefix;
     byte[] A;
 
+    /**
+     * Ed25519の曲線で初期化.
+     * @param k 秘密鍵
+     */
     public EdDSAPrivateKey(byte[] k) {
         this(new EdWards25519(), k);
     }
 
     /**
-     *
+     * EdDSA 初期.
      * @param curve 曲線
      * @param k 秘密鍵
      */
@@ -102,21 +108,22 @@ public class EdDSAPrivateKey implements PrivateKey,ASN1PrivateKey {
      * @return 
      */
     @Override
-    public ASN1Tag getPrivateKeyASN1() {
-        return rebind(new ASN1Convert());
+    public OCTETSTRING getPrivateKeyASN1() {
+        return new OCTETSTRING(this.key);
     }
 
     /**
-     * 
-     * @return 
+     * 素の鍵. EdDSA PrivateKey
+     * OCTETSTRING なのでラップなし
+     * @return 鍵
      */
     @Override
     public OCTETSTRING getPrivateKey() {
-        return (OCTETSTRING) getPrivateKeyASN1();
+        return new OCTETSTRING(this.key);
     }
 
     /**
-     * 鍵
+     * OneAsymmetricKey X.509 DER 鍵
      *
      * @return OneAsymmetricKey
      */
@@ -142,9 +149,9 @@ public class EdDSAPrivateKey implements PrivateKey,ASN1PrivateKey {
      * @param format
      * @return
      */
+    @Override
     public <T> T rebind(TypeFormat<T> format) {
-        OCTETSTRING k = new OCTETSTRING(this.key);
-        return k.rebind(format);
+        return (T)getPrivateKeyASN1().rebind(format);
     }
 
     public EdDSAPublicKey getPublicKey() {

@@ -178,8 +178,7 @@ public class RSAMiniPrivateKey implements PrivateKey, java.security.interfaces.R
      */
     @Override
     public byte[] getEncoded() {
-        SEQUENCE seq = getPrivateKeyASN1();
-        return (byte[]) seq.rebind(new ASN1DERFormat());
+        return (byte[]) getPrivateKeyASN1().rebind(new ASN1DERFormat());
     }
 
     /**

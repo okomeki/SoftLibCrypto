@@ -119,7 +119,8 @@ public class DES extends OneBlock {
     /*
      * ひとつ引いた値
      */
- /*    private static final int[] PC1 = {
+ /*
+    private static final int[] PC1 = {
         56, 48, 40, 32, 24, 16,  8,
          0, 57, 49, 41, 33, 25, 17,
          9,  1, 58, 50, 42, 34, 26,
@@ -148,6 +149,7 @@ public class DES extends OneBlock {
 
     /**
      * 鍵から変換
+     *
      * @param key 7bit 8バイト
      * @return 28*2bit
      */
@@ -233,6 +235,13 @@ public class DES extends OneBlock {
         return pc2(k);
     }
 
+    /**
+     * 鍵設定.
+     * 鍵は各バイト上位7ビットが使用されるため、ASCII文字列はビットシフトした方が良い.
+     * ToDo: saltも渡せるようにする.
+     *
+     * @param key DES鍵
+     */
     @Override
     public void init(byte[]... key) {
         //parityCheck(key);
@@ -242,11 +251,16 @@ public class DES extends OneBlock {
         }
     }
 
+    /**
+     * 6bit x8
+     */
     final byte[] e = new byte[8];
 
     /**
      * rからeに行列変換っぽいもの
-     * @param r 
+     * e : 6bit x 8
+     *
+     * @param r
      */
     private void e(int r) {
         e[0] = (byte) ((r << 5) | (r >>> 27));
@@ -260,41 +274,42 @@ public class DES extends OneBlock {
 //        return e;
     }
 
-    // DEScrypt パスワード用亜種拡張
-    int[] saltmask = new int[0];
-    int[] saltxor = new int[0];
+    // DEScrypt パスワード用亜種拡張 12bit 反転
+    byte[] saltmask = new byte[0];
+    // DEScrypt パスワード用亜種拡張 12bit
+    byte[] saltxor = new byte[0];
 
     /**
      * DEScrype用 改変DES
      *
-     * @param salt 12bitぐらいまで 6bit x2で格納
+     * @param salt 12bitぐらい little endian 6bit x2で格納
      */
     public void setSalt(byte[] salt) {
-        saltxor = new int[salt.length];
+
+        saltmask = new byte[salt.length];
+        saltxor = new byte[salt.length];
         for (int i = 0; i < salt.length; i++) {
-            saltxor[i] = salt[i] & 0x3f;
-        }
-        System.out.println("salt:"+Bin.toHex(salt));
-        saltmask = new int[salt.length];
-        for (int i = 0; i < saltxor.length; i++) {
-            saltmask[i] = ~saltxor[i];
+            saltxor[i] = salt[salt.length - i - 1];
+            saltmask[i] = (byte) ~saltxor[i];
         }
     }
 
     /**
-     * 
-     * @param r
-     * @return 
+     *
+     * saltbox 6bit x 2 下からi番目とi+24番目を入れ替える
+     *
+     * @param e 48bit (6bit x8) block
+     * @return
      */
-    private int salt(int r) {
-        System.out.println("in :"+Bin.toHex(e));
+    private void salt(byte[] e) {
         for (int i = 0; i < saltxor.length; i++) {
-            int tmp = (e[6+ i] & saltmask[i]) | (e[2+ i] & saltxor[i]);
-            e[2+ i] = (byte) ((e[2+ i] & saltmask[i]) | (e[6+ i] & saltxor[i]));
-            e[6+ i] = (byte) tmp;
+            int m1 = e[i] & saltxor[i];
+            int m2 = e[4 + i] & saltxor[i];
+            e[i] &= saltmask[i];
+            e[4 + i] &= saltmask[i];
+            e[i] |= m2;
+            e[4 + i] |= m1;
         }
-        System.out.println("out:"+Bin.toHex(e));
-        return r;
     }
 
     /**
@@ -305,8 +320,8 @@ public class DES extends OneBlock {
      * @return 32bitハッシュ系データ
      */
     private int f(int r, int kn) {
-        r = salt(r);
         e(r); // 6x8bit 48ビットに増やす
+        salt(e);
         byte[] k1 = ks[kn];
 
         int re = 0;

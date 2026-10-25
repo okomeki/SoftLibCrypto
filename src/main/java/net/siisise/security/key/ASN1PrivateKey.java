@@ -15,6 +15,7 @@
  */
 package net.siisise.security.key;
 
+import net.siisise.bind.format.TypeFormat;
 import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.ietf.pkcs8.OneAsymmetricKey;
 import net.siisise.ietf.pkcs8.PrivateKeyInfo;
@@ -64,10 +65,15 @@ public interface ASN1PrivateKey {
     /**
      * PrivateKey 符号化前.
      * SEQUENCE など原型
+     * rebind と同じ
      * 
      * @return ASN1Tagのまま
      */
     ASN1Tag getPrivateKeyASN1();
+    
+    default <T> T rebind(TypeFormat<T> format) {
+        return (T) getPrivateKeyASN1().rebind(format);
+    }
 
     default PrivateKeyInfo getPrivateKeyInfo() {
         AlgorithmIdentifier ai = getAlgorithmIdentifier();

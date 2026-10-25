@@ -20,6 +20,7 @@ import net.siisise.ietf.pkcs.asn1.AlgorithmIdentifier;
 import net.siisise.ietf.pkcs1.PKCS1;
 import net.siisise.iso.asn1.ASN1;
 import net.siisise.iso.asn1.ASN1Util;
+import net.siisise.iso.asn1.tag.ASN1Convert;
 import net.siisise.iso.asn1.tag.ASN1Prefixed;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
 import net.siisise.iso.asn1.tag.SEQUENCE;
@@ -44,14 +45,15 @@ public class RSAES_OAEP_params {
 
     public SEQUENCEMap encode() {
         SEQUENCEMap seq = new SEQUENCEMap();
+        ASN1Convert conv = new ASN1Convert();
         if ( !hashAlgorithm.algorithm.equals(SHA1.OBJECTIDENTIFIER)) {
-            seq.put("hashAlgorithm", new ASN1Prefixed(0, hashAlgorithm.encodeASN1()));
+            seq.put("hashAlgorithm", new ASN1Prefixed(0, hashAlgorithm.rebind(conv)));
         }
 //        if ( !maskGenAlgorithm.algorithm.equals(MGF1.OID)) {
-            seq.put("maskGenAlgorithm", new ASN1Prefixed(1, maskGenAlgorithm.encodeASN1()));
+            seq.put("maskGenAlgorithm", new ASN1Prefixed(1, maskGenAlgorithm.rebind(conv)));
 //        }
         if ( !pSourceAlgorithm.algorithm.equals(PKCS1.id_pSpecified)) {
-            seq.put("pSourceAlgorithm", new ASN1Prefixed(2, pSourceAlgorithm.encodeASN1()));
+            seq.put("pSourceAlgorithm", new ASN1Prefixed(2, pSourceAlgorithm.rebind(conv)));
         }
         return seq;
     }

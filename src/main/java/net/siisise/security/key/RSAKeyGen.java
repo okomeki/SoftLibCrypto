@@ -31,6 +31,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.siisise.iso.asn1.ASN1Util;
+import net.siisise.iso.asn1.tag.ASN1Convert;
 import net.siisise.iso.asn1.tag.INTEGER;
 import net.siisise.iso.asn1.tag.SEQUENCE;
 import net.siisise.iso.asn1.tag.SEQUENCEList;
@@ -263,7 +264,7 @@ public class RSAKeyGen extends KeyPairGeneratorSpi {
      * @return 
      */
     public static SEQUENCEMap encodePrivate8(RSAPrivateCrtKey key) {
-        return key.getPrivateKeyInfo().encodeASN1();
+        return (SEQUENCEMap)key.getPrivateKeyInfo().rebind(new ASN1Convert());
     }
     
     public static SEQUENCEMap encodePublic1(RSAPublicKey pub) {

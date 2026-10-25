@@ -18,6 +18,7 @@ package net.siisise.security.key;
 import java.math.BigInteger;
 import java.security.interfaces.DSAParams;
 import net.siisise.iso.asn1.tag.ASN1DERFormat;
+import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 
 /**
  * DSA公開鍵.
@@ -25,29 +26,34 @@ import net.siisise.iso.asn1.tag.ASN1DERFormat;
  * 固有の値 y
  */
 public class DSAPublicKey implements java.security.interfaces.DSAPublicKey {
+
+    public static final OBJECTIDENTIFIER dsaWithSha224 = new OBJECTIDENTIFIER("2.16.840.1.101.3.4.3.1");
+    public static final OBJECTIDENTIFIER dsaWithSha256 = new OBJECTIDENTIFIER("2.16.840.1.101.3.4.3.2");
+
     private final BigInteger y;
     private final DSAParams params;
 
     /**
-     * 
+     *
      * @param y DSA公開鍵成分
      * @param params DSA秘密鍵公開鍵共通成分 p q g
      */
-    public DSAPublicKey(BigInteger y, DSAParams params ) {
+    public DSAPublicKey(BigInteger y, DSAParams params) {
         this.y = y;
         this.params = params;
     }
 
     /**
      * DSA公開鍵
+     *
      * @param y DSA公開鍵成分
      * @param p domain 成分
      * @param q domain 成分
-     * @param g domain 成分 
+     * @param g domain 成分
      */
-    public DSAPublicKey(BigInteger y, BigInteger p, BigInteger q, BigInteger g ) {
+    public DSAPublicKey(BigInteger y, BigInteger p, BigInteger q, BigInteger g) {
         this.y = y;
-        this.params = new DSADomain(p,q,g);
+        this.params = new DSADomain(p, q, g);
     }
 
     @Override
@@ -57,7 +63,8 @@ public class DSAPublicKey implements java.security.interfaces.DSAPublicKey {
 
     /**
      * DSA秘密鍵/公開鍵共通部分
-     * @return 
+     *
+     * @return
      */
     @Override
     public DSAParams getParams() {
@@ -70,9 +77,9 @@ public class DSAPublicKey implements java.security.interfaces.DSAPublicKey {
     }
 
     /**
-     * X.509 か PKCS#8 か
-     * getEncoded() で返す形式
-     * @return 
+     * X.509 か PKCS#8 か getEncoded() で返す形式
+     *
+     * @return
      */
     @Override
     public String getFormat() {
@@ -87,8 +94,8 @@ public class DSAPublicKey implements java.security.interfaces.DSAPublicKey {
         sequence.add(params.getG());
         sequence.add(params.getQ());
         sequence.add(y);
-        */
+         */
         return new ASN1DERFormat().numberFormat(y);
     }
-    
+
 }

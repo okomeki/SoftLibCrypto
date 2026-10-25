@@ -152,19 +152,6 @@ public class RSAMultiPrivateKey extends RSAPrivateCrtKey {
         return prv;
     }
     
-    /**
-     * RFC 8017 PKCS #1 A.1.2.
-     * 
-     * ASN.1 と同じ出力を他フォーマットでも可能に
-     * @param <T>
-     * @param format 
-     * @return 
-     */
-    @Override
-    public <T> T rebind(TypeFormat<T> format) {
-        return (T)getPrivateKeyASN1().rebind(format);
-    }
-
     @Override
     public String toString() {
         return "Siisise RSA private CRT key, " + modulus.bitLength() + " bits";

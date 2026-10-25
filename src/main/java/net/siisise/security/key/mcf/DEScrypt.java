@@ -58,34 +58,54 @@ public class DEScrypt implements ModularCryptFormat {
     }
 
     /**
-     * MCF生成.
      *
-     * @param salt 2文字
-     * @param pass 8文字までのパスワード
-     * @return 13文字
+     * @param salt salt
+     * @param pass utf-8 8文字想定のパスワード
+     * @return
      */
     String encode(String salt, String pass) {
-
         byte[] passcode = pass.getBytes(StandardCharsets.UTF_8);
+        return encode(salt, passcode);
+    }
+
+    /**
+     * MCF生成. 文字以外(NUL除く)のテストも可能な想定.
+     *
+     * @param salt 2文字
+     * @param pass 8バイトまでのパスワード
+     * @return 13文字
+     */
+    String encode(String salt, byte[] passcode) {
+
         // key
-        byte[] bin = new byte[8];
-        DES des = new DES();
-        System.arraycopy(passcode, 0, bin, 0, Math.min(passcode.length, 8));
-        des.init(bin);
-        BASE64 b64 = new BASE64(BASE64.Type.PASSWORD, false, 0); // hash64
-        BASE64 ble = new BASE64.LE(BASE64.Type.PASSWORD, false, 0);
-        byte[] saltbin = new byte[salt.length()];
-        for (int i = 0; i < saltbin.length; i++) {
-            byte[] dec = ble.decode(salt.substring(i, i + 1) + ".");
-            saltbin[i] = dec[0];
+        byte[] passbin = new byte[8];
+        int len = Math.min(passcode.length, 8);
+        for (int i = 0; i < len; i++) {
+            if (passcode[i] == 0) {
+                throw new IllegalStateException();
+            }
+            passbin[i] = (byte) (passcode[i] << 1);
         }
+        BASE64 b64 = new BASE64(BASE64.Type.PASSWORD, false, 0); // hash64
+
+        byte[] saltbin = new byte[salt.length()];
+        int saltlen = saltbin.length;
+        for (int i = 0; i < saltlen; i++) {
+            String sub = salt.substring(i, i + 1);
+            byte[] dec = b64.decode(sub + ".");
+            for (int j = 2; j < 8; j++) {
+                saltbin[saltlen - 1 - i] |= ((dec[0] >> j) & 1) << (7 - j);
+            }
+        }
+        DES des = new DES();
+        des.init(passbin, saltbin);
         des.setSalt(saltbin);
 
-        Arrays.fill(bin, (byte) 0);
+        Arrays.fill(passbin, (byte) 0);
         for (int i = 0; i < 25; i++) {
-            bin = des.encrypt(bin);
+            passbin = des.encrypt(passbin);
         }
-        return salt + b64.encode(bin);
+        return salt + b64.encode(passbin);
     }
 
     @Override

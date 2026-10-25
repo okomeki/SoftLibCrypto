@@ -23,20 +23,21 @@ import java.util.Map;
  */
 public class MCF implements ModularCryptFormat {
 
-    ModularCryptFormat gen;
     Map<String, ModularCryptFormat> sub;
+    String gen;
 
     public MCF() {
-        this(new BCrypt());
+        this("2b");
     }
 
     /**
-     *
-     * @param gen 生成用
+     * 生成.
+     * @param gen 生成用フォーマット選択
      */
-    public MCF(ModularCryptFormat gen) {
+    public MCF(String gen) {
         this.gen = gen;
         sub = new HashMap<>();
+        sub.put("", new DEScrypt());
         sub.put("2", new BCrypt("2", 10));
         sub.put("2a", new BCrypt("2a", 10));
         sub.put("2b", new BCrypt());
@@ -46,17 +47,22 @@ public class MCF implements ModularCryptFormat {
 
     @Override
     public String generate(String pass) {
-        return gen.generate(pass);
+        ModularCryptFormat mcf;
+        mcf = sub.get(gen);
+        return mcf.generate(pass);
     }
 
     @Override
     public boolean verify(String pass, String code) {
         String[] spp = code.split("\\x24");
+        ModularCryptFormat mcf;
         if (spp.length > 2) {
-            ModularCryptFormat mcf = sub.get(spp[1]);
-            if (mcf != null) {
-                return mcf.verify(pass, code);
-            }
+            mcf = sub.get(spp[1]);
+        } else {
+            mcf = sub.get("");
+        }
+        if (mcf != null) {
+            return mcf.verify(pass, code);
         }
         return false;
     }

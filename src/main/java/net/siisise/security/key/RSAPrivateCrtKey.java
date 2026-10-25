@@ -236,18 +236,6 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements ASN1PrivateKe
     }
 
     /**
-     * RFC 8017 A.1.2.RSA Private Key Syntax.
-     * Optional なし
-     * @param <T> 出力型
-     * @param format 任意の出力形式
-     * @return formatで指定した形式
-     */
-    public <T> T rebind(TypeFormat<T> format) {
-        SEQUENCE prv = getPrivateKeyASN1();
-        return (T)prv.rebind(format);
-    }
-
-    /**
      * RFC 8017 A.1.2. RSA Private Key Syntax
      * PKCS #1
      * 鍵の要素だけを格納したもの
@@ -276,16 +264,6 @@ public class RSAPrivateCrtKey extends RSAMiniPrivateKey implements ASN1PrivateKe
         prv.put("exponent2", exponent2);
         prv.put("coefficient", coefficient);
         return prv;
-    }
-
-    /**
-     * SSH系の鍵をいくつか出力できるようにしておくといいかもしれず
-     * @return SSHの方式っぽい鍵
-     * @deprecated いろいろあるのでまだ未定.
-     */
-    @Deprecated
-    public byte[] getSSHEncoded() {
-        throw new UnsupportedOperationException();
     }
     
     @Override
