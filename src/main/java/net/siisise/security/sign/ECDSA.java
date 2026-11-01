@@ -235,7 +235,7 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
         if (s2.equals(BigInteger.ZERO)) {
             throw new SecurityException();
         }
-        
+
         return pairEnc(s1, s2);
     }
 
@@ -243,7 +243,7 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
         int blen = getKeyLength();
         return PKCS1.OS2IP(Arrays.copyOf(h, Integer.min(h.length, blen)));
     }
-    
+
     byte[] pairEnc(BigInteger s1, BigInteger s2) {
         int blen = getKeyLength(); //(E.p.bitLength() + 7) / 8;
         byte[] SS = new byte[blen * 2];
@@ -253,7 +253,7 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
         System.arraycopy(S, 0, SS, blen, blen);
         return SS;
     }
-    
+
     BigInteger[] pairDec(byte[] sign) {
         int blen = getKeyLength();
         if (sign.length != blen * 2) {
@@ -303,6 +303,6 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
         BigInteger u2 = s1.multiply(s2Inv).mod(q);
         ECCurvep.ECPoint Y = pub.getY();
         ECCurvep.ECPoint R = E.xG(u1).add(Y.x(u2));
-        return R.getX().equals(s1);
+        return R.getX().mod(q).equals(s1);
     }
 }

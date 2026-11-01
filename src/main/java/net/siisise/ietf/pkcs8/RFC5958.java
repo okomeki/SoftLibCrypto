@@ -33,13 +33,15 @@ import net.siisise.security.block.Block;
 import net.siisise.security.mac.HMAC;
 
 /**
- * PKCS #8 の後継的な RFC 5208 PKCS #8 Private-Key Information Syntax Specification
- * Version 1.2 私有鍵情報構文仕様 Version 1.2 RFC 5958 Asymmetric Key Packages
+ * PKCS #8 の後継的な
+ * RFC 5208 PKCS #8 Private-Key Information Syntax Specification Version 1.2 私有鍵情報構文仕様 Version 1.2
+ * RFC 5958 Asymmetric Key Packages
  */
 public class RFC5958 extends PKCS8 {
 
     /**
-     * PBKDF2で使用する乱数生成器のOBJECTIDENTIFIER. HMACが標準、他のMACも設定は可能
+     * PBKDF2で使用する乱数生成器のOBJECTIDENTIFIER.
+     * HMACが標準、他のMACも設定は可能
      */
     public OBJECTIDENTIFIER prf = HMAC.idhmacWithSHA256;
     /**
@@ -101,7 +103,8 @@ public class RFC5958 extends PKCS8 {
     }
 
     /**
-     * CMS RFC 5652, RFC 5083 を使って暗号化ができるのでどうにかする. SignedData 署名 EncryptedData
+     * CMS RFC 5652, RFC 5083 を使って暗号化ができるのでどうにかする.
+     * SignedData 署名 EncryptedData
      * AsymmetricKeyで暗号化 暗号化キー共有済み EnvelopedData AsymmetricKeyで暗号化 暗号化キーを共有しない
      * AuthenticatedData メッセージ認証コードを使用して EnvelopedDataと同様な AuthEnvelopedData
      * EnvelopedDataと同様な

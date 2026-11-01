@@ -44,6 +44,9 @@ public class EdDSA extends Output.AbstractOutput implements SignVerify {
     public static final OBJECTIDENTIFIER X448 = new OBJECTIDENTIFIER("1.3.101.111");
     public static final OBJECTIDENTIFIER Ed25519 = new OBJECTIDENTIFIER("1.3.101.112");
     public static final OBJECTIDENTIFIER Ed448 = new OBJECTIDENTIFIER("1.3.101.113");
+// 以下draftで削除
+//    public static final OBJECTIDENTIFIER Ed25519ph = new OBJECTIDENTIFIER("1.3.101.114");
+//    public static final OBJECTIDENTIFIER Ed448ph = new OBJECTIDENTIFIER("1.3.101.115");
 
     public static EdWards25519 init25519() {
         return new EdWards25519();

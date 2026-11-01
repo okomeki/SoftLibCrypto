@@ -31,6 +31,7 @@ import net.siisise.ietf.pkcs1.PKCS1;
 import net.siisise.io.Output;
 import net.siisise.iso.asn1.ASN1Util;
 import net.siisise.iso.asn1.tag.ASN1DERFormat;
+import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.SEQUENCE;
 import net.siisise.security.math.Modular;
 
@@ -49,6 +50,10 @@ import net.siisise.security.math.Modular;
  * 
  */
 public class DSA extends Output.AbstractOutput implements SignVerify {
+
+    public static OBJECTIDENTIFIER oid = new OBJECTIDENTIFIER("1.2.840.10040.4.1");
+    public static OBJECTIDENTIFIER dsaWithSha224 = new OBJECTIDENTIFIER("2.16.840.1.101.3.4.3.1");
+    public static OBJECTIDENTIFIER dsaWithSha256 = new OBJECTIDENTIFIER("2.16.840.1.101.3.4.3.2");
     
     private DSAPrivateKey signKey;
     private DSAPublicKey verifyKey;
