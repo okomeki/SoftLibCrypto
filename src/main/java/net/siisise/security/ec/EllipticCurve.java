@@ -224,12 +224,12 @@ public class EllipticCurve {
                 1); // h
         sect163k1 = K163 = new ECCurvet(new OBJECTIDENTIFIER("1.3.132.0.1"),
                 new BigInteger("0800000000000000000000000000000000000000c9", 16),
-                1,
-                BigInteger.ONE,
-                new BigInteger("02fe13c0537bbc11acaa07d793de4e6d5e5c94eee8", 16),
-                new BigInteger("0289070fb05d38ff58321f2e800536d538ccdaa3d9", 16),
-                new BigInteger("04000000000000000000020108a2e0cc0d99f8a5ef", 16),
-                2);
+                1, // a
+                BigInteger.ONE, // b
+                new BigInteger("02fe13c0537bbc11acaa07d793de4e6d5e5c94eee8", 16), // Gx
+                new BigInteger("0289070fb05d38ff58321f2e800536d538ccdaa3d9", 16), // Gy
+                new BigInteger("04000000000000000000020108a2e0cc0d99f8a5ef", 16), // n
+                2); // h
         sect163r1 = new ECCurvet(new OBJECTIDENTIFIER("1.3.132.0.2"),
                 new BigInteger("0800000000000000000000000000000000000000c9",16), // p
                 new BigInteger("07B6882CAAEFA84F9554FF8428BD88E246D2782AE2",16), // a

@@ -16,7 +16,6 @@
 package net.siisise.security.block;
 
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
-import net.siisise.lang.Bin;
 
 /**
  * Data Encryption Standard.
@@ -116,22 +115,6 @@ public class DES extends OneBlock {
         }
     }
 */
-    /*
-     * ひとつ引いた値
-     */
- /*
-    private static final int[] PC1 = {
-        56, 48, 40, 32, 24, 16,  8,
-         0, 57, 49, 41, 33, 25, 17,
-         9,  1, 58, 50, 42, 34, 26,
-        18, 10,  2, 59, 51, 43, 35,
-
-        62, 54, 46, 38, 30, 22, 14,
-         6, 61, 53, 45, 37, 29, 21,
-        13,  5, 60, 52, 44, 36, 28,
-        20, 12,  4, 27, 19, 11,  3
-    };
-     */
     /**
      * 1つ引いて下位3ビットを反転したもの
      */
@@ -165,21 +148,6 @@ public class DES extends OneBlock {
         return cd;
     }
 
-    /*
-     * ひとつ減らした値
-     */
- /*
-    private static final int[] PC2 = {
-        13, 16, 10, 23,  0,  4,
-         2, 27, 14,  5, 20,  9,
-        22, 18, 11,  3, 25,  7,
-        15,  6, 26, 19, 12,  1,
-        40, 51, 30, 36, 46, 54,
-        29, 39, 50, 44, 32, 47,
-        43, 48, 38, 55, 33, 52,
-        45, 41, 49, 35, 28, 31
-    };
-     */
     /**
      * ひとつ減らして上位消し、下位反転した値
      * 27 - PC2 % 28
@@ -296,7 +264,8 @@ public class DES extends OneBlock {
 
     /**
      *
-     * saltbox 6bit x 2 下からi番目とi+24番目を入れ替える
+     * saltbox 6bit x 2
+     * 下からi番目とi+24番目を入れ替える
      *
      * @param e 48bit (6bit x8) block
      * @return
@@ -337,9 +306,9 @@ public class DES extends OneBlock {
     /**
      * IP処理
      *
-     * @param src
-     * @param offset
-     * @return
+     * @param src ソース
+     * @param offset 位置
+     * @return 結果
      */
     private static int[] ip(byte[] src, int offset) {
         int[] lr = new int[2];
@@ -360,7 +329,7 @@ public class DES extends OneBlock {
      * intからバイト列にする過程を省略してみる
      *
      * @param src
-     * @return
+     * @return 復元結果
      */
     private static byte[] ip_1(int[] src) {
         byte[] x = new byte[8];

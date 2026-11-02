@@ -39,5 +39,9 @@ public class Curvet<P extends Curvet.Pointt> extends EllipticCurve {
     Curvet(OBJECTIDENTIFIER oid, BigInteger p, BigInteger order, int h) {
         super(oid, p, order, h);
     }
+    
+    Curvet(BigInteger p, BigInteger order, int h) {
+        super(p, order, h);
+    }
 
 }

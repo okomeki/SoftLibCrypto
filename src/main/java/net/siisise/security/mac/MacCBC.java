@@ -21,6 +21,7 @@ import net.siisise.security.block.Block;
 /**
  * ブロック単位 CBC-MAC.
  * ハッシュ用に出力を外したCBC
+ * パディングなし
  */
 public class MacCBC {
 
@@ -29,6 +30,10 @@ public class MacCBC {
     int blen;
     int vl;
 
+    /**
+     * AES-CBC-MAC.
+     * @param block AES
+     */
     public MacCBC(Block block) {
         this.block = block;
         blen = (block.getBlockLength() + 7) / 8;
@@ -45,8 +50,21 @@ public class MacCBC {
         return block.getBlockLength() / 8;
     }
 
+    /**
+     * ブロック暗号の鍵登録.
+     * CBCのIVを省略
+     * @param key ブロック鍵
+     */
     public void init(byte[] key) {
         block.init(key);
+    }
+    
+    public void init(byte[]... params) {
+        int offset = 0;
+        if (params.length > 1) {
+            vector = Bin.btol(params[offset++]);
+        }
+        block.init(params[offset]);
     }
 
     /**

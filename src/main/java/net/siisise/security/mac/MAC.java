@@ -15,6 +15,7 @@
  */
 package net.siisise.security.mac;
 
+import java.util.Arrays;
 import net.siisise.io.Output;
 import net.siisise.security.sign.SignVerify;
 
@@ -22,7 +23,7 @@ import net.siisise.security.sign.SignVerify;
  * Message Authentication Code.
  * Mac のどこでも使える版
  */
-public interface MAC extends SignVerify {
+public interface MAC extends SignVerify<byte[]> {
 
     void init(byte[] key);
 
@@ -39,6 +40,11 @@ public interface MAC extends SignVerify {
 
     default byte[] doFinal() {
         return sign();
+    }
+
+    @Override
+    default boolean verify(byte[] sign) {
+        return Arrays.equals(sign(), sign);
     }
 
     /**

@@ -228,11 +228,6 @@ public class HMAC extends Output.AbstractOutput implements MAC {
     }
 
     @Override
-    public void update(byte[] src) {
-        md.update(src);
-    }
-
-    @Override
     public void update(byte[] src, int offset, int len) {
         md.update(src, offset, len);
     }

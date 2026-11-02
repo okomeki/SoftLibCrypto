@@ -81,6 +81,7 @@ public interface XOF extends Input {
 
     /**
      * 連続出力が可能な型式.
+     * d 標準ビット長
      * @param out 出力先
      */
     void digest(Output out);

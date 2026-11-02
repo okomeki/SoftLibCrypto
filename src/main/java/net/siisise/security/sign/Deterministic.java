@@ -19,27 +19,29 @@ import java.math.BigInteger;
 import net.siisise.ietf.pkcs1.PKCS1;
 
 /**
- * RFC 6979
- * 決定的
- * ToDo: 仮
+ * RFC 6979 決定論的
  */
-public class Deterministic {
+class Deterministic {
 
+    BigInteger q;
     int qlen;
-    
-    Deterministic(int qlen) {
-        this.qlen = qlen;
+
+    Deterministic(BigInteger q) {
+        this.q = q;
+        qlen = q.bitLength();
     }
-    
+
     /**
      * RFC 6979 2.3.2.
+     * 下位ビットを切り捨てる
+     *
      * @param seq ビットシーケンス (左詰め)
      * @param qlen 出力可能ビットサイズ
      * @return 非負整数
      */
     public static BigInteger bits2int(byte[] seq, int qlen) {
         BigInteger n = PKCS1.OS2IP(seq);
-        int blen = n.bitLength();
+        int blen = seq.length * 8; // バイト単位 * 8
         if (blen > qlen) {
             n = n.shiftRight(blen - qlen);
         }
@@ -56,19 +58,21 @@ public class Deterministic {
      * SEC 1 Section 2.3.7 Integer-to-OctetString
      * PKCS1 I2OSP と同じ
      * ECDSA ではバイトで指定?
-     * 
+     *
      * rlen = (qlen + 7) / 8
+     *
      * @param x 正の整数
      * @param qlen 出力ビットサイズ rlenの元
      * @return オクテット列 Octet String
      */
     public static byte[] int2octets(BigInteger x, int qlen) {
-        return PKCS1.I2OSP(x, (qlen + 7)/8);
+        return PKCS1.I2OSP(x, (qlen + 7) / 8);
     }
 
     /**
      * 2.3.3. Integer to Octet String
      * int2octets(x)
+     *
      * @param x 正の整数
      * @return オクテット列
      */
@@ -78,7 +82,7 @@ public class Deterministic {
 
     /**
      * RFC 6979 2.3.4. Bit String to Octet String
-     * 
+     *
      * @param b blenビットのビット列
      * @param rlen 出力ビット長 8の倍数ビット
      * @param q
@@ -87,10 +91,16 @@ public class Deterministic {
     public static byte[] bits2octets(byte[] b, int rlen, BigInteger q) {
         BigInteger z1 = bits2int(b, q.bitLength());
         BigInteger z2 = z1.mod(q);
-        return int2octets(z2,rlen);
+        return int2octets(z2, rlen);
     }
-    
-    public byte[] bits2octets(byte[] b, BigInteger q) {
+
+    /**
+     * RFC 6979
+     * 
+     * @param b 元
+     * @return b mod q
+     */
+    public byte[] bits2octets(byte[] b) {
         BigInteger z1 = bits2int(b);
         BigInteger z2 = z1.mod(q);
         return int2octets(z2);

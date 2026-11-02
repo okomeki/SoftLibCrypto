@@ -174,6 +174,14 @@ public class ECCurvet<P extends ECCurvet.ECPointt> extends Curvet<P> implements 
         gf = new BIGF(p);
         G = toPoint(gx, gy);
     }
+    
+    public ECCurvet(BigInteger p, BigInteger a, BigInteger b, BigInteger gx, BigInteger gy, BigInteger n, int h) {
+        super(p, n, h);
+        this.a = a;
+        this.b = b;
+        gf = new BIGF(p);
+        G = toPoint(gx, gy);
+    }
 
     @Override
     public P toPoint(BigInteger x, BigInteger y) {

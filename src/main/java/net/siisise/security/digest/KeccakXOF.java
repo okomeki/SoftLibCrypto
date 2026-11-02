@@ -26,14 +26,30 @@ import net.siisise.io.PacketA;
 public class KeccakXOF extends Keccak implements XOF,Input {
     Packet buff = new PacketA();
 
+    /**
+     * @param d 出力ビット長
+     */
     protected KeccakXOF(int d) {
         super(d);
     }
-    
+
+    /**
+     * 
+     * @param c キャパシティ b まで
+     * @param d 出力ビット長
+     */
     protected KeccakXOF(int c, int d) {
         super(c, d);
     }
 
+    /**
+     * 
+     * @param name プロトコル名
+     * @param c キャパシティ 2*d か d か固定
+     * @param d 出力長 bit
+     * @param suffix paddingの前に付加するビット列 とKeccak padding先頭1ビットをまとめた値 頭ビットは下位
+     * @param suflen suffix のビット長
+     */
     protected KeccakXOF(String name, int c, long d, int suffix, int suflen) {
         super(name, c, d, suffix, suflen);
     }
