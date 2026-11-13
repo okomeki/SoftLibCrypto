@@ -17,6 +17,7 @@ package net.siisise.security.sign;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
+import net.siisise.bind.format.TypeFormat;
 import net.siisise.security.ec.ECCurvep;
 import net.siisise.security.ec.EllipticCurve;
 
@@ -37,7 +38,7 @@ public class ECDSA_KTIV extends ECDSA {
      * @return
      */
     @Override
-    public byte[] sign(byte[] h, BigInteger k) {
+    public <T> T sign(byte[] h, BigInteger k, TypeFormat<T> format) {
         BigInteger q = E.getN(); // order
 
         // 2.
@@ -58,7 +59,7 @@ public class ECDSA_KTIV extends ECDSA {
             throw new SecurityException();
         }
 
-        return pairEnc(s1, s2);
+        return bindSign(s1, s2, format);
     }
 
     @Override

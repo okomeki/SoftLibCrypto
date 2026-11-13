@@ -45,7 +45,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.14.1</version>
+                <version>3.16.0</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -90,13 +90,13 @@
         <dependency>
             <groupId>net.siisise</groupId>
             <artifactId>softlib.module</artifactId>
-            <version>[1.1.21,1.2.0)</version>
+            <version>1.2.1-SNAPSHOT</version>
             <type>jar</type>
         </dependency>
         <dependency>
             <groupId>net.siisise</groupId>
             <artifactId>softlib-asn1.module</artifactId>
-            <version>[1.1.1,1.2.0)</version>
+            <version>1.2.0</version>
             <type>jar</type>
         </dependency>
         <dependency>

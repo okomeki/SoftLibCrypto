@@ -25,8 +25,9 @@ import net.siisise.iso.asn1.tag.SEQUENCE;
 import net.siisise.iso.asn1.tag.SEQUENCEMap;
 
 /**
- * PBES1用
- * @Deprecated
+ * PBES1用.
+ * 
+ * @deprecated PBES2がある
  */
 @Deprecated
 public class PBEParameter {
@@ -52,14 +53,25 @@ public class PBEParameter {
         pbe.iterationCount = ((INTEGER)ps.get("iterationCount", 1)).intValue();
         return pbe;
     }
-    
+
+    /**
+     * PBES1生成.
+     * @param ai パラメータがPBEParameter
+     * @return PBES1
+     */
     public static PBES1 decode(AlgorithmIdentifier ai) {
         PBEParameter pbe = decode((SEQUENCE)ai.parameters);
         PBES1 es = pbe.decode();
         es.init(ai.algorithm);
         return es;
     }
-    
+
+    /**
+     * ASN.1対応
+     * @param <V>
+     * @param format 出力形式
+     * @return アルゴリズムパラメータSEQUENCE
+     */
     public <V> V rebind(TypeFormat<V> format) {
         SEQUENCEMap seq = new SEQUENCEMap();
         seq.put("salt", new OCTETSTRING(salt));

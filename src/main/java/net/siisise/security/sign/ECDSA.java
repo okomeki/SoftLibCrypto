@@ -27,9 +27,11 @@ import java.security.spec.ECFieldFp;
 import java.security.spec.ECParameterSpec;
 import java.security.spec.ECPoint;
 import java.util.Arrays;
+import net.siisise.bind.format.TypeFormat;
 import net.siisise.ietf.pkcs1.PKCS1;
 import net.siisise.io.Output;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
+import net.siisise.iso.asn1.tag.SEQUENCEMap;
 import net.siisise.security.ec.ECCurve;
 import net.siisise.security.ec.ECCurvep;
 import net.siisise.security.ec.ECCurvet;
@@ -49,11 +51,17 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
     public static final OBJECTIDENTIFIER ECDSA_SHAKE128 = PKIX_ALGORITHMS.sub(32);
     public static final OBJECTIDENTIFIER ECDSA_SHAKE256 = PKIX_ALGORITHMS.sub(33);
 
-    MessageDigest md;
-    ECDSAPrivateKey prv;
-    ECDSAPublicKey pub;
+    final ECCurve E;
 
-    ECCurve E;
+    final MessageDigest md;
+    /**
+     * 署名用秘密鍵.
+     */
+    ECDSAPrivateKey prv;
+    /**
+     * 検証用公開鍵.
+     */
+    ECDSAPublicKey pub;
 
     /**
      * Java ECDSA Specからの変換.
@@ -64,16 +72,21 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
     public static ECCurve toCurve(ECParameterSpec spec) {
         java.security.spec.EllipticCurve c = spec.getCurve();
         ECField field = c.getField();
+        ECPoint g = spec.getGenerator();
         if (field instanceof ECFieldFp) {
             ECFieldFp fp = (ECFieldFp) field;
-            ECPoint g = spec.getGenerator();
             return new ECCurvep(fp.getP(),
                     c.getA(), c.getB(),
                     g.getAffineX(), g.getAffineY(),
                     spec.getOrder(), spec.getCofactor());
+        } else if (field instanceof ECFieldF2m) {
+            ECFieldF2m f2m = (ECFieldF2m) field;
+            g = spec.getGenerator();
+            return new ECCurvet(f2m.getReductionPolynomial(),
+                    c.getA(), c.getB(),
+                    g.getAffineX(), g.getAffineY(),
+                    spec.getOrder(), spec.getCofactor());
         } else {
-            ECFieldF2m f2 = (ECFieldF2m) field;
-
             throw new UnsupportedOperationException();
         }
     }
@@ -117,8 +130,8 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
     /**
      * Public Key の変換.
      *
-     * @param pub
-     * @return
+     * @param pub Java形式公開鍵
+     * @return SoftLib 公開鍵
      */
     public static ECDSAPublicKey toECDSAKey(ECPublicKey pub) {
         ECCurve curve = toCurve(pub.getParams());
@@ -127,11 +140,12 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
     }
 
     /**
-     *
+     * ECDSA署名初期設定.
+     * 出力はP1363形式 (仮)
      * @param e 楕円曲線E
      * @param h ハッシュ関数
      */
-    public ECDSA(ECCurvep e, MessageDigest h) {
+    protected ECDSA(ECCurve e, MessageDigest h) {
         this.E = e;
         md = h;
         md.reset();
@@ -144,21 +158,19 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
      * @param h ハッシュ関数
      */
     public ECDSA(ECDSAPrivateKey prv, MessageDigest h) {
+        this(prv.getCurve(), h);
         this.prv = prv;
-        this.E = prv.getCurve();
-        this.md = h;
     }
 
     /**
-     * 公開鍵.
+     * 検証用公開鍵.
      *
      * @param pub 公開鍵
      * @param h ハッシュ関数
      */
     public ECDSA(ECDSAPublicKey pub, MessageDigest h) {
+        this(pub.getCurve(), h);
         this.pub = pub;
-        E = pub.getCurve();
-        this.md = h;
     }
 
     @Override
@@ -191,29 +203,50 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
      */
     @Override
     public byte[] sign() {
+        return sign(new P1363Format(E.getP().bitLength()));
+    }
+    
+    public <T> T sign(TypeFormat<T> format) {
         byte[] h = md.digest();
 
-        BigInteger q = E.getN();
         do {
-            // 0 < k < q = q = order
-            BigInteger k = rnd().mod(q.subtract(BigInteger.ONE)).add(BigInteger.ONE);
+            // 0 < k < q = q = order 乱数生成
+            BigInteger k = genK(h);
             // 2.
             try {
-                return sign(h, k);
+                return sign(h, k, format);
             } catch (SecurityException e) {
             }
         } while (true);
     }
 
     /**
+     * 乱数っぽいものの生成.
+     * 重複しないこと
+     *
+     * @param h ハッシュ値 決定論的ECDSAで使用、ECDSAでは不要
+     * @return 0 < k < q
+     */
+    BigInteger genK(byte[] h) {
+        BigInteger q = E.getN();
+        return rnd().mod(q.subtract(BigInteger.ONE)).add(BigInteger.ONE);
+    }
+    
+    public byte[] sign(byte[] h, BigInteger k) {
+        return sign(h, k, new P1363Format(E.getP().bitLength()));
+    }
+
+    /**
      * KT-I署名.
      * テスト用署名乱数指定可能版.
      *
+     * @param <T>
      * @param h ハッシュ済み値
      * @param k 乱数を固定 1 から order -1
+     * @param format
      * @return 署名
      */
-    public byte[] sign(byte[] h, BigInteger k) {
+    public <T> T sign(byte[] h, BigInteger k, TypeFormat<T> format) {
         BigInteger q = E.getN(); // order
 
         // SEC.1 4.1.3. 1. kとRのペアを生成
@@ -236,64 +269,100 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
             throw new SecurityException();
         }
 
-        return pairEnc(s1, s2);
+        return bindSign(s1, s2, format);
     }
 
-    protected BigInteger signH(byte[] h) {
-        int blen = getKeyLength();
-        return PKCS1.OS2IP(Arrays.copyOf(h, Integer.min(h.length, blen)));
+    /**
+     * 上位有効ビットの取り出し.
+     * バイト列を切り詰めたあと整数化する
+     *
+     * @param H ハッシュ値
+     * @return Hをorderのビット長に切り詰めた値
+     */
+    protected BigInteger signH(byte[] H) {
+        BigInteger q = E.getN(); // order
+        Deterministic de = new Deterministic(q);
+        return de.bits2int(H);
     }
 
-    byte[] pairEnc(BigInteger s1, BigInteger s2) {
-        int blen = getKeyLength(); //(E.p.bitLength() + 7) / 8;
-        byte[] SS = new byte[blen * 2];
-        byte[] S = PKCS1.I2OSP(s1, blen);
-        System.arraycopy(S, 0, SS, 0, blen);
-        S = PKCS1.I2OSP(s2, blen);
-        System.arraycopy(S, 0, SS, blen, blen);
-        return SS;
+    /**
+     * 符号化.
+     *
+     * @param <T>
+     * @param r
+     * @param s
+     * @param format 出力形式
+     * @return
+     */
+    public <T> T bindSign(BigInteger r, BigInteger s, TypeFormat<T> format) {
+        SEQUENCEMap m = new SEQUENCEMap();
+        m.put("r", r);
+        m.put("s", s);
+        return (T) m.rebind(format);
     }
 
-    BigInteger[] pairDec(byte[] sign) {
+    /**
+     * 複合.
+     *
+     * @param sign
+     * @return r, s
+     */
+    public BigInteger[] pairDec(byte[] sign) {
         int blen = getKeyLength();
         if (sign.length != blen * 2) {
             throw new SecurityException();
         }
         BigInteger[] ss = new BigInteger[2];
 
-        byte[] S = Arrays.copyOfRange(sign, 0, blen);
-        BigInteger q = E.getN();
-        ss[0] = PKCS1.OS2IP(S);
-        if (ss[0].equals(BigInteger.ZERO) || ss[0].compareTo(q) >= 0) {
-            throw new SecurityException();
+        for (int i = 0; i < 2; i++) {
+            byte[] S = Arrays.copyOfRange(sign, blen * i, blen * (i+1));
+            ss[i] = PKCS1.OS2IP(S);
         }
 
-        S = Arrays.copyOfRange(sign, blen, blen * 2);
-        ss[1] = PKCS1.OS2IP(S);
-        if (ss[1].equals(BigInteger.ZERO) || ss[1].compareTo(q) >= 0) {
-            throw new SecurityException();
-        }
         return ss;
+    }
+
+    /**
+     *
+     * @param sign
+     * @return
+     */
+    @Override
+    public boolean verify(byte[] sign) {
+        try {
+            BigInteger[] ss = pairDec((byte[])sign);
+            return verify(ss);
+        } catch (SecurityException e) {
+            return false;
+        }
     }
 
     /**
      * KT-I verify
      *
-     * @param sign (s1,s2)
+     * @param sign (s1,s2) または (r, s) と表記するもの
      * @return 成否
      */
-    @Override
-    public boolean verify(byte[] sign) {
+    public boolean verify(BigInteger[] sign) {
         BigInteger s1;
         BigInteger s2;
+        BigInteger q = E.getN();
         try {
-            BigInteger[] ss = pairDec(sign);
-            s1 = ss[0];
-            s2 = ss[1];
+            if (sign == null || sign.length != 2) {
+                return false;
+            }
+            for (int i = 0; i < 2; i++) {
+                if (sign[i].compareTo(BigInteger.ZERO) <= 0 || sign[i].compareTo(q) >= 0) {
+                    return false;
+//                    throw new SecurityException();
+                }
+            }
+            s1 = sign[0];
+            s2 = sign[1];
         } catch (SecurityException e) {
             return false;
         }
-        BigInteger q = E.getN();
+
         BigInteger s2Inv = s2.modInverse(q);
 
         byte[] h = md.digest();

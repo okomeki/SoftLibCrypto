@@ -23,7 +23,7 @@ import net.siisise.security.sign.SignVerify;
  * Message Authentication Code.
  * Mac のどこでも使える版
  */
-public interface MAC extends SignVerify<byte[]> {
+public interface MAC extends SignVerify {
 
     void init(byte[] key);
 
@@ -40,11 +40,6 @@ public interface MAC extends SignVerify<byte[]> {
 
     default byte[] doFinal() {
         return sign();
-    }
-
-    @Override
-    default boolean verify(byte[] sign) {
-        return Arrays.equals(sign(), sign);
     }
 
     /**

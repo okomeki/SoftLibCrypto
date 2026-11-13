@@ -30,8 +30,11 @@ import net.siisise.security.block.Block;
 public class XCBC extends Output.AbstractOutput implements MAC {
 
     private final Block block;
+    /**
+     * block CBC
+     */
     private MacCBC cbc;
-    
+
     private byte[] k1;
     private byte[] k2;
     private byte[] k3;
@@ -87,6 +90,12 @@ public class XCBC extends Output.AbstractOutput implements MAC {
         cbc = new MacCBC(block);
     }
 
+    /**
+     * 追加.
+     * @param src ソース
+     * @param offset 位置
+     * @param length 長さ
+     */
     @Override
     public void update(byte[] src, int offset, int length) {
         int mlen = m.size();
@@ -97,19 +106,22 @@ public class XCBC extends Output.AbstractOutput implements MAC {
             System.arraycopy(src, offset, t, mlen, blen);
             offset += blen;
             length -= blen;
+            Bin.xorl(t, k2);
             cbc.update(t,0,k2.length);
         }
         if ( length > k2.length ) {
             int blen = (length - 1) / k2.length * k2.length;
+            
             cbc.update(src, offset, blen);
             offset += blen;
             length -= blen;
         }
         m.write(src, offset, length);
-}
-
+    }
+    
     @Override
     public byte[] sign() {
+        // passing
         byte[] t = new byte[k2.length];
         if ( m.size() < k2.length ) { // 10* Padding
             m.write(0x80);
@@ -120,6 +132,7 @@ public class XCBC extends Output.AbstractOutput implements MAC {
             Bin.xorl(t, k2);
         }
         cbc.update(t,0,t.length);
+
         t = cbc.vector();
         cbc = new MacCBC(block); // 次の初期化
         return Arrays.copyOf(t, outlen);

@@ -15,6 +15,7 @@
  */
 package net.siisise.security.sign;
 
+//import net.siisise.bind.format.TypeFormat;
 import net.siisise.io.Output;
 
 /**
@@ -48,6 +49,7 @@ public interface Signer extends Output {
      * @return signature
      */
     byte[] sign();
+//    <T> T sign(TypeFormat<T> format);
 
     @Override
     default public Output put(byte[] data, int offset, int length) {

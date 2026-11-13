@@ -20,20 +20,32 @@ import java.security.MessageDigest;
 import java.util.Arrays;
 import net.siisise.io.PacketA;
 import net.siisise.security.key.ECDSAPrivateKey;
+import net.siisise.security.key.ECDSAPublicKey;
 import net.siisise.security.mac.HMAC;
 
 /**
- * RFC 6979 決定論的 鍵の生成にHMAC_DRBGを使用しているのかもしれない
+ * RFC 6979 決定論的
+ * 鍵の生成にHMAC_DRBGを使用しているのかもしれない
  */
 public class DECDSA extends ECDSA {
 
     /**
-     *
+     * 署名用.
      * @param prv 秘密鍵
      * @param h ダイジェスト関数
      */
     public DECDSA(ECDSAPrivateKey prv, MessageDigest h) {
         super(prv, h);
+    }
+
+    /**
+     * 検証用.
+     * 検証では変更点なし.
+     * @param pub 公開鍵
+     * @param h ダイジェスト関数
+     */
+    public DECDSA(ECDSAPublicKey pub, MessageDigest h) {
+        super(pub, h);
     }
 
     /**

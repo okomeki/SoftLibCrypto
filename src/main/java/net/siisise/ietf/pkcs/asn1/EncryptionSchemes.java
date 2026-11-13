@@ -19,7 +19,7 @@ import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.security.block.Block;
 
 /**
- * 
+ * 仮
  */
 public class EncryptionSchemes {
     
@@ -34,7 +34,7 @@ public class EncryptionSchemes {
      *   RC2-CBC-Pad
      * 
      * @param oid
-     * @return 
+     * @return 未
      */
     static Block decode(OBJECTIDENTIFIER oid) {
         throw new UnsupportedOperationException();
