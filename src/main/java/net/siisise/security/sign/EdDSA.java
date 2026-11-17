@@ -15,13 +15,12 @@
  */
 package net.siisise.security.sign;
 
-import net.siisise.security.ec.EdWards448;
-import net.siisise.security.ec.EdWards25519;
-import net.siisise.security.ec.EdWards;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import net.siisise.block.ReadableBlock;
+import net.siisise.io.Input;
 import net.siisise.io.Output;
 import net.siisise.io.PacketA;
 import net.siisise.iso.asn1.tag.ASN1DERFormat;
@@ -29,6 +28,9 @@ import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.iso.asn1.tag.OCTETSTRING;
 import net.siisise.lang.Bin;
 import net.siisise.security.digest.BlockMessageDigest;
+import net.siisise.security.ec.EdWards;
+import net.siisise.security.ec.EdWards25519;
+import net.siisise.security.ec.EdWards448;
 import net.siisise.security.key.EdDSAPrivateKey;
 import net.siisise.security.key.EdDSAPublicKey;
 
@@ -65,7 +67,8 @@ public class EdDSA extends Output.AbstractOutput implements SignVerify {
     BlockMessageDigest H;
 
     byte[] dom;
-    PacketA block = new PacketA();
+    Input block = new PacketA();
+//    MultiBlock block = new MultiBlock(List.of());
 
     public EdDSA() {
     }
@@ -105,9 +108,33 @@ public class EdDSA extends Output.AbstractOutput implements SignVerify {
         if (pkey != null) {
             H.update(src, offset, length);
         }
-        block.write(src, offset, length);
+//        EditBlock edit = EditBlock.wrap(src, offset, length);
+        ((Output)block).write(src, offset, length);
+//        block.addDirectNext(edit);
+    }
+    
+    public void write(ReadableBlock src, int offset, int length) {
+        ReadableBlock b = src.sub(offset, length);
+        write(b);
     }
 
+    @Override
+    public long write(Input src) {
+        long p;
+        long ret = src.length();
+        if (src instanceof ReadableBlock) {
+            ReadableBlock b;
+            b = (ReadableBlock)src;
+            p = b.backLength();
+            H.update(src);
+            b.seek(p);
+            block = b;
+        } else {
+            ((Output)block).write(src);
+        }
+        return ret;
+    }
+    
     /**
      * 秘密鍵.
      * RFC 8410 CurvePrivateKey の形式
@@ -169,8 +196,11 @@ public class EdDSA extends Output.AbstractOutput implements SignVerify {
         H.update(dom);
         H.update(R);
         H.update(pkey.getA());
-        byte[] phM = block.toByteArray(); //curve.PH(); // PH(M)
-        H.update(phM);
+        //block.seek(0);
+        //byte[] phM = block.toByteArray(); //curve.PH(); // PH(M)
+        H.update(block);
+        //H.update(phM);
+        block = new PacketA(); // new MultiBlock(List.of());
 
         BigInteger k = Bin.lbtobi(H.digest()).mod(curve.L);
         BigInteger s = pkey.gets();
@@ -199,12 +229,15 @@ public class EdDSA extends Output.AbstractOutput implements SignVerify {
         if (S.compareTo(curve.L) >= 0) {
             throw new IllegalStateException();
         }
-        byte[] phM = block.toByteArray();
         H = curve.H();
         H.update(dom);
         H.update(Rb);
         H.update(Ab);
-        byte[] h = H.digest(phM);
+//        byte[] phM = block.toByteArray();
+//        block.seek(0);
+        H.update(block);
+        block = new PacketA();
+        byte[] h = H.digest();
         BigInteger k = Bin.lbtobi(h).mod(curve.L);
         EdWards.Point R = curve.decXY(Rb);
         EdWards.Point A = curve.decXY(Ab);

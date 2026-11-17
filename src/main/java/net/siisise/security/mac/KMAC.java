@@ -75,6 +75,7 @@ public abstract class KMAC extends Output.AbstractOutput implements MAC, KDF {
 
     /**
      * KDF4Xとして利用.
+     * 複数回生成するもの、らしい
      *
      * @param K 鍵導出鍵
      * @param L 出力ビットサイズ
