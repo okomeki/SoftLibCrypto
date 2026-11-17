@@ -26,6 +26,10 @@ import net.siisise.security.digest.BlockMessageDigest;
 import net.siisise.security.digest.SHA1;
 import net.siisise.security.digest.SHA224;
 import net.siisise.security.digest.SHA256;
+import net.siisise.security.digest.SHA3224;
+import net.siisise.security.digest.SHA3256;
+import net.siisise.security.digest.SHA3384;
+import net.siisise.security.digest.SHA3512;
 import net.siisise.security.digest.SHA384;
 import net.siisise.security.digest.SHA512;
 import net.siisise.security.digest.SHA512224;
@@ -83,6 +87,11 @@ public class HMAC extends Output.AbstractOutput implements MAC {
     public static final OBJECTIDENTIFIER idhmacWithSHA512 = DIGESTALGORITHM.sub(11);
     public static final OBJECTIDENTIFIER idhmacWithSHA512224 = DIGESTALGORITHM.sub(12);
     public static final OBJECTIDENTIFIER idhmacWithSHA512256 = DIGESTALGORITHM.sub(13);
+    public static final OBJECTIDENTIFIER hashAlgs = SHA256.hashAlgs;
+    public static final OBJECTIDENTIFIER idhmacWithSHA3_224 = hashAlgs.sub(13);
+    public static final OBJECTIDENTIFIER idhmacWithSHA3_256 = hashAlgs.sub(14);
+    public static final OBJECTIDENTIFIER idhmacWithSHA3_384 = hashAlgs.sub(15);
+    public static final OBJECTIDENTIFIER idhmacWithSHA3_512 = hashAlgs.sub(16);
 
 //    private HMACSpi spi;
     private MessageDigest md;
@@ -243,7 +252,7 @@ public class HMAC extends Output.AbstractOutput implements MAC {
     }
 
     /**
-     * RFC 8018 など.
+     * RFC 8018, 9688 など.
      * @param ai OBJECTIDENTIFIERなど含む構造
      * @return HMAC
      */
@@ -265,6 +274,14 @@ public class HMAC extends Output.AbstractOutput implements MAC {
             return new HMAC(new SHA512224());
         } else if (ai.algorithm.equals(idhmacWithSHA512256)) {
             return new HMAC(new SHA512256());
+        } else if (ai.algorithm.equals(idhmacWithSHA3_224)) { // RFC 9688
+            return new HMAC(new SHA3224());
+        } else if (ai.algorithm.equals(idhmacWithSHA3_256)) {
+            return new HMAC(new SHA3256());
+        } else if (ai.algorithm.equals(idhmacWithSHA3_384)) {
+            return new HMAC(new SHA3384());
+        } else if (ai.algorithm.equals(idhmacWithSHA3_512)) {
+            return new HMAC(new SHA3512());
         }
         return null;
     }

@@ -30,7 +30,7 @@ public class SHA256 extends BlockMessageDigest {
     public static final OBJECTIDENTIFIER nistAlgorithm = new OBJECTIDENTIFIER("2.16.840.1.101.3.4");
     /**
      * hashAlgs :== nistAlgorithm 2
-     * 
+     *
      * 1 sha-256
      * 2 sha-384
      * 3 sha-512
@@ -53,10 +53,10 @@ public class SHA256 extends BlockMessageDigest {
      * 20 KMACWithSHAKE256 length INTEGER default 512, customizationString OCTETSTRING
      * 21 KMAC128
      * 22 KMAC256
-     * 
+     *
      */
     public static final OBJECTIDENTIFIER hashAlgs = nistAlgorithm.sub(2);
-    public static final OBJECTIDENTIFIER OID = hashAlgs.sub(1 );
+    public static final OBJECTIDENTIFIER OID = hashAlgs.sub(1);
 
     static final int[] IV256 = {
         0x6a09e667,
@@ -92,7 +92,7 @@ public class SHA256 extends BlockMessageDigest {
     private final int[] IV;
 
     public SHA256() {
-        this("SHA-256",IV256);
+        this("SHA-256", IV256);
     }
 
     protected SHA256(String n, int[] iv) {
@@ -178,7 +178,7 @@ public class SHA256 extends BlockMessageDigest {
             b = a;
             a = temp1 + temp2;
         }
-/*
+        /*
         // シフトしているのは元に戻る
         for (int t = 63; t >=0; t--) {
             int temp1 = a;
@@ -205,7 +205,7 @@ public class SHA256 extends BlockMessageDigest {
             b = a;
             a = temp1 + temp2;
         }
-*/
+         */
         H[0] += a;
         H[1] += b;
         H[2] += c;
@@ -218,6 +218,7 @@ public class SHA256 extends BlockMessageDigest {
 
     /**
      * int列をbyte列に変換するだけ。 big endianかな
+     *
      * @param src データint列
      * @param len 出力バイト長
      * @return バイト列
@@ -240,11 +241,12 @@ public class SHA256 extends BlockMessageDigest {
         pac.write(new byte[]{(byte) 0x80});
         int padlen = 512 - (int) ((len + 64 + 8) % 512);
         pac.write(new byte[padlen / 8]);
-        byte[] lena = new byte[8];
-        for (int i = 0; i < 8; i++) {
-            lena[7 - i] = (byte) len;
-            len >>>= 8;
-        }
+        byte[] lena; // = new byte[8];
+        lena = Bin.toByte(len);
+//        for (int i = 0; i < 8; i++) {
+//            lena[7 - i] = (byte) len;
+//            len >>>= 8;
+//        }
 
         pac.write(lena, 0, lena.length);
 
