@@ -32,6 +32,7 @@ public class PKCS1 {
     public static final OBJECTIDENTIFIER PKCS_1 = PKCS1.sub(0, 1);
     public static final OBJECTIDENTIFIER rsaEncryption = PKCS1.sub(1);
     public static final OBJECTIDENTIFIER md2WithRSAEncryption = PKCS1.sub(2); // RSASSA_PKCS1_v1_5 MD2
+    public static final OBJECTIDENTIFIER md4WithRSAEncryption = PKCS1.sub(3); // RSASSA_PKCS1_v1_5 MD4
     public static final OBJECTIDENTIFIER md5WithRSAEncryption = PKCS1.sub(4); // RSASSA_PKCS1_v1_5 MD5
     public static final OBJECTIDENTIFIER sha1WithRSAEncryption = PKCS1.sub(5); // RSASSA_PKCS1_v1_5 SHA1
     public static final OBJECTIDENTIFIER id_RSAES_OAEP = PKCS1.sub(7);
