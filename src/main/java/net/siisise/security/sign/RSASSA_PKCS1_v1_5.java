@@ -19,6 +19,7 @@ import java.security.MessageDigest;
 import java.util.Arrays;
 import net.siisise.iso.asn1.tag.OBJECTIDENTIFIER;
 import net.siisise.security.digest.SHA1;
+import net.siisise.security.digest.SHA256;
 import net.siisise.security.key.RSAMiniPrivateKey;
 import net.siisise.security.key.RSAPublicKey;
 
@@ -30,7 +31,13 @@ import net.siisise.security.key.RSAPublicKey;
 public class RSASSA_PKCS1_v1_5 extends RSASSA {
     
     static final OBJECTIDENTIFIER pkcs1 = new OBJECTIDENTIFIER("1.2.840.113549.1.1");
-    static final OBJECTIDENTIFIER sha224WithRSAEncryption = pkcs1.sub(14);
+//    static final OBJECTIDENTIFIER sha224WithRSAEncryption = pkcs1.sub(14);
+    static final OBJECTIDENTIFIER nistAlgorithm = SHA256.nistAlgorithm;
+    static final OBJECTIDENTIFIER sigAlgs = nistAlgorithm.sub(3);
+    static final OBJECTIDENTIFIER idRsassaPkcs1v1_5WithSha3_224 = sigAlgs.sub(13); // RFC 9688 3.1.
+    static final OBJECTIDENTIFIER idRsassaPkcs1v1_5WithSha3_256 = sigAlgs.sub(14);
+    static final OBJECTIDENTIFIER idRsassaPkcs1v1_5WithSha3_384 = sigAlgs.sub(15);
+    static final OBJECTIDENTIFIER idRsassaPkcs1v1_5WithSha3_512 = sigAlgs.sub(16);
 
     /**
      * 省略時 SHA-1 を使用(非推奨)

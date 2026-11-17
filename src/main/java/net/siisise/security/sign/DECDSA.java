@@ -41,6 +41,7 @@ public class DECDSA extends ECDSA {
     /**
      * 検証用.
      * 検証では変更点なし.
+     * 
      * @param pub 公開鍵
      * @param h ダイジェスト関数
      */
@@ -48,37 +49,40 @@ public class DECDSA extends ECDSA {
         super(pub, h);
     }
 
+    BigInteger genK(byte[] h) {
+        return genK(h, md, prv.getS(), E.getN());
+    }
+    
     /**
      * ハッシュ値から乱数の代わりになるものを生成.
-     * @param h 本文digest
+     * HMAC_DRBG らしい.
+     * 
+     * @param h HMAC_DRBGのnonce 3.2. a. h1 = H(m) 本文digest
      * @return k
      */
-    @Override
-    BigInteger genK(byte[] h) {
-        BigInteger q = E.getN(); // order
+    static BigInteger genK(byte[] h, MessageDigest md, BigInteger x, BigInteger q) {
         Deterministic de = new Deterministic(q);
 
         // 3.2. kの生成
-        int qlen = q.bitLength();
+        int qlen = de.qlen;
         HMAC hmac = new HMAC(md);
+        // hlen 仕様ではbit ここではbyte
         int hlen = md.getDigestLength();
-        // 3.2. b.
+        // 3.2. c. K の変数代用
         byte[] V = new byte[hlen];
+        hmac.init(V); // K
+        // 3.2. b.
         Arrays.fill(V, (byte) 0x01); // SHA-256の場合
-        // 3.2. c.
-        byte[] K = new byte[hlen];
-        hmac.init(K);
         // 3.2. d.
         // K = HMAC_K(V || 0x00 || int2octets(x) || bits2octets(h1))
-        BigInteger x = prv.getS();
-        byte[] ox = de.int2octets(x);
-        byte[] h1o = de.bits2octets(h); // K
+        byte[] ox = de.int2octets(x); // 秘密鍵x
+        byte[] nonce = de.bits2octets(h); // K = h1 mod q
 
         hmac.update(V);
         hmac.update(new byte[]{0});
         hmac.update(ox); // 秘密鍵 x [1, q-1]
-        hmac.update(h1o); // update(bits2octets(h1))
-        K = hmac.sign();
+        hmac.update(nonce);
+        byte[] K = hmac.sign();
 
         // 3.2. e
         hmac.init(K);
@@ -91,7 +95,7 @@ public class DECDSA extends ECDSA {
         hmac.update(V);
         hmac.update(new byte[]{1});
         hmac.update(ox); // 秘密鍵 x [1, q-1]
-        hmac.update(h1o); // update(bits2octets(h1))
+        hmac.update(nonce);
         K = hmac.sign();
 
         BigInteger k;
@@ -135,7 +139,8 @@ public class DECDSA extends ECDSA {
         // 1. H(m) から qを法とする整数に変換
         byte[] h = md.digest();
 
-        BigInteger k = genK(h);
+        BigInteger q = E.getN(); // order
+        BigInteger k = genK(h, md, prv.getS(), q);
 
         return sign(h, k);
     }

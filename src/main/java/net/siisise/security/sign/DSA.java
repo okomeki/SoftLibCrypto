@@ -47,19 +47,27 @@ import net.siisise.security.math.Modular;
  * 
  * 入力
  *  k 乱数値 毎回必要
+ * @deprecated 
  * 
  */
+@Deprecated
 public class DSA extends Output.AbstractOutput implements SignVerify {
 
     public static OBJECTIDENTIFIER oid = new OBJECTIDENTIFIER("1.2.840.10040.4.1");
     public static OBJECTIDENTIFIER dsaWithSha224 = new OBJECTIDENTIFIER("2.16.840.1.101.3.4.3.1");
     public static OBJECTIDENTIFIER dsaWithSha256 = new OBJECTIDENTIFIER("2.16.840.1.101.3.4.3.2");
-    
-    private DSAPrivateKey signKey;
-    private DSAPublicKey verifyKey;
+
+    /**
+     * 秘密鍵
+     */
+    DSAPrivateKey signKey;
+    /**
+     * 公開鍵
+     */
+    DSAPublicKey verifyKey;
 
     private final SecureRandom rnd;
-    private MessageDigest H;
+    final MessageDigest H;
 
     /**
      * 
@@ -152,15 +160,17 @@ public class DSA extends Output.AbstractOutput implements SignVerify {
     /**
      * 0 &lt; x &lt; max
      *
-     * @param max
-     * @return
+     * @param h ハッシュ値 (決定論的の場合に使用)
+     * @param x 秘密鍵
+     * @param q q
+     * @return 使い回さない値
      */
-    private BigInteger rnd1(BigInteger max) {
-        int len = max.bitLength() + 8 / 8;
+    protected BigInteger genK(byte[] h, BigInteger x, BigInteger q) {
+        int len = (q.bitLength() + 8) / 8;
         byte[] bytes = new byte[len];
         rnd.nextBytes(bytes);
         bytes[0] &= 0x7f;
-        return new BigInteger(bytes).mod(max.subtract(BigInteger.ONE)).add(BigInteger.ONE);
+        return new BigInteger(bytes).mod(q.subtract(BigInteger.ONE)).add(BigInteger.ONE);
     }
 
     @Override
@@ -181,7 +191,7 @@ public class DSA extends Output.AbstractOutput implements SignVerify {
         do {
             BigInteger k;
             do {
-                k = rnd1(q);
+                k = genK(d, signKey.getX(), q); // d は決定論的用
                 r = params.getG().modPow(k, p).mod(q);
             } while (r.equals(BigInteger.ZERO));
             BigInteger zxr = z.add(signKey.getX().multiply(r));

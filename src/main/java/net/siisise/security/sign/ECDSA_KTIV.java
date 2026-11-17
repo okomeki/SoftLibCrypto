@@ -18,7 +18,6 @@ package net.siisise.security.sign;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import net.siisise.bind.format.TypeFormat;
-import net.siisise.security.ec.ECCurvep;
 import net.siisise.security.ec.EllipticCurve;
 
 /**
@@ -26,8 +25,8 @@ import net.siisise.security.ec.EllipticCurve;
  */
 public class ECDSA_KTIV extends ECDSA {
 
-    public ECDSA_KTIV(ECCurvep e, MessageDigest h) {
-        super(e, h);
+    public ECDSA_KTIV(MessageDigest h) {
+        super(h);
     }
 
     /**
@@ -63,25 +62,9 @@ public class ECDSA_KTIV extends ECDSA {
     }
 
     @Override
-    public boolean verify(byte[] sign) {
-        BigInteger[] ss;
-        try {
-            ss = pairDec(sign);
-        } catch (SecurityException e) {
-            return false;
-        }
-        BigInteger s1 = ss[0];
-        BigInteger s2 = ss[1];
-        BigInteger q = E.getN();
-
-        BigInteger hh = signH(md.digest());
-
-        BigInteger u1 = hh.multiply(s2).mod(q);
-        BigInteger u2 = s1.multiply(s2).mod(q);
-
-        EllipticCurve.ECPoint Y = pub.getY();
-        EllipticCurve.ECPoint R = E.xG(u1).add(Y.x(u2));
-
-        return R.getX().equals(s1);
+    BigInteger s2iv(BigInteger s2, BigInteger q) {
+        return s2;
     }
+    
+    
 }

@@ -32,8 +32,8 @@ import net.siisise.security.key.ECDSAKeyGen;
 import net.siisise.security.key.ECDSAPrivateKey;
 import net.siisise.security.key.ECDSAPublicKey;
 import net.siisise.security.math.BIGF;
-import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 /**
  * ECDSAなテスト.
@@ -143,8 +143,8 @@ public class ECDSATest {
 //        System.out.println("Qx:" + Bin.toUpperHex(Qx));
 //        System.out.println("Qx:" + Q.getX().toString(16));
 //        System.out.println("Qy:" + Q.getY().toString(16));
-        assertArrayEquals(Qx, Q.encX());
-        assertArrayEquals(Qy, Q.encY());
+        assertEquals(PKCS1.OS2IP(Qx), Q.getX());
+        assertEquals(PKCS1.OS2IP(Qy), Q.getY());
 
 //        assertEquals(PKCS1.OS2IP(S),s);
         ECCurvep.ECPoint VR = P256.xG(u1).add(Q.x(u2));
@@ -179,7 +179,6 @@ public class ECDSATest {
         assertArrayEquals(H, oH);
 
         ECCurvet B283 = EllipticCurve.B283;
-        System.out.println("p:" + B283.p.toString(16));
         ECDSAPrivateKey pk = new ECDSAPrivateKey(B283, D); // 秘密鍵
         BigInteger q = B283.getN();
 
@@ -192,34 +191,20 @@ public class ECDSATest {
         BigInteger zk = gf.mul(kinvgf, k);
         BigInteger kinv = k.modInverse(q);
         System.out.println("Kinv:" + Bin.toHex(Kinv));
-        BigInteger kinv2 = k.modInverse(B283.p);
 //        GFL gf = new GFL(B283.getN());
         System.out.println("K:" + Bin.toHex(K));
         System.out.println("K:" + k.toString(16));
 
         //BigInteger kinv = PKCS1.OS2IP(Bin.ltob(gf.inv(GFL.toLong(K))));
         System.out.println("zK  :" + zk.toString(16));
-        System.out.println("zKK :" + gf.mul(zk, k).toString(16));
-        System.out.println("Kinv:" + kinv.toString(16));
-        System.out.println("Kinv2:" + kinv2.toString(16));
-        System.out.println("KinvGF:" + kinvgf.toString(16));
         
         assertArrayEquals(Kinv, PKCS1.I2OSP(kinv, Kinv.length));
         ECCurvet.ECPointt R_ = B283.xG(k);
 
-        gf = new BIGF(B283.getP());
-        k = BigInteger.valueOf(3);
-        zk = gf.inv(k);
-        System.out.println("zk:" + zk.toString(16));
-        BigInteger kk = gf.mul(zk, k);
-        System.out.println("kk:" + kk.toString(16));
-
         BigInteger x = R_.getX();
         BigInteger y = R_.getY();
         System.out.println("Rx:" + x.toString(16));
-//        System.out.println("Rx:" + Bin.toHex(Rx));
         System.out.println("Ry:" + y.toString(16));
-//        System.out.println("Ry:" + Bin.toHex(Ry));
         assertArrayEquals(Rx, R_.encX());
         assertArrayEquals(Ry, R_.encY());
         BigInteger e = PKCS1.OS2IP(E);
@@ -228,6 +213,7 @@ public class ECDSATest {
         int blen = (B283.getN().bitLength() + 7) / 8;
         byte[] RR = PKCS1.I2OSP(r, blen);
         assertArrayEquals(R,RR);
+
         BigInteger d = pk.getS(); // 秘密鍵
         BigInteger s2a = e.add(d.multiply(r).mod(q)).mod(q);
         System.out.println(s2a.toString(16));
@@ -241,18 +227,12 @@ public class ECDSATest {
         byte[] RS = new byte[blen*2];
         System.arraycopy(RR, 0, RS, 0, blen);
         System.arraycopy(SS, 0, RS, blen, blen);
-/*        
         ECDSA ec = new ECDSA(pk, new SHA3256());
         byte[] sign = ec.sign(E, k);
         System.out.println("RS  :" + Bin.toHex(RS));
         System.out.println("sign:" + Bin.toHex(sign));
         assertArrayEquals(RS,sign);
-*/
-    }
 
-    /*
-        
-        
         // verify
         BigInteger s2inv = s.modInverse(q);
         System.out.println(s2inv.toString(16));
@@ -262,17 +242,16 @@ public class ECDSATest {
         System.out.println("u2:"+u2.toString(16));
 
         ECCurvet.ECPointt Q = (ECCurvet.ECPointt) pk.getPublicKey().getY();
-//        System.out.println("Qx:" + Bin.toUpperHex(Qx));
-//        System.out.println("Qx:" + Q.getX().toString(16));
-//        System.out.println("Qy:" + Q.getY().toString(16));
-        assertArrayEquals(Qx,Q.encX());
-        assertArrayEquals(Qy,Q.encY());
+
+        assertEquals(PKCS1.OS2IP(Qx), Q.getX());
+        assertEquals(PKCS1.OS2IP(Qy), Q.getY());
 
 //        assertEquals(PKCS1.OS2IP(S),s);
         ECCurvet.ECPoint VR = B283.xG(u1).add(Q.x(u2));
-        assertEquals(VR.getX(),r);
+        System.out.println("R:"+r.toString(16));
+        System.out.println("VRx:"+VR.getX().mod(q).toString(16));
+        assertEquals(VR.getX().mod(q),r);
     }
-     */
 
     @Test
     public void testVectorK163() {
@@ -282,7 +261,7 @@ public class ECDSATest {
 
     @Test
     public void testVectorK233() {
-        System.out.println("EC K-233");
+        System.out.println("EC K-233 SHA3-224");
         ECCurvet K233 = EllipticCurve.K233;
         SHA3224 sha = new SHA3224();
         byte[] src = "Example of ECDSA with K-233".getBytes(StandardCharsets.ISO_8859_1);
@@ -314,9 +293,9 @@ public class ECDSATest {
         byte[] Kinv=Bin.toByteArray("A202EA455D0E1A5EF09054B39259C768DB76FFD1A77B6281FC7056A4A23A1012CDD604E4D7993E0D9EDD422DEFD782C1225A1A"); // inv n
         byte[] Rx = Bin.toByteArray("01F3E4DA3101C64239D76831995C0EC1E56CE4690C42DDD53DBF3EF725D819DF090B8632F327499B5B99C280D7F410CD7105C8DB"); // 公開鍵 R Q
         byte[] Ry = Bin.toByteArray("0122C8D8E5BEEC67621FF662D16D96845ADD77930A1096913CFFC984E97DA8E7351F73AC33BEAD2C2FA5B3049FC53FCF38160AF5");
-        byte[] R  = Bin.toByteArray("F3E4DA3101C64239D76831995C0EC1E56CE4690C42DDD53DBF3D147B0173CC15D87E749382CD5EBD9492FD568F43959763B768"); // r 署名1
+        byte[] R  = Bin.toByteArray("00F3E4DA3101C64239D76831995C0EC1E56CE4690C42DDD53DBF3D147B0173CC15D87E749382CD5EBD9492FD568F43959763B768"); // r 署名1
         byte[] D  = Bin.toByteArray("4AF896DB379ABDF70C8FADE9EBD28CD530F2ECB336B4DE84BD6E065EF56C8C548C532D00FA55CA8ACF3E98ADBCA9F78D241B"); // 秘密鍵
-        byte[] S  = Bin.toByteArray("292FA994DC6EA367236AD73956DBC1EB62B8779DF438165407141587E3FEED883741CDF5542F255BEBC57B9D0C87AD403B8EAB"); // s2 署名2
+        byte[] S  = Bin.toByteArray("00292FA994DC6EA367236AD73956DBC1EB62B8779DF438165407141587E3FEED883741CDF5542F255BEBC57B9D0C87AD403B8EAB"); // s2 署名2
 
         byte[] Qx = Bin.toByteArray("01951C5E41607E9317F247D49A389D0E120F479D47737543098AE5E1BB62BD59DE70E1C584AE655C702D39DD4F7883E1876C4A9B"); // 公開鍵
         byte[] Qy = Bin.toByteArray("016B16B98A3353D75BEB4D3576C64568BA381463CF77D4AEB85218D2D546E7A1EE3AB9316D8C7DF00D155B7891B2C0BF4B5E942E"); // 公開鍵
@@ -328,8 +307,9 @@ public class ECDSATest {
 
         System.out.println("n;" + B409.b.bitLength());
         BigInteger k = PKCS1.OS2IP(K).mod(q); // 乱数
-        BigInteger kinv = k.modInverse(q);
+
         BIGF gf = new BIGF(B409.getN());
+        BigInteger kinv = k.modInverse(q);
         System.out.println("K:" +Bin.toHex(K));
         System.out.println("K:" +k.toString(16));
         byte[] bkinv = PKCS1.I2OSP(kinv, Kinv.length);
@@ -340,9 +320,10 @@ public class ECDSATest {
         System.out.println("Kinv:" +kinv.toString(16));
         assertArrayEquals(Kinv, bkinv);
         ECCurvep.ECPoint R_ = B409.xG(k);
+
 //        System.out.println("Rx:" + R_.getX().toString(16));
-        assertArrayEquals(Rx,R_.encX());
 //        System.out.println("Ry:" + R_.getY().toString(16));
+        assertArrayEquals(Rx,R_.encX());
         assertArrayEquals(Ry,R_.encY());
 //        System.out.println(EllipticCurve.P256.xG(k).getX().toString(16));
 //        System.out.println("Ry:" + R_.getY().toString(16));
@@ -352,8 +333,10 @@ public class ECDSATest {
         assertEquals(PKCS1.OS2IP(R),r);
         int blen = (B409.getN().bitLength() + 7) / 8;
         byte[] RR = PKCS1.I2OSP(r, blen);
-/*
-        assertArrayEquals(R,RR);
+        System.out.println("R :" + Bin.toHex(R));
+        System.out.println("RR:" + Bin.toHex(RR));
+        assertEquals(new BigInteger(R),r);
+
         BigInteger d = pk.getS(); // 秘密鍵
         BigInteger s2a = e.add(d.multiply(r).mod(q)).mod(q);
         System.out.println(s2a.toString(16));
@@ -361,6 +344,8 @@ public class ECDSATest {
         System.out.println(s.toString(16));
         assertEquals(PKCS1.OS2IP(S),s);
         byte[] SS = PKCS1.I2OSP(s, blen);
+        System.out.println("S :" + Bin.toHex(S));
+        System.out.println("SS:" + Bin.toHex(SS));
         assertArrayEquals(S,SS);
         
         // ( r ,s )
@@ -390,8 +375,7 @@ public class ECDSATest {
 
 //        assertEquals(PKCS1.OS2IP(S),s);
         ECCurvet.ECPoint VR = B409.xG(u1).add(Q.x(u2));
-        assertEquals(VR.getX(),r);
-*/
+        assertEquals(VR.getX().mod(q),r);
     }
 
     /**

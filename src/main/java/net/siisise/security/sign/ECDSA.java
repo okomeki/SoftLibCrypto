@@ -51,7 +51,7 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
     public static final OBJECTIDENTIFIER ECDSA_SHAKE128 = PKIX_ALGORITHMS.sub(32);
     public static final OBJECTIDENTIFIER ECDSA_SHAKE256 = PKIX_ALGORITHMS.sub(33);
 
-    final ECCurve E;
+    ECCurve E;
 
     final MessageDigest md;
     /**
@@ -142,11 +142,9 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
     /**
      * ECDSA署名初期設定.
      * 出力はP1363形式 (仮)
-     * @param e 楕円曲線E
      * @param h ハッシュ関数
      */
-    protected ECDSA(ECCurve e, MessageDigest h) {
-        this.E = e;
+    protected ECDSA(MessageDigest h) {
         md = h;
         md.reset();
     }
@@ -158,8 +156,8 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
      * @param h ハッシュ関数
      */
     public ECDSA(ECDSAPrivateKey prv, MessageDigest h) {
-        this(prv.getCurve(), h);
-        this.prv = prv;
+        this(h);
+        init(prv);
     }
 
     /**
@@ -169,8 +167,20 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
      * @param h ハッシュ関数
      */
     public ECDSA(ECDSAPublicKey pub, MessageDigest h) {
-        this(pub.getCurve(), h);
+        this(h);
+        init(pub);
+    }
+
+    public void init(ECDSAPublicKey pub) {
         this.pub = pub;
+        E = pub.getCurve();
+        md.reset();
+    }
+
+    public void init(ECDSAPrivateKey prv) {
+        this.prv = prv;
+        E = prv.getCurve();
+        md.reset();
     }
 
     @Override
@@ -181,18 +191,6 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
     @Override
     public void update(byte[] src, int offset, int length) {
         md.update(src, offset, length);
-    }
-
-    BigInteger rnd() {
-        int bit = E.getP().bitLength(); // てきとうに増やす
-        byte[] rnd = new byte[(bit + 9) / 8];
-        try {
-            SecureRandom.getInstanceStrong().nextBytes(rnd);
-            rnd[0] &= 0x7f;
-            return new BigInteger(rnd);
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
     }
 
     /**
@@ -219,19 +217,38 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
             }
         } while (true);
     }
+    
+    public byte[] sign(ECDSAPrivateKey prv) {
+        this.prv = prv;
+        E = prv.getCurve();
+        return sign();
+    }
+
+    private SecureRandom rnd;
 
     /**
      * 乱数っぽいものの生成.
      * 重複しないこと
      *
      * @param h ハッシュ値 決定論的ECDSAで使用、ECDSAでは不要
-     * @return 0 < k < q
+     * @return 0 &lt; k &lt; q
      */
     BigInteger genK(byte[] h) {
         BigInteger q = E.getN();
-        return rnd().mod(q.subtract(BigInteger.ONE)).add(BigInteger.ONE);
+        int len = (q.bitLength() + 8) / 8;
+        byte[] bytes = new byte[len];
+        try {
+            if (rnd == null) {
+                rnd = SecureRandom.getInstanceStrong();
+            }
+            rnd.nextBytes(bytes);
+            bytes[0] &= 0x7f;
+            return new BigInteger(bytes).mod(q.subtract(BigInteger.ONE)).add(BigInteger.ONE);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
     }
-    
+
     public byte[] sign(byte[] h, BigInteger k) {
         return sign(h, k, new P1363Format(E.getP().bitLength()));
     }
@@ -333,6 +350,7 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
             BigInteger[] ss = pairDec((byte[])sign);
             return verify(ss);
         } catch (SecurityException e) {
+            md.reset();
             return false;
         }
     }
@@ -344,34 +362,34 @@ public class ECDSA extends Output.AbstractOutput implements SignVerify {
      * @return 成否
      */
     public boolean verify(BigInteger[] sign) {
-        BigInteger s1;
-        BigInteger s2;
         BigInteger q = E.getN();
+        byte[] h = md.digest();
         try {
             if (sign == null || sign.length != 2) {
                 return false;
             }
-            for (int i = 0; i < 2; i++) {
-                if (sign[i].compareTo(BigInteger.ZERO) <= 0 || sign[i].compareTo(q) >= 0) {
-                    return false;
-//                    throw new SecurityException();
-                }
-            }
-            s1 = sign[0];
-            s2 = sign[1];
         } catch (SecurityException e) {
             return false;
         }
 
-        BigInteger s2Inv = s2.modInverse(q);
+        for (int i = 0; i < 2; i++) {
+            if (sign[i].compareTo(BigInteger.ZERO) <= 0 || sign[i].compareTo(q) >= 0) {
+                return false;
+            }
+        }
+        BigInteger s1 = sign[0];
+        BigInteger s2Inv = s2iv(sign[1], q);
 
-        byte[] h = md.digest();
-
-        BigInteger e = signH(h); // hを切り詰めた値
-        BigInteger u1 = e.multiply(s2Inv).mod(q);
+        BigInteger hh = signH(h); // hを切り詰めた値
+        
+        BigInteger u1 = hh.multiply(s2Inv).mod(q);
         BigInteger u2 = s1.multiply(s2Inv).mod(q);
         ECCurvep.ECPoint Y = pub.getY();
         ECCurvep.ECPoint R = E.xG(u1).add(Y.x(u2));
         return R.getX().mod(q).equals(s1);
+    }
+    
+    BigInteger s2iv(BigInteger s2, BigInteger q) {
+        return s2.modInverse(q);
     }
 }
