@@ -38,9 +38,11 @@ public class MCF implements ModularCryptFormat {
         this.gen = gen;
         sub = new HashMap<>();
         sub.put("", new DEScrypt());
-        sub.put("2", new BCrypt("2", 10));
-        sub.put("2a", new BCrypt("2a", 10));
-        sub.put("2b", new BCrypt());
+        sub.put("2", new BCryptMCF("2", 10));
+        sub.put("2a", new BCryptMCF("2a", 10));
+        sub.put("2b", new BCryptMCF());
+        sub.put("2x", new BCryptMCF());
+        sub.put("2y", new BCryptMCF());
         sub.put("5", new DigestCrypt("5", "SHA-256"));
         sub.put("6", new DigestCrypt("6", "SHA-512"));
     }
